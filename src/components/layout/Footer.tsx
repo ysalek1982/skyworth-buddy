@@ -76,9 +76,17 @@ const Footer = () => {
             <p className="text-sm text-muted-foreground">
               © 2026 Skyworth. Todos los derechos reservados.
             </p>
-            <p className="text-xs text-muted-foreground">
-              Promoción válida hasta el 30 de junio de 2026
-            </p>
+            <div className="flex items-center gap-4">
+              <p className="text-xs text-muted-foreground">
+                Promoción válida hasta el 30 de junio de 2026
+              </p>
+              <Link 
+                to="/admin" 
+                className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+              >
+                •
+              </Link>
+            </div>
           </div>
         </div>
       </div>
