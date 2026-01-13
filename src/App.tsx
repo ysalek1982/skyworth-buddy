@@ -14,6 +14,8 @@ const RegistroCliente = lazy(() => import("./pages/RegistroCliente"));
 const RegistroVendedor = lazy(() => import("./pages/RegistroVendedor"));
 const Rankings = lazy(() => import("./pages/Rankings"));
 const Resultados = lazy(() => import("./pages/Resultados"));
+const Admin = lazy(() => import("./pages/Admin"));
+const DashboardVendedor = lazy(() => import("./pages/DashboardVendedor"));
 
 const queryClient = new QueryClient();
 
@@ -38,6 +40,8 @@ const App = () => (
               <Route path="/registro-vendedor" element={<RegistroVendedor />} />
               <Route path="/rankings" element={<Rankings />} />
               <Route path="/resultados" element={<Resultados />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/dashboard-vendedor" element={<DashboardVendedor />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
