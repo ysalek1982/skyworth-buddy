@@ -1,23 +1,131 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Users, Ticket, Calendar, TrendingUp } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { supabase } from "@/integrations/supabase/client";
+
+interface CampaignData {
+  name: string;
+  draw_date: string | null;
+  end_date: string;
+}
+
+interface DrawResult {
+  id: string;
+  name: string;
+  executed_at: string | null;
+  results: any;
+}
 
 const Resultados = () => {
-  // Estadísticas de ejemplo
-  const stats = [
-    { label: "Participantes", value: "12,450", icon: Users, color: "text-primary" },
-    { label: "Tickets Emitidos", value: "28,340", icon: Ticket, color: "text-secondary" },
-    { label: "Ventas Registradas", value: "8,920", icon: TrendingUp, color: "text-primary" },
-    { label: "Días Restantes", value: "183", icon: Calendar, color: "text-secondary" },
+  const [stats, setStats] = useState({
+    participantes: 0,
+    cupones: 0,
+    ventas: 0,
+    diasRestantes: 0,
+  });
+  const [campaign, setCampaign] = useState<CampaignData | null>(null);
+  const [winners, setWinners] = useState<{ name: string; city: string; prize: string; date: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch campaign info
+        const { data: campaignData } = await supabase
+          .from("campaign")
+          .select("name, draw_date, end_date")
+          .eq("is_active", true)
+          .single();
+
+        if (campaignData) {
+          setCampaign(campaignData);
+          
+          // Calculate days remaining
+          const endDate = new Date(campaignData.end_date);
+          const today = new Date();
+          const diffTime = endDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          setStats(prev => ({ ...prev, diasRestantes: Math.max(0, diffDays) }));
+        }
+
+        // Fetch stats
+        const [
+          { count: clientCount },
+          { count: couponCount },
+          { count: salesCount },
+        ] = await Promise.all([
+          supabase.from("client_purchases").select("*", { count: "exact", head: true }).eq("admin_status", "APPROVED"),
+          supabase.from("coupons").select("*", { count: "exact", head: true }),
+          supabase.from("seller_sales").select("*", { count: "exact", head: true }),
+        ]);
+
+        setStats(prev => ({
+          ...prev,
+          participantes: clientCount || 0,
+          cupones: couponCount || 0,
+          ventas: salesCount || 0,
+        }));
+
+        // Fetch draw results (winners)
+        const { data: draws } = await supabase
+          .from("draws")
+          .select("id, name, executed_at, results")
+          .not("executed_at", "is", null)
+          .order("executed_at", { ascending: false })
+          .limit(5);
+
+        if (draws && draws.length > 0) {
+          const formattedWinners: { name: string; city: string; prize: string; date: string }[] = [];
+          
+          for (const draw of draws) {
+            if (draw.results && typeof draw.results === 'object') {
+              const results = draw.results as { finalists?: Array<{ name?: string; city?: string }> };
+              if (results.finalists && Array.isArray(results.finalists)) {
+                results.finalists.forEach((finalist: any) => {
+                  formattedWinners.push({
+                    name: finalist.name || "Ganador",
+                    city: finalist.city || "Bolivia",
+                    prize: draw.name,
+                    date: draw.executed_at ? new Date(draw.executed_at).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }) : "",
+                  });
+                });
+              }
+            }
+          }
+          
+          setWinners(formattedWinners.slice(0, 5));
+        }
+      } catch (error) {
+        console.error("Error fetching results data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const formatNumber = (num: number) => {
+    return num.toLocaleString('es-ES');
+  };
+
+  const statsDisplay = [
+    { label: "Participantes", value: formatNumber(stats.participantes), icon: Users, color: "text-primary" },
+    { label: "Cupones Emitidos", value: formatNumber(stats.cupones), icon: Ticket, color: "text-secondary" },
+    { label: "Ventas Registradas", value: formatNumber(stats.ventas), icon: TrendingUp, color: "text-primary" },
+    { label: "Días Restantes", value: formatNumber(stats.diasRestantes), icon: Calendar, color: "text-secondary" },
   ];
 
-  // Ganadores anteriores (simulados)
-  const previousWinners = [
-    { name: "Roberto Mendez", department: "Santa Cruz", prize: "TV 65\" OLED", date: "Enero 2026" },
-    { name: "Patricia Quispe", department: "La Paz", prize: "Soundbar Premium", date: "Enero 2026" },
-    { name: "Fernando García", department: "Cochabamba", prize: "TV 55\" 4K", date: "Diciembre 2025" },
-  ];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
+        <div className="text-foreground">Cargando resultados...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -50,7 +158,7 @@ const Resultados = () => {
             transition={{ delay: 0.2 }}
             className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12"
           >
-            {stats.map((stat, index) => (
+            {statsDisplay.map((stat, index) => (
               <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -99,13 +207,18 @@ const Resultados = () => {
                   </p>
                   <div className="bg-muted rounded-xl p-4 inline-block">
                     <p className="text-sm text-muted-foreground">Sorteo el</p>
-                    <p className="text-xl font-bold text-gradient-gold">15 de Julio, 2026</p>
+                    <p className="text-xl font-bold text-gradient-gold">
+                      {campaign?.draw_date 
+                        ? new Date(campaign.draw_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+                        : "15 de Julio, 2026"
+                      }
+                    </p>
                   </div>
                 </div>
               </div>
             </motion.div>
 
-            {/* Ganadores Mensuales */}
+            {/* Ganadores Recientes */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -114,30 +227,37 @@ const Resultados = () => {
             >
               <div className="p-6 border-b border-border">
                 <h2 className="text-xl font-bold text-card-foreground">Ganadores Recientes</h2>
-                <p className="text-sm text-muted-foreground">Premios mensuales de la promoción</p>
+                <p className="text-sm text-muted-foreground">Premios de la promoción</p>
               </div>
               <div className="divide-y divide-border">
-                {previousWinners.map((winner, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 + index * 0.1 }}
-                    className="p-4 flex items-center gap-4"
-                  >
-                    <div className="w-12 h-12 rounded-full bg-gradient-gold flex items-center justify-center">
-                      <Trophy className="w-6 h-6 text-skyworth-dark" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-bold text-card-foreground">{winner.name}</p>
-                      <p className="text-sm text-muted-foreground">{winner.department}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-primary">{winner.prize}</p>
-                      <p className="text-xs text-muted-foreground">{winner.date}</p>
-                    </div>
-                  </motion.div>
-                ))}
+                {winners.length > 0 ? (
+                  winners.map((winner, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.5 + index * 0.1 }}
+                      className="p-4 flex items-center gap-4"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-gradient-gold flex items-center justify-center">
+                        <Trophy className="w-6 h-6 text-skyworth-dark" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-bold text-card-foreground">{winner.name}</p>
+                        <p className="text-sm text-muted-foreground">{winner.city}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-primary">{winner.prize}</p>
+                        <p className="text-xs text-muted-foreground">{winner.date}</p>
+                      </div>
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-muted-foreground">
+                    <p>Aún no hay ganadores.</p>
+                    <p className="text-sm">¡Participa para ser el primero!</p>
+                  </div>
+                )}
               </div>
               <div className="p-4 bg-muted/30">
                 <p className="text-center text-sm text-muted-foreground">
@@ -157,7 +277,7 @@ const Resultados = () => {
             <div className="bg-gradient-card-blue rounded-2xl p-8 inline-block">
               <h3 className="text-xl font-bold text-foreground mb-2">¿Aún no participas?</h3>
               <p className="text-muted-foreground mb-4">
-                Registra tu compra y obtén tus tickets para el gran sorteo
+                Registra tu compra y obtén tus cupones para el gran sorteo
               </p>
               <a href="/registro-cliente" className="btn-cta-primary inline-flex items-center gap-2">
                 <Trophy className="w-5 h-5" />
