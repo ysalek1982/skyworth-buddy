@@ -1,23 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trophy, User, IdCard, Phone, Upload, ArrowLeft, CheckCircle } from "lucide-react";
+import { Trophy, User, IdCard, Phone, Upload, ArrowLeft, CheckCircle, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 
 const RegistroCliente = () => {
   const navigate = useNavigate();
+  const { user, signUp } = useAuth();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     nombre: "",
+    apellido: "",
     ci: "",
     telefono: "",
+    email: "",
+    password: "",
     departamento: "",
     factura: null as File | null,
   });
@@ -34,6 +41,13 @@ const RegistroCliente = () => {
     "Pando",
   ];
 
+  useEffect(() => {
+    if (user && step !== 3) {
+      // If user is already logged in, skip to step 2
+      setStep(2);
+    }
+  }, [user, step]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -45,16 +59,75 @@ const RegistroCliente = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulación de registro
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
+    let currentUser = user;
+
+    // If not logged in, create account first
+    if (!currentUser) {
+      const { error: authError } = await signUp(formData.email, formData.password, {
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        telefono: formData.telefono,
+      });
+
+      if (authError) {
+        if (authError.message.includes("User already registered")) {
+          toast.error("Este email ya está registrado. Intenta iniciar sesión.");
+        } else {
+          toast.error(authError.message);
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      // Get the newly created user
+      const { data: { user: newUser } } = await supabase.auth.getUser();
+      currentUser = newUser;
+    }
+
+    if (currentUser) {
+      // Check if cliente already exists
+      const { data: existingCliente } = await supabase
+        .from("clientes")
+        .select("id")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+      if (!existingCliente) {
+        // Create cliente record
+        const { error: clienteError } = await supabase.from("clientes").insert({
+          user_id: currentUser.id,
+          cedula: formData.ci,
+          email: formData.email || currentUser.email,
+          telefono: formData.telefono,
+          estado: "activo",
+        });
+
+        if (clienteError) {
+          console.error("Error creating cliente:", clienteError);
+          toast.error("Error al crear el perfil de cliente.");
+          setIsLoading(false);
+          return;
+        }
+
+        // Assign cliente role
+        await supabase.from("user_roles").insert({
+          user_id: currentUser.id,
+          role: "cliente",
+        });
+      }
+    }
+
     setStep(3);
     toast.success("¡Registro completado exitosamente!");
     setIsLoading(false);
   };
 
   const nextStep = () => {
-    if (step === 1 && formData.nombre && formData.ci && formData.telefono && formData.departamento) {
+    if (step === 1 && formData.nombre && formData.apellido && formData.ci && formData.telefono && formData.departamento) {
+      if (!user && (!formData.email || !formData.password)) {
+        toast.error("Por favor ingresa tu email y contraseña.");
+        return;
+      }
       setStep(2);
     }
   };
@@ -116,19 +189,35 @@ const RegistroCliente = () => {
                   </p>
                 </div>
 
-                <form className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="nombre" className="text-card-foreground">
-                      Nombre completo
-                    </Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <form className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="nombre" className="text-card-foreground">
+                        Nombre
+                      </Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <Input
+                          id="nombre"
+                          placeholder="Tu nombre"
+                          value={formData.nombre}
+                          onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                          className="pl-10 bg-background border-input text-foreground"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="apellido" className="text-card-foreground">
+                        Apellido
+                      </Label>
                       <Input
-                        id="nombre"
-                        placeholder="Tu nombre completo"
-                        value={formData.nombre}
-                        onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                        className="pl-10 bg-background border-input text-foreground"
+                        id="apellido"
+                        placeholder="Tu apellido"
+                        value={formData.apellido}
+                        onChange={(e) => setFormData({ ...formData, apellido: e.target.value })}
+                        className="bg-background border-input text-foreground"
                         required
                       />
                     </div>
@@ -187,10 +276,58 @@ const RegistroCliente = () => {
                     </Select>
                   </div>
 
+                  {!user && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="text-card-foreground">
+                          Correo electrónico
+                        </Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="tu@email.com"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            className="pl-10 bg-background border-input text-foreground"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="password" className="text-card-foreground">
+                          Contraseña
+                        </Label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                          <Input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            value={formData.password}
+                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            className="pl-10 pr-10 bg-background border-input text-foreground"
+                            required
+                            minLength={6}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
                   <Button
                     type="button"
                     onClick={nextStep}
-                    disabled={!formData.nombre || !formData.ci || !formData.telefono || !formData.departamento}
+                    disabled={!formData.nombre || !formData.apellido || !formData.ci || !formData.telefono || !formData.departamento || (!user && (!formData.email || !formData.password))}
                     className="w-full bg-gradient-green text-primary-foreground font-bold uppercase tracking-wider py-6"
                   >
                     Continuar

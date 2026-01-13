@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Trophy, Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { user, signIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -16,13 +18,30 @@ const Login = () => {
     password: "",
   });
 
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulación de login - en producción se conectaría a Supabase
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const { error } = await signIn(formData.email, formData.password);
     
+    if (error) {
+      if (error.message.includes("Invalid login credentials")) {
+        toast.error("Credenciales inválidas. Verifica tu email y contraseña.");
+      } else if (error.message.includes("Email not confirmed")) {
+        toast.error("Por favor confirma tu email antes de iniciar sesión.");
+      } else {
+        toast.error(error.message);
+      }
+      setIsLoading(false);
+      return;
+    }
+
     toast.success("¡Bienvenido de vuelta!");
     navigate("/");
     setIsLoading(false);
@@ -55,7 +74,7 @@ const Login = () => {
               Iniciar Sesión
             </h1>
             <p className="text-muted-foreground text-sm">
-              Accede a tu cuenta de vendedor Skyworth
+              Accede a tu cuenta Skyworth
             </p>
           </div>
 
@@ -93,6 +112,7 @@ const Login = () => {
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="pl-10 pr-10 bg-background border-input text-foreground"
                   required
+                  minLength={6}
                 />
                 <button
                   type="button"
@@ -114,11 +134,17 @@ const Login = () => {
           </form>
 
           {/* Footer */}
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center space-y-2">
             <p className="text-sm text-muted-foreground">
               ¿No tienes cuenta?{" "}
               <Link to="/registro-vendedor" className="text-primary hover:underline font-medium">
                 Regístrate como vendedor
+              </Link>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              ¿Eres cliente?{" "}
+              <Link to="/registro-cliente" className="text-primary hover:underline font-medium">
+                Registra tu compra
               </Link>
             </p>
           </div>

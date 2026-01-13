@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Menu, X, Store } from "lucide-react";
+import { Trophy, Menu, X, Store, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut, loading } = useAuth();
 
   const navLinks = [
     { href: "/", label: "Inicio" },
@@ -16,6 +20,12 @@ const Header = () => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("¡Hasta pronto!");
+    navigate("/");
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 glass-effect">
@@ -51,12 +61,33 @@ const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <Link to="/login" className="hidden sm:block">
-              <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-                <Store className="w-4 h-4 mr-2" />
-                Soy Vendedor
-              </Button>
-            </Link>
+            {!loading && (
+              <>
+                {user ? (
+                  <div className="hidden sm:flex items-center gap-2">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
+                      <User className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">{user.email?.split("@")[0]}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSignOut}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Link to="/login" className="hidden sm:block">
+                    <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                      <Store className="w-4 h-4 mr-2" />
+                      Soy Vendedor
+                    </Button>
+                  </Link>
+                )}
+              </>
+            )}
 
             {/* Mobile Menu Toggle */}
             <button
@@ -94,14 +125,33 @@ const Header = () => {
                 </Link>
               ))}
               <div className="pt-2 border-t border-border mt-2">
-                <Link
-                  to="/login"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-primary"
-                >
-                  <Store className="w-4 h-4" />
-                  Soy Vendedor
-                </Link>
+                {user ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 px-4 py-2 text-sm text-foreground">
+                      <User className="w-4 h-4" />
+                      {user.email}
+                    </div>
+                    <button
+                      onClick={() => {
+                        handleSignOut();
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-destructive w-full"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Cerrar Sesión
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    to="/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-primary"
+                  >
+                    <Store className="w-4 h-4" />
+                    Soy Vendedor
+                  </Link>
+                )}
               </div>
             </nav>
           </motion.div>

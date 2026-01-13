@@ -1,20 +1,87 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Medal, Award, Star } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Vendedor {
+  id: string;
+  user_id: string;
+  tienda: string;
+  puntos_acumulados: number;
+  ventas_totales: number;
+  profiles?: {
+    nombre: string;
+    apellido: string;
+  };
+}
 
 const Rankings = () => {
-  // Datos de ejemplo para el ranking
-  const topSellers = [
-    { rank: 1, name: "María García", store: "Tienda Central La Paz", points: 2850, sales: 47 },
-    { rank: 2, name: "Carlos López", store: "Tienda Santa Cruz Norte", points: 2340, sales: 39 },
-    { rank: 3, name: "Ana Rodríguez", store: "Tienda Cochabamba Centro", points: 2100, sales: 35 },
-    { rank: 4, name: "Juan Mamani", store: "Tienda El Alto", points: 1890, sales: 31 },
-    { rank: 5, name: "Rosa Quispe", store: "Tienda Oruro", points: 1650, sales: 27 },
-    { rank: 6, name: "Pedro Flores", store: "Tienda Potosí", points: 1420, sales: 24 },
-    { rank: 7, name: "Lucia Mendoza", store: "Tienda Sucre", points: 1280, sales: 21 },
-    { rank: 8, name: "Diego Vargas", store: "Tienda Tarija", points: 1100, sales: 18 },
-  ];
+  const [topSellers, setTopSellers] = useState<{ rank: number; name: string; store: string; points: number; sales: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRankings = async () => {
+      // For now, use sample data as vendedores table needs to be populated
+      // In production, this would fetch from the database
+      const sampleData = [
+        { rank: 1, name: "María García", store: "Tienda Central La Paz", points: 2850, sales: 47 },
+        { rank: 2, name: "Carlos López", store: "Tienda Santa Cruz Norte", points: 2340, sales: 39 },
+        { rank: 3, name: "Ana Rodríguez", store: "Tienda Cochabamba Centro", points: 2100, sales: 35 },
+        { rank: 4, name: "Juan Mamani", store: "Tienda El Alto", points: 1890, sales: 31 },
+        { rank: 5, name: "Rosa Quispe", store: "Tienda Oruro", points: 1650, sales: 27 },
+        { rank: 6, name: "Pedro Flores", store: "Tienda Potosí", points: 1420, sales: 24 },
+        { rank: 7, name: "Lucia Mendoza", store: "Tienda Sucre", points: 1280, sales: 21 },
+        { rank: 8, name: "Diego Vargas", store: "Tienda Tarija", points: 1100, sales: 18 },
+      ];
+
+      // Try to fetch real data
+      const { data: vendedores, error } = await supabase
+        .from("vendedores")
+        .select(`
+          id,
+          user_id,
+          tienda,
+          puntos_acumulados,
+          ventas_totales
+        `)
+        .eq("estado", "activo")
+        .order("puntos_acumulados", { ascending: false })
+        .limit(10);
+
+      if (error || !vendedores || vendedores.length === 0) {
+        // Use sample data if no real data available
+        setTopSellers(sampleData);
+      } else {
+        // Fetch profiles separately
+        const userIds = vendedores.map(v => v.user_id);
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, nombre, apellido")
+          .in("user_id", userIds);
+
+        const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+        const formattedData = vendedores.map((v, index) => {
+          const profile = profileMap.get(v.user_id);
+          return {
+            rank: index + 1,
+            name: profile ? `${profile.nombre} ${profile.apellido}` : "Vendedor",
+            store: v.tienda,
+            points: v.puntos_acumulados,
+            sales: v.ventas_totales,
+          };
+        });
+
+        setTopSellers(formattedData.length > 0 ? formattedData : sampleData);
+      }
+
+      setLoading(false);
+    };
+
+    fetchRankings();
+  }, []);
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -42,6 +109,14 @@ const Rankings = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
+        <div className="text-foreground">Cargando rankings...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Header />
@@ -67,48 +142,50 @@ const Rankings = () => {
           </motion.div>
 
           {/* Top 3 Podium */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex justify-center items-end gap-4 mb-12"
-          >
-            {/* 2nd Place */}
-            <div className="text-center">
-              <div className="w-20 h-20 mx-auto mb-2 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center shadow-lg">
-                <Medal className="w-10 h-10 text-white" />
+          {topSellers.length >= 3 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex justify-center items-end gap-4 mb-12"
+            >
+              {/* 2nd Place */}
+              <div className="text-center">
+                <div className="w-20 h-20 mx-auto mb-2 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center shadow-lg">
+                  <Medal className="w-10 h-10 text-white" />
+                </div>
+                <div className="bg-gray-500/20 rounded-t-xl pt-4 pb-8 px-4 w-32">
+                  <p className="font-bold text-foreground text-sm truncate">{topSellers[1]?.name}</p>
+                  <p className="text-xs text-muted-foreground mb-2">{topSellers[1]?.points} pts</p>
+                  <div className="text-2xl font-black text-gray-400">2°</div>
+                </div>
               </div>
-              <div className="bg-gray-500/20 rounded-t-xl pt-4 pb-8 px-4 w-32">
-                <p className="font-bold text-foreground text-sm truncate">{topSellers[1]?.name}</p>
-                <p className="text-xs text-muted-foreground mb-2">{topSellers[1]?.points} pts</p>
-                <div className="text-2xl font-black text-gray-400">2°</div>
-              </div>
-            </div>
 
-            {/* 1st Place */}
-            <div className="text-center -mt-8">
-              <div className="w-24 h-24 mx-auto mb-2 rounded-full bg-gradient-gold flex items-center justify-center shadow-glow-gold">
-                <Trophy className="w-12 h-12 text-skyworth-dark" />
+              {/* 1st Place */}
+              <div className="text-center -mt-8">
+                <div className="w-24 h-24 mx-auto mb-2 rounded-full bg-gradient-gold flex items-center justify-center shadow-glow-gold">
+                  <Trophy className="w-12 h-12 text-skyworth-dark" />
+                </div>
+                <div className="bg-primary/20 rounded-t-xl pt-4 pb-12 px-4 w-36">
+                  <p className="font-bold text-foreground text-sm truncate">{topSellers[0]?.name}</p>
+                  <p className="text-xs text-muted-foreground mb-2">{topSellers[0]?.points} pts</p>
+                  <div className="text-3xl font-black text-gradient-gold">1°</div>
+                </div>
               </div>
-              <div className="bg-primary/20 rounded-t-xl pt-4 pb-12 px-4 w-36">
-                <p className="font-bold text-foreground text-sm truncate">{topSellers[0]?.name}</p>
-                <p className="text-xs text-muted-foreground mb-2">{topSellers[0]?.points} pts</p>
-                <div className="text-3xl font-black text-gradient-gold">1°</div>
-              </div>
-            </div>
 
-            {/* 3rd Place */}
-            <div className="text-center">
-              <div className="w-20 h-20 mx-auto mb-2 rounded-full bg-gradient-to-br from-amber-600 to-amber-700 flex items-center justify-center shadow-lg">
-                <Award className="w-10 h-10 text-white" />
+              {/* 3rd Place */}
+              <div className="text-center">
+                <div className="w-20 h-20 mx-auto mb-2 rounded-full bg-gradient-to-br from-amber-600 to-amber-700 flex items-center justify-center shadow-lg">
+                  <Award className="w-10 h-10 text-white" />
+                </div>
+                <div className="bg-amber-600/20 rounded-t-xl pt-4 pb-6 px-4 w-32">
+                  <p className="font-bold text-foreground text-sm truncate">{topSellers[2]?.name}</p>
+                  <p className="text-xs text-muted-foreground mb-2">{topSellers[2]?.points} pts</p>
+                  <div className="text-2xl font-black text-amber-500">3°</div>
+                </div>
               </div>
-              <div className="bg-amber-600/20 rounded-t-xl pt-4 pb-6 px-4 w-32">
-                <p className="font-bold text-foreground text-sm truncate">{topSellers[2]?.name}</p>
-                <p className="text-xs text-muted-foreground mb-2">{topSellers[2]?.points} pts</p>
-                <div className="text-2xl font-black text-amber-500">3°</div>
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
 
           {/* Full Ranking List */}
           <motion.div
