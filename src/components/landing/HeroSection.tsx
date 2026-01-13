@@ -1,11 +1,38 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Trophy } from "lucide-react";
 import CountdownTimer from "@/components/ui/CountdownTimer";
+import { supabase } from "@/integrations/supabase/client";
 
 const HeroSection = () => {
-  // Fecha del sorteo para el Mundial 2026
-  const sorteoDate = new Date("2026-07-15T20:00:00");
+  const [sorteoDate, setSorteoDate] = useState<Date>(new Date("2026-07-15T20:00:00"));
+  const [campaignName, setCampaignName] = useState("MUNDIAL");
+
+  useEffect(() => {
+    const fetchCampaign = async () => {
+      const { data } = await supabase
+        .from("campaign")
+        .select("name, draw_date")
+        .eq("is_active", true)
+        .single();
+
+      if (data) {
+        if (data.draw_date) {
+          setSorteoDate(new Date(data.draw_date));
+        }
+        if (data.name) {
+          // Extract key word from campaign name for display
+          const words = data.name.split(" ");
+          if (words.length > 1) {
+            setCampaignName(words[1].toUpperCase());
+          }
+        }
+      }
+    };
+
+    fetchCampaign();
+  }, []);
 
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px-4 py-20 overflow-hidden">
@@ -37,7 +64,7 @@ const HeroSection = () => {
           className="text-4xl md:text-6xl lg:text-7xl font-black uppercase mb-4"
         >
           <span className="text-foreground">GANA EL</span>{" "}
-          <span className="text-gradient-gold">MUNDIAL</span>
+          <span className="text-gradient-gold">{campaignName}</span>
         </motion.h1>
 
         <motion.h2

@@ -23,38 +23,49 @@ const Rankings = () => {
 
   useEffect(() => {
     const fetchRankings = async () => {
-      // For now, use sample data as vendedores table needs to be populated
-      // In production, this would fetch from the database
-      const sampleData = [
-        { rank: 1, name: "María García", store: "Tienda Central La Paz", points: 2850, sales: 47 },
-        { rank: 2, name: "Carlos López", store: "Tienda Santa Cruz Norte", points: 2340, sales: 39 },
-        { rank: 3, name: "Ana Rodríguez", store: "Tienda Cochabamba Centro", points: 2100, sales: 35 },
-        { rank: 4, name: "Juan Mamani", store: "Tienda El Alto", points: 1890, sales: 31 },
-        { rank: 5, name: "Rosa Quispe", store: "Tienda Oruro", points: 1650, sales: 27 },
-        { rank: 6, name: "Pedro Flores", store: "Tienda Potosí", points: 1420, sales: 24 },
-        { rank: 7, name: "Lucia Mendoza", store: "Tienda Sucre", points: 1280, sales: 21 },
-        { rank: 8, name: "Diego Vargas", store: "Tienda Tarija", points: 1100, sales: 18 },
-      ];
+      // First try the new sellers table
+      const { data: sellers, error: sellersError } = await supabase
+        .from("sellers")
+        .select("id, user_id, store_name, store_city, total_points, total_sales")
+        .eq("is_active", true)
+        .order("total_points", { ascending: false })
+        .limit(10);
 
-      // Try to fetch real data
+      if (!sellersError && sellers && sellers.length > 0) {
+        // Fetch profiles for sellers
+        const userIds = sellers.map(s => s.user_id);
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, nombre, apellido")
+          .in("user_id", userIds);
+
+        const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+        const formattedData = sellers.map((s, index) => {
+          const profile = profileMap.get(s.user_id);
+          return {
+            rank: index + 1,
+            name: profile ? `${profile.nombre} ${profile.apellido}` : "Vendedor",
+            store: `${s.store_name} - ${s.store_city}`,
+            points: s.total_points,
+            sales: s.total_sales,
+          };
+        });
+
+        setTopSellers(formattedData);
+        setLoading(false);
+        return;
+      }
+
+      // Fallback to vendedores table
       const { data: vendedores, error } = await supabase
         .from("vendedores")
-        .select(`
-          id,
-          user_id,
-          tienda,
-          puntos_acumulados,
-          ventas_totales
-        `)
+        .select("id, user_id, tienda, puntos_acumulados, ventas_totales")
         .eq("estado", "activo")
         .order("puntos_acumulados", { ascending: false })
         .limit(10);
 
-      if (error || !vendedores || vendedores.length === 0) {
-        // Use sample data if no real data available
-        setTopSellers(sampleData);
-      } else {
-        // Fetch profiles separately
+      if (!error && vendedores && vendedores.length > 0) {
         const userIds = vendedores.map(v => v.user_id);
         const { data: profiles } = await supabase
           .from("profiles")
@@ -74,7 +85,10 @@ const Rankings = () => {
           };
         });
 
-        setTopSellers(formattedData.length > 0 ? formattedData : sampleData);
+        setTopSellers(formattedData);
+      } else {
+        // No data available - show empty state
+        setTopSellers([]);
       }
 
       setLoading(false);
@@ -184,6 +198,24 @@ const Rankings = () => {
                   <div className="text-2xl font-black text-amber-500">3°</div>
                 </div>
               </div>
+            </motion.div>
+          )}
+
+          {/* Empty State */}
+          {topSellers.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-card rounded-2xl shadow-card p-12 text-center mb-8"
+            >
+              <Trophy className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-xl font-bold text-card-foreground mb-2">
+                Aún no hay vendedores en el ranking
+              </h3>
+              <p className="text-muted-foreground">
+                ¡Sé el primero en registrar ventas y aparecer aquí!
+              </p>
             </motion.div>
           )}
 
