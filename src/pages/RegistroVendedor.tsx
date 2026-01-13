@@ -1,20 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trophy, User, Mail, Lock, Store, Eye, EyeOff, ArrowLeft, CheckCircle } from "lucide-react";
+import { Store, User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, IdCard, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const RegistroVendedor = () => {
   const navigate = useNavigate();
+  const { user, signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [formData, setFormData] = useState({
     nombre: "",
+    apellido: "",
+    cedula: "",
+    telefono: "",
     email: "",
     password: "",
     tienda: "",
@@ -29,13 +35,74 @@ const RegistroVendedor = () => {
     "Otra tienda autorizada",
   ];
 
+  useEffect(() => {
+    if (user && !isSuccess) {
+      navigate("/");
+    }
+  }, [user, navigate, isSuccess]);
+
+  const generateVendorCode = () => {
+    const prefix = "VND";
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return `${prefix}-${random}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulación de registro
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Register with Supabase Auth
+    const { error: authError } = await signUp(formData.email, formData.password, {
+      nombre: formData.nombre,
+      apellido: formData.apellido,
+      telefono: formData.telefono,
+    });
+
+    if (authError) {
+      if (authError.message.includes("User already registered")) {
+        toast.error("Este email ya está registrado. Intenta iniciar sesión.");
+      } else if (authError.message.includes("Password")) {
+        toast.error("La contraseña debe tener al menos 6 caracteres.");
+      } else {
+        toast.error(authError.message);
+      }
+      setIsLoading(false);
+      return;
+    }
+
+    // Get the newly created user
+    const { data: { user: newUser } } = await supabase.auth.getUser();
     
+    if (newUser) {
+      // Create vendedor record
+      const { error: vendedorError } = await supabase.from("vendedores").insert({
+        user_id: newUser.id,
+        cedula: formData.cedula,
+        email: formData.email,
+        telefono: formData.telefono,
+        tienda: formData.tienda,
+        codigo_vendedor: generateVendorCode(),
+        estado: "pendiente",
+      });
+
+      if (vendedorError) {
+        console.error("Error creating vendedor:", vendedorError);
+        toast.error("Error al crear el perfil de vendedor. Contacta al administrador.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Assign vendedor role
+      const { error: roleError } = await supabase.from("user_roles").insert({
+        user_id: newUser.id,
+        role: "vendedor",
+      });
+
+      if (roleError) {
+        console.error("Error assigning role:", roleError);
+      }
+    }
+
     setIsSuccess(true);
     toast.success("¡Registro completado exitosamente!");
     setIsLoading(false);
@@ -62,7 +129,7 @@ const RegistroVendedor = () => {
             ¡Registro Exitoso!
           </h1>
           <p className="text-muted-foreground mb-8">
-            Tu cuenta de vendedor ha sido creada. Ya puedes iniciar sesión y empezar a registrar ventas.
+            Tu cuenta de vendedor ha sido creada y está pendiente de aprobación. Ya puedes iniciar sesión.
           </p>
 
           <Button
@@ -108,18 +175,68 @@ const RegistroVendedor = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="nombre" className="text-card-foreground">
+                  Nombre
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="nombre"
+                    placeholder="Tu nombre"
+                    value={formData.nombre}
+                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                    className="pl-10 bg-background border-input text-foreground"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="apellido" className="text-card-foreground">
+                  Apellido
+                </Label>
+                <Input
+                  id="apellido"
+                  placeholder="Tu apellido"
+                  value={formData.apellido}
+                  onChange={(e) => setFormData({ ...formData, apellido: e.target.value })}
+                  className="bg-background border-input text-foreground"
+                  required
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <Label htmlFor="nombre" className="text-card-foreground">
-                Nombre completo
+              <Label htmlFor="cedula" className="text-card-foreground">
+                Carnet de Identidad
               </Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                  id="nombre"
-                  placeholder="Tu nombre completo"
-                  value={formData.nombre}
-                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                  id="cedula"
+                  placeholder="12345678"
+                  value={formData.cedula}
+                  onChange={(e) => setFormData({ ...formData, cedula: e.target.value })}
+                  className="pl-10 bg-background border-input text-foreground"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="telefono" className="text-card-foreground">
+                Teléfono
+              </Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  id="telefono"
+                  placeholder="+591 12345678"
+                  value={formData.telefono}
+                  onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
                   className="pl-10 bg-background border-input text-foreground"
                   required
                 />
@@ -158,6 +275,7 @@ const RegistroVendedor = () => {
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="pl-10 pr-10 bg-background border-input text-foreground"
                   required
+                  minLength={6}
                 />
                 <button
                   type="button"
@@ -190,7 +308,7 @@ const RegistroVendedor = () => {
 
             <Button
               type="submit"
-              disabled={isLoading || !formData.nombre || !formData.email || !formData.password || !formData.tienda}
+              disabled={isLoading || !formData.nombre || !formData.apellido || !formData.cedula || !formData.telefono || !formData.email || !formData.password || !formData.tienda}
               className="w-full bg-gradient-green text-primary-foreground font-bold uppercase tracking-wider py-6"
             >
               {isLoading ? "Creando cuenta..." : "Crear cuenta"}
