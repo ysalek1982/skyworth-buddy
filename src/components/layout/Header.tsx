@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Menu, X, Store, LogOut, User } from "lucide-react";
+import { Trophy, Menu, X, Store, LogOut, User, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut, loading } = useAuth();
+  const { user, signOut, loading, isAdmin } = useAuth();
 
   const navLinks = [
     { href: "/", label: "Inicio" },
@@ -65,6 +65,14 @@ const Header = () => {
               <>
                 {user ? (
                   <div className="hidden sm:flex items-center gap-2">
+                    {isAdmin && (
+                      <Link to="/admin">
+                        <Button variant="outline" size="sm" className="border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-white">
+                          <Shield className="w-4 h-4 mr-2" />
+                          Admin
+                        </Button>
+                      </Link>
+                    )}
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
                       <User className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm text-foreground">{user.email?.split("@")[0]}</span>
@@ -127,6 +135,16 @@ const Header = () => {
               <div className="pt-2 border-t border-border mt-2">
                 {user ? (
                   <div className="space-y-2">
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-amber-500"
+                      >
+                        <Shield className="w-4 h-4" />
+                        Panel Admin
+                      </Link>
+                    )}
                     <div className="flex items-center gap-2 px-4 py-2 text-sm text-foreground">
                       <User className="w-4 h-4" />
                       {user.email}

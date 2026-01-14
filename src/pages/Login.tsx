@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, signIn } = useAuth();
+  const { user, signIn, isAdmin, isSeller, rolesLoaded } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -19,10 +19,17 @@ const Login = () => {
   });
 
   useEffect(() => {
-    if (user) {
-      navigate("/");
+    if (user && rolesLoaded) {
+      // Redirect based on role
+      if (isAdmin) {
+        navigate("/admin");
+      } else if (isSeller) {
+        navigate("/dashboard-vendedor");
+      } else {
+        navigate("/");
+      }
     }
-  }, [user, navigate]);
+  }, [user, rolesLoaded, isAdmin, isSeller, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
