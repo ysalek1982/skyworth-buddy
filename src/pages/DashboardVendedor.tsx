@@ -21,7 +21,6 @@ import {
   Plus,
   Loader2,
   MapPin,
-  Store,
   Phone
 } from 'lucide-react';
 
@@ -198,13 +197,9 @@ function DashboardContent() {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            ¡Hola, {seller.store_name}!
+            ¡Hola!
           </h1>
           <div className="flex flex-wrap gap-4 text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Store className="h-4 w-4" />
-              {seller.store_name}
-            </span>
             <span className="flex items-center gap-1">
               <MapPin className="h-4 w-4" />
               {seller.store_city}

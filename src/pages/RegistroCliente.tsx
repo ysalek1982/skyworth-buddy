@@ -1,31 +1,29 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trophy, User, IdCard, Phone, Upload, ArrowLeft, CheckCircle, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Trophy, User, IdCard, Phone, Upload, ArrowLeft, CheckCircle, Mail, Tv } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 
 const RegistroCliente = () => {
   const navigate = useNavigate();
-  const { user, signUp } = useAuth();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [generatedCoupons, setGeneratedCoupons] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",
     ci: "",
     telefono: "",
     email: "",
-    password: "",
     departamento: "",
+    serialNumber: "",
     factura: null as File | null,
   });
 
@@ -41,13 +39,6 @@ const RegistroCliente = () => {
     "Pando",
   ];
 
-  useEffect(() => {
-    if (user && step !== 3) {
-      // If user is already logged in, skip to step 2
-      setStep(2);
-    }
-  }, [user, step]);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -59,76 +50,55 @@ const RegistroCliente = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    let currentUser = user;
-
-    // If not logged in, create account first
-    if (!currentUser) {
-      const { error: authError } = await signUp(formData.email, formData.password, {
-        nombre: formData.nombre,
-        apellido: formData.apellido,
-        telefono: formData.telefono,
+    try {
+      // Call the RPC function to register the buyer serial (no auth required)
+      const { data, error } = await supabase.rpc('rpc_register_buyer_serial', {
+        p_serial_number: formData.serialNumber,
+        p_full_name: `${formData.nombre} ${formData.apellido}`,
+        p_dni: formData.ci,
+        p_email: formData.email,
+        p_phone: formData.telefono,
+        p_city: formData.departamento,
+        p_purchase_date: new Date().toISOString().split('T')[0],
+        p_user_id: null
       });
 
-      if (authError) {
-        if (authError.message.includes("User already registered")) {
-          toast.error("Este email ya está registrado. Intenta iniciar sesión.");
-        } else {
-          toast.error(authError.message);
-        }
+      if (error) throw error;
+
+      const result = data as { success: boolean; error?: string; coupons?: string[] };
+
+      if (!result.success) {
+        toast.error(result.error || 'Error al registrar el serial');
         setIsLoading(false);
         return;
       }
 
-      // Get the newly created user
-      const { data: { user: newUser } } = await supabase.auth.getUser();
-      currentUser = newUser;
-    }
-
-    if (currentUser) {
-      // Check if cliente already exists
-      const { data: existingCliente } = await supabase
-        .from("clientes")
-        .select("id")
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
-
-      if (!existingCliente) {
-        // Create cliente record
-        const { error: clienteError } = await supabase.from("clientes").insert({
-          user_id: currentUser.id,
-          cedula: formData.ci,
-          email: formData.email || currentUser.email,
-          telefono: formData.telefono,
-          estado: "activo",
-        });
-
-        if (clienteError) {
-          console.error("Error creating cliente:", clienteError);
-          toast.error("Error al crear el perfil de cliente.");
-          setIsLoading(false);
-          return;
-        }
-
-        // Assign cliente role
-        await supabase.from("user_roles").insert({
-          user_id: currentUser.id,
-          role: "cliente",
-        });
+      // Store generated coupons
+      if (result.coupons) {
+        setGeneratedCoupons(result.coupons);
       }
-    }
 
-    setStep(3);
-    toast.success("¡Registro completado exitosamente!");
-    setIsLoading(false);
+      setStep(3);
+      toast.success("¡Registro completado exitosamente!");
+    } catch (error: any) {
+      console.error("Error registering purchase:", error);
+      toast.error(error.message || "Error al registrar la compra");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const nextStep = () => {
-    if (step === 1 && formData.nombre && formData.apellido && formData.ci && formData.telefono && formData.departamento) {
-      if (!user && (!formData.email || !formData.password)) {
-        toast.error("Por favor ingresa tu email y contraseña.");
-        return;
-      }
+    if (step === 1 && formData.nombre && formData.apellido && formData.ci && formData.telefono && formData.departamento && formData.email) {
       setStep(2);
+    } else {
+      toast.error("Por favor completa todos los campos requeridos.");
+    }
+  };
+
+  const prevStep = () => {
+    if (step > 1) {
+      setStep(step - 1);
     }
   };
 
@@ -276,58 +246,28 @@ const RegistroCliente = () => {
                     </Select>
                   </div>
 
-                  {!user && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="email" className="text-card-foreground">
-                          Correo electrónico
-                        </Label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                          <Input
-                            id="email"
-                            type="email"
-                            placeholder="tu@email.com"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            className="pl-10 bg-background border-input text-foreground"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="password" className="text-card-foreground">
-                          Contraseña
-                        </Label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                          <Input
-                            id="password"
-                            type={showPassword ? "text" : "password"}
-                            placeholder="••••••••"
-                            value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            className="pl-10 pr-10 bg-background border-input text-foreground"
-                            required
-                            minLength={6}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          >
-                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-card-foreground">
+                      Correo electrónico
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="tu@email.com"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="pl-10 bg-background border-input text-foreground"
+                        required
+                      />
+                    </div>
+                  </div>
 
                   <Button
                     type="button"
                     onClick={nextStep}
-                    disabled={!formData.nombre || !formData.apellido || !formData.ci || !formData.telefono || !formData.departamento || (!user && (!formData.email || !formData.password))}
+                    disabled={!formData.nombre || !formData.apellido || !formData.ci || !formData.telefono || !formData.departamento || !formData.email}
                     className="w-full bg-gradient-green text-primary-foreground font-bold uppercase tracking-wider py-6"
                   >
                     Continuar
@@ -340,14 +280,31 @@ const RegistroCliente = () => {
               <>
                 <div className="text-center mb-8">
                   <h1 className="text-2xl font-black text-card-foreground uppercase mb-2">
-                    Sube tu Factura
+                    Datos de Compra
                   </h1>
                   <p className="text-muted-foreground text-sm">
-                    Adjunta la factura de tu compra Skyworth
+                    Ingresa el serial de tu TV y adjunta la factura
                   </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="serialNumber" className="text-card-foreground">
+                      Número de Serial del TV *
+                    </Label>
+                    <div className="relative">
+                      <Tv className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        id="serialNumber"
+                        placeholder="Ej: SKW123456789"
+                        value={formData.serialNumber}
+                        onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
+                        className="pl-10 bg-background border-input text-foreground"
+                        required
+                      />
+                    </div>
+                  </div>
+
                   <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary transition-colors cursor-pointer">
                     <input
                       type="file"
@@ -377,14 +334,14 @@ const RegistroCliente = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setStep(1)}
+                      onClick={prevStep}
                       className="flex-1 border-border text-foreground"
                     >
                       Atrás
                     </Button>
                     <Button
                       type="submit"
-                      disabled={!formData.factura || isLoading}
+                      disabled={!formData.serialNumber || !formData.factura || isLoading}
                       className="flex-1 bg-gradient-green text-primary-foreground font-bold uppercase tracking-wider"
                     >
                       {isLoading ? "Procesando..." : "Registrar"}
@@ -416,10 +373,19 @@ const RegistroCliente = () => {
                   <div className="flex items-center justify-center gap-4">
                     <Trophy className="w-8 h-8 text-primary" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Tickets generados</p>
-                      <p className="text-3xl font-black text-gradient-gold">2</p>
+                      <p className="text-sm text-muted-foreground">Cupones generados</p>
+                      <p className="text-3xl font-black text-gradient-gold">{generatedCoupons.length}</p>
                     </div>
                   </div>
+                  {generatedCoupons.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      {generatedCoupons.map((coupon, idx) => (
+                        <div key={idx} className="bg-background rounded-lg p-3 font-mono text-center text-foreground">
+                          {coupon}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <Button
