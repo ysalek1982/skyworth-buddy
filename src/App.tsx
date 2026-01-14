@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import RegistroCliente from "./pages/RegistroCliente";
@@ -27,46 +28,48 @@ const LoadingFallback = () => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/registro-cliente" element={<RegistroCliente />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/registro-vendedor" element={<RegistroVendedor />} />
-            <Route path="/rankings" element={<Rankings />} />
-            <Route path="/resultados" element={<Resultados />} />
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/registro-cliente" element={<RegistroCliente />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/registro-vendedor" element={<RegistroVendedor />} />
+              <Route path="/rankings" element={<Rankings />} />
+              <Route path="/resultados" element={<Resultados />} />
 
-            {/* Protected seller routes */}
-            <Route
-              path="/dashboard-vendedor"
-              element={
-                <ProtectedRoute requiredRole="seller">
-                  <DashboardVendedor />
-                </ProtectedRoute>
-              }
-            />
+              {/* Protected seller routes */}
+              <Route
+                path="/dashboard-vendedor"
+                element={
+                  <ProtectedRoute requiredRole="seller">
+                    <DashboardVendedor />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Protected admin routes */}
-            <Route
-              path="/admin/*"
-              element={
-                <ProtectedRoute requiredRole="admin">
-                  <Admin />
-                </ProtectedRoute>
-              }
-            />
+              {/* Protected admin routes */}
+              <Route
+                path="/admin/*"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <Admin />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </TooltipProvider>
+              {/* 404 */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
