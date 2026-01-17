@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Tv, Ticket } from "lucide-react";
+import { Ticket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 
 interface Product {
   id: string;
   model_name: string;
-  model_key: string | null;
-  tier: string;
-  ticket_multiplier: number;
   description: string | null;
-  image_url: string | null;
+  ticket_multiplier: number;
 }
 
 const ProductsSection = () => {
@@ -21,13 +19,13 @@ const ProductsSection = () => {
     const fetchProducts = async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, model_name, model_key, tier, ticket_multiplier, description, image_url")
+        .select("id, model_name, description, ticket_multiplier")
         .eq("is_active", true)
         .order("ticket_multiplier", { ascending: false });
 
       if (error) {
         console.error("Error fetching products:", error);
-      } else if (data && data.length > 0) {
+      } else if (data) {
         setProducts(data);
       }
       setLoading(false);
@@ -36,47 +34,38 @@ const ProductsSection = () => {
     fetchProducts();
   }, []);
 
-  const getTierLabel = (tier: string) => {
-    switch (tier) {
-      case 'T1': return 'Premium';
-      case 'T2': return 'Mid';
-      case 'T3': return 'Standard';
-      default: return tier;
-    }
-  };
-
-  const getTierColor = (tier: string) => {
-    switch (tier) {
-      case 'T1': return 'bg-gradient-gold text-skyworth-dark';
-      case 'T2': return 'bg-secondary text-white';
-      case 'T3': return 'bg-muted text-foreground';
-      default: return 'bg-muted text-foreground';
+  const getTicketBadgeColor = (multiplier: number) => {
+    switch (multiplier) {
+      case 4:
+        return "bg-gradient-gold text-skyworth-dark font-bold";
+      case 3:
+        return "bg-green-500 text-white font-bold";
+      case 2:
+        return "bg-blue-500 text-white font-bold";
+      default:
+        return "bg-muted text-foreground font-bold";
     }
   };
 
   if (loading) {
     return (
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto text-center">
+      <section id="modelos" className="py-20 px-4 scroll-mt-24">
+        <div className="max-w-4xl mx-auto text-center">
           <div className="text-muted-foreground">Cargando productos...</div>
         </div>
       </section>
     );
   }
 
-  if (products.length === 0) {
-    return null;
-  }
-
   return (
-    <section className="py-20 px-4">
-      <div className="max-w-6xl mx-auto">
+    <section id="modelos" className="py-20 px-4 scroll-mt-24">
+      <div className="max-w-4xl mx-auto">
         {/* Section Title */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-12"
         >
           <h2 className="text-4xl md:text-5xl font-black uppercase mb-4">
             <span className="text-foreground">MODELOS </span>
@@ -87,90 +76,61 @@ const ProductsSection = () => {
           </p>
         </motion.div>
 
-        {/* Products Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((product, index) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.05 }}
-              className="product-card group"
-            >
-              {/* Product Image */}
-              <div className="relative h-40 bg-gradient-card-green flex items-center justify-center overflow-hidden">
-                {product.image_url ? (
-                  <img 
-                    src={product.image_url} 
-                    alt={product.model_name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <Tv className="w-20 h-20 text-foreground/20" />
-                )}
-
-                {/* Tier Badge */}
-                <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold ${getTierColor(product.tier)}`}>
-                  {getTierLabel(product.tier)}
-                </div>
-              </div>
-
-              {/* Product Info */}
-              <div className="p-5">
-                <h3 className="text-lg font-bold text-foreground mb-1">
-                  {product.model_name}
-                </h3>
-
-                {product.description && (
-                  <p className="text-sm text-muted-foreground mb-3">
-                    {product.description}
-                  </p>
-                )}
-
-                {/* Tickets */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                      <Ticket className="w-4 h-4 text-primary" />
+        {/* Products Table */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="bg-card rounded-2xl shadow-card overflow-hidden"
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-skyworth-dark/80 text-white">
+                  <th className="px-6 py-4 text-left font-bold uppercase text-sm">Modelo</th>
+                  <th className="px-6 py-4 text-left font-bold uppercase text-sm">Descripción</th>
+                  <th className="px-6 py-4 text-center font-bold uppercase text-sm">
+                    <div className="flex items-center justify-center gap-2">
+                      <Ticket className="w-4 h-4" />
+                      Nro de Tickets
                     </div>
-                    <div>
-                      <span className="font-black text-xl text-primary">
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {products.map((product, index) => (
+                  <motion.tr
+                    key={product.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.05 }}
+                    className="hover:bg-muted/50 transition-colors"
+                  >
+                    <td className="px-6 py-4">
+                      <span className="font-bold text-foreground">{product.model_name}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-muted-foreground">{product.description || "-"}</span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <Badge className={`text-lg px-4 py-1 ${getTicketBadgeColor(product.ticket_multiplier)}`}>
                         {product.ticket_multiplier}
-                      </span>
-                      <span className="text-sm text-muted-foreground ml-1">
-                        {product.ticket_multiplier === 1 ? 'ticket' : 'tickets'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Visual indicator */}
-                  <div className="flex gap-1">
-                    {[...Array(product.ticket_multiplier)].map((_, i) => (
-                      <div 
-                        key={i} 
-                        className="w-2 h-2 rounded-full bg-primary"
-                      />
-                    ))}
-                    {[...Array(Math.max(0, 4 - product.ticket_multiplier))].map((_, i) => (
-                      <div 
-                        key={i} 
-                        className="w-2 h-2 rounded-full bg-muted"
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                      </Badge>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
 
         {/* Legend */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="mt-12 text-center"
+          className="mt-8 text-center"
         >
           <p className="text-sm text-muted-foreground">
             Cada ticket es una oportunidad de ganar el viaje al Mundial 2026 🏆

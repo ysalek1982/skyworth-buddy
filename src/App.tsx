@@ -7,16 +7,24 @@ import { lazy, Suspense } from "react";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
-import RegistroCliente from "./pages/RegistroCliente";
 import NotFound from "./pages/NotFound";
 
-// Lazy load protected pages
-const Login = lazy(() => import("./pages/Login"));
-const RegistroVendedor = lazy(() => import("./pages/RegistroVendedor"));
+// Public pages
 const Rankings = lazy(() => import("./pages/Rankings"));
-const DashboardVendedor = lazy(() => import("./pages/DashboardVendedor"));
-const Admin = lazy(() => import("./pages/Admin"));
 const Resultados = lazy(() => import("./pages/Resultados"));
+
+// Vendedores pages (separate context)
+const VendedoresHome = lazy(() => import("./pages/vendedores/VendedoresHome"));
+const VendedoresLogin = lazy(() => import("./pages/vendedores/VendedoresLogin"));
+const VendedoresRegistro = lazy(() => import("./pages/vendedores/VendedoresRegistro"));
+const VendedoresDashboard = lazy(() => import("./pages/vendedores/VendedoresDashboard"));
+const VendedoresRanking = lazy(() => import("./pages/vendedores/VendedoresRanking"));
+
+// Admin
+const Admin = lazy(() => import("./pages/Admin"));
+
+// Legacy routes (redirect)
+const Login = lazy(() => import("./pages/Login"));
 
 const queryClient = new QueryClient();
 
@@ -35,23 +43,20 @@ const App = () => (
         <BrowserRouter>
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
-              {/* Public routes */}
+              {/* Public routes - one-page landing */}
               <Route path="/" element={<Index />} />
-              <Route path="/registro-cliente" element={<RegistroCliente />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/registro-vendedor" element={<RegistroVendedor />} />
               <Route path="/rankings" element={<Rankings />} />
               <Route path="/resultados" element={<Resultados />} />
 
-              {/* Protected seller routes */}
-              <Route
-                path="/dashboard-vendedor"
-                element={
-                  <ProtectedRoute requiredRole="seller">
-                    <DashboardVendedor />
-                  </ProtectedRoute>
-                }
-              />
+              {/* Vendedores routes - separate context */}
+              <Route path="/vendedores" element={<VendedoresHome />} />
+              <Route path="/vendedores/login" element={<VendedoresLogin />} />
+              <Route path="/vendedores/registro" element={<VendedoresRegistro />} />
+              <Route path="/vendedores/dashboard" element={<VendedoresDashboard />} />
+              <Route path="/vendedores/ranking" element={<VendedoresRanking />} />
+
+              {/* Legacy login redirect */}
+              <Route path="/login" element={<Login />} />
 
               {/* Protected admin routes */}
               <Route
