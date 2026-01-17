@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Ticket } from "lucide-react";
+import { Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -31,7 +31,7 @@ const ProductsSection = () => {
     fetchProducts();
   }, []);
 
-  const getTicketBadgeClass = (count: number) => {
+  const getCouponBadgeClass = (count: number) => {
     if (count >= 4) return "tier-4";
     if (count >= 3) return "tier-3";
     if (count >= 2) return "tier-2";
@@ -49,14 +49,14 @@ const ProductsSection = () => {
           className="text-center mb-12"
         >
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-blue shadow-glow-blue mb-4">
-            <Ticket className="w-8 h-8 text-white" />
+            <Gift className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-4xl md:text-5xl font-black uppercase mb-4">
             <span className="text-white">MODELOS </span>
             <span className="text-gradient-orange">PARTICIPANTES</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            Cada modelo te da un número diferente de tickets para participar
+            Cada modelo te da un número diferente de cupones para participar
           </p>
         </motion.div>
 
@@ -79,7 +79,7 @@ const ProductsSection = () => {
                   <tr>
                     <th>Modelo</th>
                     <th>Descripción</th>
-                    <th className="text-center">Nro de Tickets</th>
+                    <th className="text-center">Nro de Cupones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -94,7 +94,7 @@ const ProductsSection = () => {
                       <td className="font-bold text-white">{product.model_name}</td>
                       <td>{product.description || "-"}</td>
                       <td className="text-center">
-                        <span className={`ticket-badge ${getTicketBadgeClass(product.ticket_multiplier)}`}>
+                        <span className={`ticket-badge ${getCouponBadgeClass(product.ticket_multiplier)}`}>
                           {product.ticket_multiplier}
                           <span className="ml-1.5">
                             {Array.from({ length: Math.min(product.ticket_multiplier, 4) }).map((_, i) => (

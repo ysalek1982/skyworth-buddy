@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Trophy, User, IdCard, Phone, Upload, CheckCircle, Mail, Tv, ArrowLeft, Loader2, AlertCircle, XCircle } from "lucide-react";
+import { Trophy, User, IdCard, Phone, Upload, CheckCircle, Mail, Tv, ArrowLeft, Loader2, AlertCircle, XCircle, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -493,11 +493,11 @@ const RegistroCompraForm = () => {
                     </p>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
                       <div>
-                        <span className="text-muted-foreground text-xs uppercase">Modelo:</span>
+                  <span className="text-muted-foreground text-xs uppercase">Modelo:</span>
                         <p className="text-white font-medium">{serialValidation.productName}</p>
                       </div>
                       <div>
-                        <span className="text-muted-foreground text-xs uppercase">Tickets a generar:</span>
+                        <span className="text-muted-foreground text-xs uppercase">Cupones a generar:</span>
                         <p className="text-2xl font-black text-gradient-orange">{serialValidation.ticketCount}</p>
                       </div>
                     </div>
@@ -571,20 +571,20 @@ const RegistroCompraForm = () => {
               ¡Registro Exitoso!
             </h3>
             <p className="text-muted-foreground mb-8">
-              Tu compra ha sido registrada. Recibirás tus tickets por correo electrónico.
+              Tu compra ha sido registrada. Recibirás tus cupones por correo electrónico.
             </p>
 
             <div className="bg-muted/30 rounded-xl p-6 mb-8 border border-border">
               <div className="flex items-center justify-center gap-4">
-                <Trophy className="w-8 h-8 text-primary" />
+                <Gift className="w-8 h-8 text-primary" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Tickets generados</p>
+                  <p className="text-sm text-muted-foreground">Cupones generados</p>
                   <p className="text-4xl font-black text-gradient-orange">{generatedCoupons.length}</p>
                 </div>
               </div>
               {generatedCoupons.length > 0 && (
                 <div className="mt-6 space-y-2">
-                  <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Tus códigos:</p>
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Tus cupones:</p>
                   {generatedCoupons.map((coupon, idx) => (
                     <div key={idx} className="bg-muted/50 rounded-lg p-3 font-mono text-center text-white border border-border">
                       {coupon}

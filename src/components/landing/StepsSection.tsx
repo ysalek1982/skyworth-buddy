@@ -18,7 +18,7 @@ const StepsSection = () => {
     {
       number: "03",
       title: "PARTICIPA",
-      description: "Recibe tus tickets únicos y prepárate para ganar el viaje al Repechaje.",
+      description: "Recibe tus cupones únicos y prepárate para ganar el viaje al Repechaje.",
       icon: Ticket,
     },
   ];
