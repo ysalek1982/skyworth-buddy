@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Trophy, User, IdCard, Phone, Upload, CheckCircle, Mail, Tv, ArrowLeft } from "lucide-react";
+import { Trophy, User, IdCard, Phone, Upload, CheckCircle, Mail, Tv, ArrowLeft, Loader2, AlertCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,10 +20,25 @@ const departamentos = [
   "Pando",
 ];
 
+interface SerialValidation {
+  isValid: boolean;
+  isChecking: boolean;
+  error: string | null;
+  productName: string | null;
+  ticketCount: number | null;
+}
+
 const RegistroCompraForm = () => {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [generatedCoupons, setGeneratedCoupons] = useState<string[]>([]);
+  const [serialValidation, setSerialValidation] = useState<SerialValidation>({
+    isValid: false,
+    isChecking: false,
+    error: null,
+    productName: null,
+    ticketCount: null,
+  });
   const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",
@@ -35,6 +50,132 @@ const RegistroCompraForm = () => {
     factura: null as File | null,
   });
 
+  // Normalize serial: trim, uppercase, remove duplicate spaces
+  const normalizeSerial = (serial: string): string => {
+    return serial.trim().replace(/\s+/g, ' ').toUpperCase();
+  };
+
+  // Validate serial against database
+  const validateSerial = useCallback(async (serialNumber: string) => {
+    const normalized = normalizeSerial(serialNumber);
+    
+    if (!normalized) {
+      setSerialValidation({
+        isValid: false,
+        isChecking: false,
+        error: null,
+        productName: null,
+        ticketCount: null,
+      });
+      return;
+    }
+
+    setSerialValidation(prev => ({ ...prev, isChecking: true, error: null }));
+
+    try {
+      // Query tv_serials table for the serial
+      const { data: serialData, error: serialError } = await supabase
+        .from("tv_serials")
+        .select(`
+          id,
+          serial_number,
+          status,
+          buyer_status,
+          product_id,
+          products (
+            id,
+            model_name,
+            description,
+            ticket_multiplier
+          )
+        `)
+        .eq("serial_number", normalized)
+        .maybeSingle();
+
+      if (serialError) {
+        throw serialError;
+      }
+
+      if (!serialData) {
+        setSerialValidation({
+          isValid: false,
+          isChecking: false,
+          error: "Serial no encontrado. Verifica el Número de Serial del TV.",
+          productName: null,
+          ticketCount: null,
+        });
+        return;
+      }
+
+      // Check if serial is blocked
+      if (serialData.status === "BLOCKED") {
+        setSerialValidation({
+          isValid: false,
+          isChecking: false,
+          error: "Este serial está bloqueado y no puede participar.",
+          productName: null,
+          ticketCount: null,
+        });
+        return;
+      }
+
+      // Check if already registered by a buyer
+      if (serialData.buyer_status === "REGISTERED") {
+        setSerialValidation({
+          isValid: false,
+          isChecking: false,
+          error: "Este serial ya fue registrado por otro comprador.",
+          productName: null,
+          ticketCount: null,
+        });
+        return;
+      }
+
+      // Serial is valid and available
+      const product = serialData.products as { model_name: string; description: string; ticket_multiplier: number } | null;
+      
+      setSerialValidation({
+        isValid: true,
+        isChecking: false,
+        error: null,
+        productName: product ? `${product.model_name} - ${product.description}` : "Producto Skyworth",
+        ticketCount: product?.ticket_multiplier || 1,
+      });
+
+    } catch (error: any) {
+      console.error("Error validating serial:", error);
+      setSerialValidation({
+        isValid: false,
+        isChecking: false,
+        error: "Error al validar el serial. Intenta nuevamente.",
+        productName: null,
+        ticketCount: null,
+      });
+    }
+  }, []);
+
+  // Handle serial input blur
+  const handleSerialBlur = () => {
+    if (formData.serialNumber.trim()) {
+      validateSerial(formData.serialNumber);
+    }
+  };
+
+  // Handle serial input change
+  const handleSerialChange = (value: string) => {
+    setFormData({ ...formData, serialNumber: value });
+    // Reset validation when typing
+    if (serialValidation.isValid || serialValidation.error) {
+      setSerialValidation({
+        isValid: false,
+        isChecking: false,
+        error: null,
+        productName: null,
+        ticketCount: null,
+      });
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -44,11 +185,23 @@ const RegistroCompraForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate serial before submit
+    if (!serialValidation.isValid) {
+      await validateSerial(formData.serialNumber);
+      if (!serialValidation.isValid) {
+        toast.error("Por favor verifica el número de serial antes de continuar.");
+        return;
+      }
+    }
+
     setIsLoading(true);
 
     try {
+      const normalizedSerial = normalizeSerial(formData.serialNumber);
+      
       const { data, error } = await supabase.rpc('rpc_register_buyer_serial', {
-        p_serial_number: formData.serialNumber,
+        p_serial_number: normalizedSerial,
         p_full_name: `${formData.nombre} ${formData.apellido}`,
         p_dni: formData.ci,
         p_email: formData.email,
@@ -99,6 +252,13 @@ const RegistroCompraForm = () => {
   const resetForm = () => {
     setStep(1);
     setGeneratedCoupons([]);
+    setSerialValidation({
+      isValid: false,
+      isChecking: false,
+      error: null,
+      productName: null,
+      ticketCount: null,
+    });
     setFormData({
       nombre: "",
       apellido: "",
@@ -111,6 +271,14 @@ const RegistroCompraForm = () => {
     });
   };
 
+  // Get serial input class based on validation state
+  const getSerialInputClass = () => {
+    if (serialValidation.isChecking) return "serial-checking";
+    if (serialValidation.isValid) return "serial-valid";
+    if (serialValidation.error) return "serial-invalid";
+    return "";
+  };
+
   return (
     <div className="max-w-2xl mx-auto">
       {/* Progress Steps */}
@@ -120,7 +288,7 @@ const RegistroCompraForm = () => {
             <div
               className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
                 step >= s
-                  ? "bg-gradient-gold text-skyworth-dark"
+                  ? "bg-gradient-orange text-white"
                   : "bg-muted text-muted-foreground"
               }`}
             >
@@ -137,17 +305,17 @@ const RegistroCompraForm = () => {
         ))}
       </div>
 
-      {/* Form Card */}
+      {/* Form Card - Dark Glass */}
       <motion.div
         key={step}
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
-        className="bg-card rounded-2xl p-6 sm:p-8 shadow-card"
+        className="form-dark-panel"
       >
         {step === 1 && (
           <>
             <div className="text-center mb-8">
-              <h3 className="text-2xl font-black text-card-foreground uppercase mb-2">
+              <h3 className="text-2xl font-black text-white uppercase mb-2">
                 Datos Personales
               </h3>
               <p className="text-muted-foreground text-sm">
@@ -158,7 +326,7 @@ const RegistroCompraForm = () => {
             <form className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="nombre" className="text-card-foreground">Nombre</Label>
+                  <Label htmlFor="nombre" className="text-white">Nombre *</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <Input
@@ -166,27 +334,27 @@ const RegistroCompraForm = () => {
                       placeholder="Tu nombre"
                       value={formData.nombre}
                       onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                      className="pl-10 bg-background border-input text-foreground"
+                      className="pl-10 bg-muted/50 border-border text-white placeholder:text-muted-foreground"
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="apellido" className="text-card-foreground">Apellido</Label>
+                  <Label htmlFor="apellido" className="text-white">Apellido *</Label>
                   <Input
                     id="apellido"
                     placeholder="Tu apellido"
                     value={formData.apellido}
                     onChange={(e) => setFormData({ ...formData, apellido: e.target.value })}
-                    className="bg-background border-input text-foreground"
+                    className="bg-muted/50 border-border text-white placeholder:text-muted-foreground"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="ci" className="text-card-foreground">Carnet de Identidad</Label>
+                <Label htmlFor="ci" className="text-white">Carnet de Identidad *</Label>
                 <div className="relative">
                   <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
@@ -194,14 +362,14 @@ const RegistroCompraForm = () => {
                     placeholder="12345678"
                     value={formData.ci}
                     onChange={(e) => setFormData({ ...formData, ci: e.target.value })}
-                    className="pl-10 bg-background border-input text-foreground"
+                    className="pl-10 bg-muted/50 border-border text-white placeholder:text-muted-foreground"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="telefono" className="text-card-foreground">Teléfono</Label>
+                <Label htmlFor="telefono" className="text-white">Teléfono *</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
@@ -209,19 +377,19 @@ const RegistroCompraForm = () => {
                     placeholder="+591 12345678"
                     value={formData.telefono}
                     onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                    className="pl-10 bg-background border-input text-foreground"
+                    className="pl-10 bg-muted/50 border-border text-white placeholder:text-muted-foreground"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-card-foreground">Departamento</Label>
+                <Label className="text-white">Departamento *</Label>
                 <Select
                   value={formData.departamento}
                   onValueChange={(value) => setFormData({ ...formData, departamento: value })}
                 >
-                  <SelectTrigger className="bg-background border-input text-foreground">
+                  <SelectTrigger className="bg-muted/50 border-border text-white">
                     <SelectValue placeholder="Selecciona tu departamento" />
                   </SelectTrigger>
                   <SelectContent>
@@ -233,7 +401,7 @@ const RegistroCompraForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-card-foreground">Correo electrónico</Label>
+                <Label htmlFor="email" className="text-white">Correo electrónico *</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
@@ -242,7 +410,7 @@ const RegistroCompraForm = () => {
                     placeholder="tu@email.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="pl-10 bg-background border-input text-foreground"
+                    className="pl-10 bg-muted/50 border-border text-white placeholder:text-muted-foreground"
                     required
                   />
                 </div>
@@ -252,7 +420,7 @@ const RegistroCompraForm = () => {
                 type="button"
                 onClick={nextStep}
                 disabled={!formData.nombre || !formData.apellido || !formData.ci || !formData.telefono || !formData.departamento || !formData.email}
-                className="w-full bg-gradient-green text-primary-foreground font-bold uppercase tracking-wider py-6"
+                className="w-full bg-gradient-orange text-white font-bold uppercase tracking-wider py-6 hover:opacity-90"
               >
                 Continuar
               </Button>
@@ -263,7 +431,7 @@ const RegistroCompraForm = () => {
         {step === 2 && (
           <>
             <div className="text-center mb-8">
-              <h3 className="text-2xl font-black text-card-foreground uppercase mb-2">
+              <h3 className="text-2xl font-black text-white uppercase mb-2">
                 Datos de Compra
               </h3>
               <p className="text-muted-foreground text-sm">
@@ -272,24 +440,73 @@ const RegistroCompraForm = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Serial Number Field - Main Focus */}
               <div className="space-y-2">
-                <Label htmlFor="serialNumber" className="text-card-foreground">
+                <Label htmlFor="serialNumber" className="text-white text-lg font-bold">
                   Número de Serial del TV *
                 </Label>
                 <div className="relative">
-                  <Tv className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Tv className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
                   <Input
                     id="serialNumber"
                     placeholder="Ej: SKW123456789"
                     value={formData.serialNumber}
-                    onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
-                    className="pl-10 bg-background border-input text-foreground"
+                    onChange={(e) => handleSerialChange(e.target.value)}
+                    onBlur={handleSerialBlur}
+                    className={`pl-10 pr-12 bg-muted/50 border-2 border-border text-white placeholder:text-muted-foreground text-lg py-6 ${getSerialInputClass()}`}
                     required
                   />
+                  {/* Validation indicator */}
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {serialValidation.isChecking && (
+                      <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+                    )}
+                    {serialValidation.isValid && (
+                      <CheckCircle className="w-5 h-5 text-green-400" />
+                    )}
+                    {serialValidation.error && (
+                      <XCircle className="w-5 h-5 text-red-400" />
+                    )}
+                  </div>
                 </div>
+
+                {/* Validation Status Messages */}
+                {serialValidation.isChecking && (
+                  <p className="text-blue-400 text-sm flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Validando serial…
+                  </p>
+                )}
+
+                {serialValidation.error && (
+                  <p className="text-red-400 text-sm flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    {serialValidation.error}
+                  </p>
+                )}
+
+                {serialValidation.isValid && (
+                  <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mt-3">
+                    <p className="text-green-400 text-sm flex items-center gap-2 mb-2">
+                      <CheckCircle className="w-4 h-4" />
+                      Serial válido y disponible
+                    </p>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+                      <div>
+                        <span className="text-muted-foreground text-xs uppercase">Modelo:</span>
+                        <p className="text-white font-medium">{serialValidation.productName}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground text-xs uppercase">Tickets a generar:</span>
+                        <p className="text-2xl font-black text-gradient-orange">{serialValidation.ticketCount}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary transition-colors cursor-pointer">
+              {/* Invoice Upload */}
+              <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary transition-colors cursor-pointer bg-muted/20">
                 <input
                   type="file"
                   id="factura"
@@ -300,10 +517,10 @@ const RegistroCompraForm = () => {
                 <label htmlFor="factura" className="cursor-pointer">
                   <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   {formData.factura ? (
-                    <p className="text-foreground font-medium">{formData.factura.name}</p>
+                    <p className="text-white font-medium">{formData.factura.name}</p>
                   ) : (
                     <>
-                      <p className="text-foreground font-medium mb-1">Arrastra tu factura aquí</p>
+                      <p className="text-white font-medium mb-1">Arrastra tu factura aquí</p>
                       <p className="text-muted-foreground text-sm">o haz clic para seleccionar (JPG, PNG, PDF)</p>
                     </>
                   )}
@@ -315,17 +532,24 @@ const RegistroCompraForm = () => {
                   type="button"
                   variant="outline"
                   onClick={prevStep}
-                  className="flex-1 border-border text-foreground"
+                  className="flex-1 border-border text-white hover:bg-muted/50"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Atrás
                 </Button>
                 <Button
                   type="submit"
-                  disabled={!formData.serialNumber || !formData.factura || isLoading}
-                  className="flex-1 bg-gradient-green text-primary-foreground font-bold uppercase tracking-wider"
+                  disabled={!formData.serialNumber || !formData.factura || isLoading || !serialValidation.isValid}
+                  className="flex-1 bg-gradient-orange text-white font-bold uppercase tracking-wider hover:opacity-90 disabled:opacity-50"
                 >
-                  {isLoading ? "Procesando..." : "Registrar"}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Procesando...
+                    </>
+                  ) : (
+                    "Registrar"
+                  )}
                 </Button>
               </div>
             </form>
@@ -338,30 +562,31 @@ const RegistroCompraForm = () => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", duration: 0.5 }}
-              className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-green mb-6"
+              className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-orange mb-6 shadow-glow-orange"
             >
               <CheckCircle className="w-10 h-10 text-white" />
             </motion.div>
             
-            <h3 className="text-2xl font-black text-card-foreground uppercase mb-2">
+            <h3 className="text-2xl font-black text-white uppercase mb-2">
               ¡Registro Exitoso!
             </h3>
             <p className="text-muted-foreground mb-8">
               Tu compra ha sido registrada. Recibirás tus tickets por correo electrónico.
             </p>
 
-            <div className="bg-muted rounded-xl p-6 mb-8">
+            <div className="bg-muted/30 rounded-xl p-6 mb-8 border border-border">
               <div className="flex items-center justify-center gap-4">
                 <Trophy className="w-8 h-8 text-primary" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Cupones generados</p>
-                  <p className="text-3xl font-black text-gradient-gold">{generatedCoupons.length}</p>
+                  <p className="text-sm text-muted-foreground">Tickets generados</p>
+                  <p className="text-4xl font-black text-gradient-orange">{generatedCoupons.length}</p>
                 </div>
               </div>
               {generatedCoupons.length > 0 && (
-                <div className="mt-4 space-y-2">
+                <div className="mt-6 space-y-2">
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Tus códigos:</p>
                   {generatedCoupons.map((coupon, idx) => (
-                    <div key={idx} className="bg-background rounded-lg p-3 font-mono text-center text-foreground">
+                    <div key={idx} className="bg-muted/50 rounded-lg p-3 font-mono text-center text-white border border-border">
                       {coupon}
                     </div>
                   ))}
@@ -371,7 +596,7 @@ const RegistroCompraForm = () => {
 
             <Button
               onClick={resetForm}
-              className="bg-gradient-gold text-primary-foreground font-bold uppercase tracking-wider"
+              className="bg-gradient-orange text-white font-bold uppercase tracking-wider hover:opacity-90"
             >
               Registrar otra compra
             </Button>
