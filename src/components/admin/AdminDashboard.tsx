@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Users, Ticket, Barcode, ShoppingCart, TrendingUp, Package } from 'lucide-react';
+import { Loader2, Users, Ticket, Barcode, ShoppingCart, TrendingUp, Package, Star, Trophy } from 'lucide-react';
 
 interface DashboardStats {
   totalClients: number;
@@ -13,6 +13,8 @@ interface DashboardStats {
   totalPurchases: number;
   pendingPurchases: number;
   totalSales: number;
+  totalSellerPoints: number;
+  topSeller: { name: string; points: number } | null;
 }
 
 export default function AdminDashboard() {
@@ -31,19 +33,26 @@ export default function AdminDashboard() {
         couponsRes,
         serialsRes,
         purchasesRes,
-        salesRes
+        salesRes,
+        topSellerRes
       ] = await Promise.all([
-        supabase.from('clientes').select('id', { count: 'exact', head: true }),
-        supabase.from('sellers').select('id', { count: 'exact', head: true }),
-        supabase.from('coupons').select('id, status'),
+        supabase.from('client_purchases').select('id', { count: 'exact', head: true }),
+        supabase.from('sellers').select('id, total_points', { count: 'exact' }),
+        // Only count BUYER coupons
+        supabase.from('coupons').select('id, status').eq('owner_type', 'BUYER'),
         supabase.from('tv_serials').select('id, buyer_status, seller_status'),
         supabase.from('client_purchases').select('id, admin_status'),
-        supabase.from('seller_sales').select('id', { count: 'exact', head: true })
+        supabase.from('seller_sales').select('id', { count: 'exact', head: true }),
+        supabase.from('sellers').select('store_name, total_points').order('total_points', { ascending: false }).limit(1).single()
       ]);
 
       const coupons = couponsRes.data || [];
       const serials = serialsRes.data || [];
       const purchases = purchasesRes.data || [];
+      const sellers = sellersRes.data || [];
+      
+      // Calculate total seller points
+      const totalSellerPoints = sellers.reduce((sum, s) => sum + (s.total_points || 0), 0);
 
       setStats({
         totalClients: clientsRes.count || 0,
@@ -54,7 +63,9 @@ export default function AdminDashboard() {
         registeredSerials: serials.filter(s => s.buyer_status === 'REGISTERED' || s.seller_status === 'REGISTERED').length,
         totalPurchases: purchases.length,
         pendingPurchases: purchases.filter(p => p.admin_status === 'PENDING').length,
-        totalSales: salesRes.count || 0
+        totalSales: salesRes.count || 0,
+        totalSellerPoints,
+        topSeller: topSellerRes.data ? { name: topSellerRes.data.store_name, points: topSellerRes.data.total_points } : null
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -75,9 +86,9 @@ export default function AdminDashboard() {
 
   const statCards = [
     {
-      title: 'Clientes',
+      title: 'Compradores',
       value: stats.totalClients,
-      description: 'Clientes registrados',
+      description: 'Compras registradas',
       icon: Users,
       color: 'text-blue-500',
       bgColor: 'from-blue-500/20 to-blue-600/10',
@@ -93,7 +104,7 @@ export default function AdminDashboard() {
       borderColor: 'border-green-500/30'
     },
     {
-      title: 'Cupones',
+      title: 'Cupones Compradores',
       value: stats.activeCoupons,
       description: `${stats.totalCoupons} totales`,
       icon: Ticket,
@@ -102,13 +113,22 @@ export default function AdminDashboard() {
       borderColor: 'border-purple-500/30'
     },
     {
+      title: 'Puntos Vendedores',
+      value: stats.totalSellerPoints,
+      description: 'Puntos totales acumulados',
+      icon: Star,
+      color: 'text-amber-500',
+      bgColor: 'from-amber-500/20 to-amber-600/10',
+      borderColor: 'border-amber-500/30'
+    },
+    {
       title: 'Seriales',
       value: stats.registeredSerials,
       description: `${stats.totalSerials} totales`,
       icon: Barcode,
-      color: 'text-amber-500',
-      bgColor: 'from-amber-500/20 to-amber-600/10',
-      borderColor: 'border-amber-500/30'
+      color: 'text-cyan-500',
+      bgColor: 'from-cyan-500/20 to-cyan-600/10',
+      borderColor: 'border-cyan-500/30'
     },
     {
       title: 'Compras Pendientes',
@@ -118,15 +138,6 @@ export default function AdminDashboard() {
       color: 'text-red-500',
       bgColor: 'from-red-500/20 to-red-600/10',
       borderColor: 'border-red-500/30'
-    },
-    {
-      title: 'Ventas',
-      value: stats.totalSales,
-      description: 'Ventas de vendedores',
-      icon: Package,
-      color: 'text-cyan-500',
-      bgColor: 'from-cyan-500/20 to-cyan-600/10',
-      borderColor: 'border-cyan-500/30'
     }
   ];
 
@@ -155,6 +166,39 @@ export default function AdminDashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Top Seller Card */}
+      {stats.topSeller && (
+        <Card className="bg-gradient-to-br from-amber-500/10 to-orange-600/10 border-amber-500/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-amber-500" />
+              Top Vendedor
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xl font-bold text-foreground">{stats.topSeller.name}</p>
+                <p className="text-muted-foreground">Líder del ranking</p>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-amber-500">{stats.topSeller.points.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">puntos</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Info about business logic */}
+      <Card className="border-blue-500/20 bg-blue-500/5">
+        <CardContent className="py-4">
+          <p className="text-sm text-blue-400">
+            <strong>Modelo de negocio:</strong> Los compradores reciben cupones para el sorteo. Los vendedores acumulan puntos por cada venta registrada (sin cupones).
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

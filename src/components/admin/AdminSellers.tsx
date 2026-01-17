@@ -3,11 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Loader2, Search, Ban, CheckCircle } from 'lucide-react';
+import { Loader2, Search, Ban, CheckCircle, Trophy, Star, Users, TrendingUp } from 'lucide-react';
 
 interface Seller {
   id: string;
@@ -68,6 +67,17 @@ export default function AdminSellers() {
     seller.store_city.toLowerCase().includes(search.toLowerCase())
   );
 
+  const totalPoints = sellers.reduce((sum, s) => sum + s.total_points, 0);
+  const totalSales = sellers.reduce((sum, s) => sum + s.total_sales, 0);
+  const activeSellers = sellers.filter(s => s.is_active).length;
+
+  const getRankBadge = (index: number) => {
+    if (index === 0) return <Trophy className="h-5 w-5 text-amber-500" />;
+    if (index === 1) return <Trophy className="h-5 w-5 text-gray-400" />;
+    if (index === 2) return <Trophy className="h-5 w-5 text-orange-600" />;
+    return <span className="w-5 text-center text-muted-foreground">{index + 1}</span>;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -78,13 +88,78 @@ export default function AdminSellers() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Vendedores</h2>
-          <p className="text-muted-foreground">{sellers.length} vendedores registrados</p>
-        </div>
+      <div>
+        <h2 className="text-2xl font-bold text-foreground">Vendedores</h2>
+        <p className="text-muted-foreground">Ranking y gestión de vendedores (ordenado por puntos)</p>
       </div>
 
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-gradient-to-br from-blue-500/20 to-blue-600/10 border-blue-500/30">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-blue-500/20">
+                <Users className="h-6 w-6 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-blue-500">{sellers.length}</p>
+                <p className="text-sm text-muted-foreground">Total Vendedores</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-green-500/20 to-green-600/10 border-green-500/30">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-green-500/20">
+                <CheckCircle className="h-6 w-6 text-green-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-green-500">{activeSellers}</p>
+                <p className="text-sm text-muted-foreground">Activos</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border-amber-500/30">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-amber-500/20">
+                <Star className="h-6 w-6 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-amber-500">{totalPoints.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">Puntos Totales</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-purple-500/20 to-purple-600/10 border-purple-500/30">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-purple-500/20">
+                <TrendingUp className="h-6 w-6 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-purple-500">{totalSales}</p>
+                <p className="text-sm text-muted-foreground">Ventas Totales</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Info Banner */}
+      <Card className="border-amber-500/20 bg-amber-500/5">
+        <CardContent className="py-4">
+          <p className="text-sm text-amber-400 flex items-center gap-2">
+            <Star className="h-4 w-4" />
+            <span>Los vendedores acumulan <strong>puntos</strong> por cada venta registrada. El ranking se ordena por puntos (no cupones).</span>
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Search */}
       <Card>
         <CardContent className="pt-6">
           <div className="relative max-w-sm">
@@ -99,19 +174,25 @@ export default function AdminSellers() {
         </CardContent>
       </Card>
 
+      {/* Table */}
       <Card>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>#</TableHead>
-                <TableHead>Tienda</TableHead>
-                <TableHead>Ciudad</TableHead>
-                <TableHead>Teléfono</TableHead>
-                <TableHead>Puntos</TableHead>
-                <TableHead>Ventas</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
+              <TableRow className="bg-muted/30">
+                <TableHead className="font-bold w-16">Rank</TableHead>
+                <TableHead className="font-bold">Tienda</TableHead>
+                <TableHead className="font-bold">Ciudad</TableHead>
+                <TableHead className="font-bold">Teléfono</TableHead>
+                <TableHead className="font-bold text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <Star className="h-4 w-4 text-amber-500" />
+                    Puntos
+                  </div>
+                </TableHead>
+                <TableHead className="font-bold text-center">Ventas</TableHead>
+                <TableHead className="font-bold text-center">Estado</TableHead>
+                <TableHead className="font-bold text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -123,17 +204,26 @@ export default function AdminSellers() {
                 </TableRow>
               ) : (
                 filteredSellers.map((seller, index) => (
-                  <TableRow key={seller.id}>
-                    <TableCell className="font-medium">{index + 1}</TableCell>
-                    <TableCell className="font-medium">{seller.store_name}</TableCell>
-                    <TableCell>{seller.store_city}</TableCell>
-                    <TableCell>{seller.phone || '-'}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{seller.total_points.toLocaleString()}</Badge>
+                  <TableRow key={seller.id} className={!seller.is_active ? 'opacity-50' : ''}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center justify-center">
+                        {getRankBadge(index)}
+                      </div>
                     </TableCell>
-                    <TableCell>{seller.total_sales}</TableCell>
-                    <TableCell>
-                      <Badge variant={seller.is_active ? 'default' : 'destructive'}>
+                    <TableCell className="font-semibold text-foreground">{seller.store_name}</TableCell>
+                    <TableCell className="text-muted-foreground">{seller.store_city}</TableCell>
+                    <TableCell className="text-muted-foreground">{seller.phone || '-'}</TableCell>
+                    <TableCell className="text-center">
+                      <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30">
+                        {seller.total_points.toLocaleString()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center text-muted-foreground">{seller.total_sales}</TableCell>
+                    <TableCell className="text-center">
+                      <Badge 
+                        variant={seller.is_active ? 'default' : 'destructive'}
+                        className={seller.is_active ? 'bg-green-500 hover:bg-green-600' : ''}
+                      >
                         {seller.is_active ? 'Activo' : 'Bloqueado'}
                       </Badge>
                     </TableCell>
@@ -143,6 +233,7 @@ export default function AdminSellers() {
                         variant="ghost"
                         onClick={() => handleToggleActive(seller)}
                         title={seller.is_active ? 'Bloquear' : 'Activar'}
+                        className="h-8 w-8"
                       >
                         {seller.is_active ? (
                           <Ban className="h-4 w-4 text-destructive" />

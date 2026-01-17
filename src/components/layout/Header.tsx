@@ -120,7 +120,7 @@ const Header = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Link to="/vendedores" className="hidden sm:block">
+                  <Link to="/vendedores/login" className="hidden sm:block">
                     <Button variant="outline" size="sm" className="border-[#FF6A00] text-[#FF6A00] hover:bg-[#FF6A00] hover:text-white">
                       <Store className="w-4 h-4 mr-2" />
                       Soy Vendedor
@@ -205,7 +205,7 @@ const Header = () => {
                   </div>
                 ) : (
                   <Link
-                    to="/vendedores"
+                    to="/vendedores/login"
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-[#FF6A00]"
                   >

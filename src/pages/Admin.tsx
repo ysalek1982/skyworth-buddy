@@ -70,20 +70,20 @@ function AdminContent() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-hero">
       {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-50">
+      <header className="glass-effect border-b border-border sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild className="lg:hidden">
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="text-foreground hover:bg-white/10">
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-72 p-0">
+              <SheetContent side="left" className="w-72 p-0 bg-[hsl(210,70%,6%)] border-border">
                 <div className="p-4 border-b border-border">
-                  <h2 className="text-lg font-semibold">Panel Admin</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Panel Admin</h2>
                 </div>
                 <nav className="p-2">
                   {tabs.map((tab) => (
@@ -96,7 +96,7 @@ function AdminContent() {
                       className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
                         activeTab === tab.value
                           ? 'bg-primary text-primary-foreground'
-                          : 'hover:bg-accent'
+                          : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
                       }`}
                     >
                       <tab.icon className="h-5 w-5" />
@@ -110,7 +110,11 @@ function AdminContent() {
               Skyworth Admin
             </h1>
           </div>
-          <Button variant="outline" onClick={() => window.location.href = '/'}>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.href = '/'}
+            className="border-primary/50 text-foreground hover:bg-primary/10"
+          >
             Volver al sitio
           </Button>
         </div>
@@ -118,7 +122,7 @@ function AdminContent() {
 
       <div className="flex">
         {/* Sidebar - Desktop */}
-        <aside className="hidden lg:block w-64 min-h-[calc(100vh-73px)] bg-card border-r border-border">
+        <aside className="hidden lg:block w-64 min-h-[calc(100vh-73px)] bg-[hsl(210,70%,6%)] border-r border-border">
           <nav className="p-4 space-y-1">
             {tabs.map((tab) => (
               <button
@@ -127,7 +131,7 @@ function AdminContent() {
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
                   activeTab === tab.value
                     ? 'bg-primary text-primary-foreground'
-                    : 'hover:bg-accent text-muted-foreground hover:text-foreground'
+                    : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
                 }`}
               >
                 <tab.icon className="h-5 w-5" />
@@ -138,7 +142,7 @@ function AdminContent() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 bg-[hsl(210,60%,8%)]">
           {renderTabContent()}
         </main>
       </div>

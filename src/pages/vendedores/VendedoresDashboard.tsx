@@ -15,12 +15,14 @@ import { motion } from 'framer-motion';
 import { 
   Trophy, 
   Package, 
-  Ticket, 
   TrendingUp, 
   Plus,
   Loader2,
   MapPin,
-  Phone
+  Phone,
+  Star,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 
 interface Seller {
@@ -43,21 +45,21 @@ interface Sale {
   created_at: string;
 }
 
-interface Coupon {
-  id: string;
-  code: string;
-  status: string;
-  created_at: string;
+interface SerialValidation {
+  status: 'idle' | 'checking' | 'valid' | 'invalid' | 'registered';
+  message: string;
+  productName?: string;
+  points?: number;
 }
 
 function DashboardContent() {
   const { user } = useAuth();
   const [seller, setSeller] = useState<Seller | null>(null);
   const [sales, setSales] = useState<Sale[]>([]);
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [ranking, setRanking] = useState<{ position: number; total: number }>({ position: 0, total: 0 });
   const [loading, setLoading] = useState(true);
   const [registeringSerial, setRegisteringSerial] = useState(false);
+  const [serialValidation, setSerialValidation] = useState<SerialValidation>({ status: 'idle', message: '' });
   
   const [serialForm, setSerialForm] = useState({
     serial_number: '',
@@ -95,16 +97,7 @@ function DashboardContent() {
         setSales(salesData);
       }
 
-      const { data: couponsData, error: couponsError } = await supabase
-        .from('coupons')
-        .select('*')
-        .eq('owner_type', 'SELLER')
-        .in('seller_sale_id', salesData?.map(s => s.id) || []);
-
-      if (!couponsError && couponsData) {
-        setCoupons(couponsData);
-      }
-
+      // Get ranking position based on POINTS only
       const { data: allSellers, error: rankError } = await supabase
         .from('sellers')
         .select('id, total_points')
@@ -124,9 +117,91 @@ function DashboardContent() {
     }
   };
 
+  // Validate serial in real-time
+  const validateSerial = async (serialNumber: string) => {
+    if (!serialNumber || serialNumber.length < 3) {
+      setSerialValidation({ status: 'idle', message: '' });
+      return;
+    }
+
+    setSerialValidation({ status: 'checking', message: 'Verificando serial...' });
+
+    try {
+      const normalizedSerial = serialNumber.trim().toUpperCase();
+      const { data, error } = await supabase
+        .from('tv_serials')
+        .select(`
+          id,
+          serial_number,
+          status,
+          seller_status,
+          product_id,
+          products (
+            model_name,
+            points_value,
+            tier
+          )
+        `)
+        .eq('serial_number', normalizedSerial)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) {
+        setSerialValidation({ 
+          status: 'invalid', 
+          message: 'Serial no encontrado en la base de datos' 
+        });
+        return;
+      }
+
+      if (data.status === 'BLOCKED') {
+        setSerialValidation({ 
+          status: 'invalid', 
+          message: 'Este serial está bloqueado' 
+        });
+        return;
+      }
+
+      if (data.seller_status === 'REGISTERED') {
+        setSerialValidation({ 
+          status: 'registered', 
+          message: 'Este serial ya fue registrado por un vendedor' 
+        });
+        return;
+      }
+
+      const product = data.products as any;
+      setSerialValidation({ 
+        status: 'valid', 
+        message: `¡Serial válido! Producto: ${product?.model_name || 'Desconocido'}`,
+        productName: product?.model_name,
+        points: product?.points_value || 10
+      });
+    } catch (error) {
+      console.error('Error validating serial:', error);
+      setSerialValidation({ 
+        status: 'invalid', 
+        message: 'Error al validar el serial' 
+      });
+    }
+  };
+
+  const handleSerialChange = (value: string) => {
+    setSerialForm({ ...serialForm, serial_number: value });
+    // Debounce validation
+    const timeoutId = setTimeout(() => validateSerial(value), 500);
+    return () => clearTimeout(timeoutId);
+  };
+
   const handleRegisterSerial = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!seller) return;
+
+    if (serialValidation.status !== 'valid') {
+      toast.error('Por favor ingresa un serial válido');
+      return;
+    }
 
     setRegisteringSerial(true);
     try {
@@ -141,14 +216,30 @@ function DashboardContent() {
 
       if (error) throw error;
 
-      toast.success('Serial registrado exitosamente');
+      const result = data as any;
+      if (!result.success) {
+        throw new Error(result.error || 'Error al registrar');
+      }
+
+      toast.success(`¡Venta registrada! +${result.points} puntos`);
       setSerialForm({ serial_number: '', client_name: '', client_phone: '', invoice_number: '' });
+      setSerialValidation({ status: 'idle', message: '' });
       loadSellerData();
     } catch (error: any) {
       console.error('Error registering serial:', error);
       toast.error(error.message || 'Error al registrar el serial');
     } finally {
       setRegisteringSerial(false);
+    }
+  };
+
+  const getSerialInputClass = () => {
+    switch (serialValidation.status) {
+      case 'valid': return 'serial-valid';
+      case 'invalid': 
+      case 'registered': return 'serial-invalid';
+      case 'checking': return 'serial-checking';
+      default: return '';
     }
   };
 
@@ -210,14 +301,14 @@ function DashboardContent() {
           </div>
         </motion.div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats Cards - ONLY POINTS, NO COUPONS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <Card className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border-amber-500/30">
               <CardHeader className="pb-2">
                 <CardDescription className="flex items-center gap-2">
                   <Trophy className="h-4 w-4 text-amber-500" />
-                  Ranking
+                  Ranking Nacional
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -231,7 +322,7 @@ function DashboardContent() {
             <Card className="bg-gradient-to-br from-green-500/20 to-green-600/10 border-green-500/30">
               <CardHeader className="pb-2">
                 <CardDescription className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-green-500" />
+                  <Star className="h-4 w-4 text-green-500" />
                   Puntos Totales
                 </CardDescription>
               </CardHeader>
@@ -256,29 +347,13 @@ function DashboardContent() {
               </CardContent>
             </Card>
           </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-            <Card className="bg-gradient-to-br from-purple-500/20 to-purple-600/10 border-purple-500/30">
-              <CardHeader className="pb-2">
-                <CardDescription className="flex items-center gap-2">
-                  <Ticket className="h-4 w-4 text-purple-500" />
-                  Cupones
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-purple-500">{coupons.filter(c => c.status === 'ACTIVE').length}</p>
-                <p className="text-sm text-muted-foreground">cupones activos</p>
-              </CardContent>
-            </Card>
-          </motion.div>
         </div>
 
-        {/* Tabs Section */}
+        {/* Tabs Section - NO COUPONS TAB */}
         <Tabs defaultValue="register" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex">
+          <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-flex">
             <TabsTrigger value="register">Registrar Venta</TabsTrigger>
             <TabsTrigger value="sales">Mis Ventas</TabsTrigger>
-            <TabsTrigger value="coupons">Mis Cupones</TabsTrigger>
           </TabsList>
 
           <TabsContent value="register">
@@ -289,21 +364,38 @@ function DashboardContent() {
                   Registrar Nueva Venta
                 </CardTitle>
                 <CardDescription>
-                  Ingresa el serial del TV vendido para ganar puntos y cupones
+                  Ingresa el serial del TV vendido para ganar puntos
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleRegisterSerial} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="serial_number">Número de Serial *</Label>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="serial_number">Número de Serial del TV *</Label>
                       <Input
                         id="serial_number"
                         value={serialForm.serial_number}
-                        onChange={(e) => setSerialForm({ ...serialForm, serial_number: e.target.value })}
+                        onChange={(e) => handleSerialChange(e.target.value)}
                         placeholder="Ej: SKW123456789"
+                        className={getSerialInputClass()}
                         required
                       />
+                      {serialValidation.status !== 'idle' && (
+                        <div className={`flex items-center gap-2 text-sm ${
+                          serialValidation.status === 'valid' ? 'text-green-500' :
+                          serialValidation.status === 'checking' ? 'text-blue-500' : 'text-red-500'
+                        }`}>
+                          {serialValidation.status === 'valid' && <CheckCircle className="h-4 w-4" />}
+                          {serialValidation.status === 'checking' && <Loader2 className="h-4 w-4 animate-spin" />}
+                          {(serialValidation.status === 'invalid' || serialValidation.status === 'registered') && <AlertCircle className="h-4 w-4" />}
+                          <span>{serialValidation.message}</span>
+                          {serialValidation.points && (
+                            <Badge variant="outline" className="ml-2 text-green-500 border-green-500">
+                              +{serialValidation.points} puntos
+                            </Badge>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="client_name">Nombre del Cliente *</Label>
@@ -324,7 +416,7 @@ function DashboardContent() {
                         placeholder="Opcional"
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 md:col-span-2">
                       <Label htmlFor="invoice_number">Número de Factura</Label>
                       <Input
                         id="invoice_number"
@@ -334,7 +426,11 @@ function DashboardContent() {
                       />
                     </div>
                   </div>
-                  <Button type="submit" disabled={registeringSerial} className="w-full md:w-auto">
+                  <Button 
+                    type="submit" 
+                    disabled={registeringSerial || serialValidation.status !== 'valid'} 
+                    className="w-full md:w-auto"
+                  >
                     {registeringSerial ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -356,7 +452,7 @@ function DashboardContent() {
             <Card>
               <CardHeader>
                 <CardTitle>Historial de Ventas</CardTitle>
-                <CardDescription>Todas tus ventas registradas</CardDescription>
+                <CardDescription>Todas tus ventas registradas y puntos ganados</CardDescription>
               </CardHeader>
               <CardContent>
                 {sales.length === 0 ? (
@@ -378,42 +474,14 @@ function DashboardContent() {
                           <TableCell>{sale.client_name}</TableCell>
                           <TableCell>{new Date(sale.sale_date).toLocaleDateString()}</TableCell>
                           <TableCell className="text-right">
-                            <Badge variant="secondary">+{sale.points_earned}</Badge>
+                            <Badge variant="secondary" className="bg-green-500/20 text-green-500">
+                              +{sale.points_earned}
+                            </Badge>
                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="coupons">
-            <Card>
-              <CardHeader>
-                <CardTitle>Mis Cupones</CardTitle>
-                <CardDescription>Cupones generados por tus ventas</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {coupons.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">¡Registra ventas para obtener cupones!</p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {coupons.map((coupon) => (
-                      <Card key={coupon.id} className="bg-gradient-to-br from-primary/10 to-primary/5">
-                        <CardContent className="pt-6">
-                          <div className="text-center">
-                            <Ticket className="h-8 w-8 mx-auto mb-2 text-primary" />
-                            <p className="font-mono text-lg font-bold">{coupon.code}</p>
-                            <Badge variant={coupon.status === 'ACTIVE' ? 'default' : 'secondary'} className="mt-2">
-                              {coupon.status === 'ACTIVE' ? 'Activo' : coupon.status}
-                            </Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
                 )}
               </CardContent>
             </Card>
