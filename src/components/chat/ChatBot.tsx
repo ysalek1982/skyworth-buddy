@@ -38,7 +38,7 @@ const ChatBot = () => {
     const message = userMessage.toLowerCase();
     
     if (message.includes("participar") || message.includes("cómo") || message.includes("como")) {
-      return "¡Es muy fácil participar! Solo necesitas: 1) Comprar un TV Skyworth en tiendas autorizadas, 2) Registrar tu compra en nuestra web subiendo tu factura, 3) ¡Listo! Recibirás tus tickets para el sorteo del viaje al Mundial 2026.";
+      return "¡Es muy fácil participar! Solo necesitas: 1) Comprar un TV Skyworth en tiendas autorizadas, 2) Registrar tu compra en nuestra web subiendo tu factura, 3) ¡Listo! Recibirás tus cupones para el sorteo del viaje al Repechaje.";
     }
     
     if (message.includes("premio") || message.includes("ganar") || message.includes("viaje")) {
@@ -46,7 +46,7 @@ const ChatBot = () => {
     }
     
     if (message.includes("tv") || message.includes("modelo") || message.includes("producto")) {
-      return "Participan todos los TVs Skyworth: 32\" (1 ticket), 43\"-50\" (2 tickets), 55\"-65\" (3 tickets). ¡Mientras más grande tu TV, más oportunidades de ganar!";
+      return "Participan todos los TVs Skyworth: 32\" (1 cupón), 43\"-50\" (2 cupones), 55\"-65\" (3 cupones). ¡Mientras más grande tu TV, más oportunidades de ganar!";
     }
     
     if (message.includes("tienda") || message.includes("donde") || message.includes("comprar")) {
@@ -54,7 +54,7 @@ const ChatBot = () => {
     }
     
     if (message.includes("sorteo") || message.includes("fecha") || message.includes("cuando")) {
-      return "El gran sorteo será el 15 de julio de 2026. ¡No te lo pierdas! Mientras tanto, acumula todos los tickets que puedas registrando tus compras.";
+      return "El gran sorteo será el 15 de julio de 2026. ¡No te lo pierdas! Mientras tanto, acumula todos los cupones que puedas registrando tus compras.";
     }
     
     return "Gracias por tu pregunta. Para más información sobre la promoción, te invito a explorar nuestra página o contactarnos directamente. ¿Hay algo más en lo que pueda ayudarte?";

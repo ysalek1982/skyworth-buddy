@@ -268,7 +268,7 @@ const Resultados = () => {
             <div className="glass-dark rounded-2xl p-8 inline-block">
               <h3 className="text-xl font-bold text-white mb-2">¿Aún no participas?</h3>
               <p className="text-white/70 mb-4">
-                Registra tu compra y obtén tus tickets para el gran sorteo
+                Registra tu compra y obtén tus cupones para el gran sorteo
               </p>
               <a href="/#registrar-compra" className="btn-cta-primary inline-flex items-center gap-2">
                 <Trophy className="w-5 h-5" />
