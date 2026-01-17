@@ -66,8 +66,8 @@ export default {
           dark: "hsl(var(--skyworth-dark))",
           gold: "hsl(var(--skyworth-gold))",
           green: "hsl(var(--skyworth-green))",
-          "blue-light": "hsl(var(--skyworth-blue-light))",
-          "blue-medium": "hsl(var(--skyworth-blue-medium))",
+          "green-light": "hsl(var(--skyworth-green-light))",
+          "green-dark": "hsl(var(--skyworth-green-dark))",
         },
       },
       borderRadius: {
@@ -77,6 +77,7 @@ export default {
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
+        display: ["Bebas Neue", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {
@@ -112,7 +113,10 @@ export default {
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "hero-pattern": "linear-gradient(180deg, hsl(210 100% 8%) 0%, hsl(210 100% 12%) 50%, hsl(210 80% 18%) 100%)",
+        "hero-pattern": "linear-gradient(180deg, hsl(145 60% 6%) 0%, hsl(145 60% 10%) 40%, hsl(145 50% 15%) 100%)",
+      },
+      spacing: {
+        'header': 'var(--header-h)',
       },
     },
   },
