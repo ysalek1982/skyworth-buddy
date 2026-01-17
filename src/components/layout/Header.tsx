@@ -14,12 +14,35 @@ const Header = () => {
 
   const navLinks = [
     { href: "/", label: "Inicio" },
-    { href: "/registro-cliente", label: "Registrar Compra" },
+    { href: "/#modelos", label: "Modelos", isAnchor: true },
+    { href: "/#registrar-compra", label: "Registrar Compra", isAnchor: true },
     { href: "/rankings", label: "Rankings" },
     { href: "/resultados", label: "Resultados" },
   ];
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path.startsWith("/#")) return false;
+    return location.pathname === path;
+  };
+
+  const handleNavClick = (href: string, isAnchor?: boolean) => {
+    setIsMenuOpen(false);
+    if (isAnchor) {
+      const anchor = href.replace("/", "");
+      if (location.pathname === "/") {
+        // Already on home, just scroll
+        const element = document.querySelector(anchor);
+        element?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        // Navigate to home then scroll
+        navigate("/");
+        setTimeout(() => {
+          const element = document.querySelector(anchor);
+          element?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      }
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -28,9 +51,9 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 glass-effect">
+    <header className="fixed top-0 left-0 right-0 z-50 glass-effect">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-[var(--header-h)]">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-gold flex items-center justify-center">
@@ -45,17 +68,27 @@ const Header = () => {
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                className={`text-sm font-medium transition-colors ${
-                  isActive(link.href)
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {link.label}
-              </Link>
+              link.isAnchor ? (
+                <button
+                  key={link.href}
+                  onClick={() => handleNavClick(link.href, true)}
+                  className="text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
+                >
+                  {link.label}
+                </button>
+              ) : (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className={`text-sm font-medium transition-colors ${
+                    isActive(link.href)
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              )
             ))}
           </nav>
 
@@ -87,7 +120,7 @@ const Header = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Link to="/login" className="hidden sm:block">
+                  <Link to="/vendedores" className="hidden sm:block">
                     <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
                       <Store className="w-4 h-4 mr-2" />
                       Soy Vendedor
@@ -119,18 +152,28 @@ const Header = () => {
           >
             <nav className="p-4 space-y-2">
               {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`block px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive(link.href)
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  {link.label}
-                </Link>
+                link.isAnchor ? (
+                  <button
+                    key={link.href}
+                    onClick={() => handleNavClick(link.href, true)}
+                    className="block w-full text-left px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </button>
+                ) : (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`block px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      isActive(link.href)
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                )
               ))}
               <div className="pt-2 border-t border-border mt-2">
                 {user ? (
@@ -162,7 +205,7 @@ const Header = () => {
                   </div>
                 ) : (
                   <Link
-                    to="/login"
+                    to="/vendedores"
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-primary"
                   >

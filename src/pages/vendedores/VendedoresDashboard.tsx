@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { supabase } from '@/integrations/supabase/client';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import SellerLayout from '@/components/layout/SellerLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,7 +59,6 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [registeringSerial, setRegisteringSerial] = useState(false);
   
-  // Form state for registering serial
   const [serialForm, setSerialForm] = useState({
     serial_number: '',
     client_name: '',
@@ -78,7 +76,6 @@ function DashboardContent() {
     if (!user) return;
     
     try {
-      // Get seller profile
       const { data: sellerData, error: sellerError } = await supabase
         .from('sellers')
         .select('*')
@@ -88,7 +85,6 @@ function DashboardContent() {
       if (sellerError) throw sellerError;
       setSeller(sellerData);
 
-      // Get sales
       const { data: salesData, error: salesError } = await supabase
         .from('seller_sales')
         .select('*')
@@ -99,7 +95,6 @@ function DashboardContent() {
         setSales(salesData);
       }
 
-      // Get coupons
       const { data: couponsData, error: couponsError } = await supabase
         .from('coupons')
         .select('*')
@@ -110,7 +105,6 @@ function DashboardContent() {
         setCoupons(couponsData);
       }
 
-      // Calculate ranking
       const { data: allSellers, error: rankError } = await supabase
         .from('sellers')
         .select('id, total_points')
@@ -160,36 +154,39 @@ function DashboardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <SellerLayout>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </SellerLayout>
     );
   }
 
   if (!seller) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle>No eres vendedor</CardTitle>
-            <CardDescription>
-              Debes registrarte como vendedor para acceder al dashboard.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => window.location.href = '/registro-vendedor'}>
-              Registrarme como Vendedor
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <SellerLayout>
+        <div className="flex items-center justify-center py-20">
+          <Card className="max-w-md">
+            <CardHeader>
+              <CardTitle>No eres vendedor</CardTitle>
+              <CardDescription>
+                Debes registrarte como vendedor para acceder al dashboard.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => window.location.href = '/vendedores/registro'}>
+                Registrarme como Vendedor
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </SellerLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container mx-auto px-4 pt-24 pb-16">
+    <SellerLayout>
+      <div className="container mx-auto px-4 py-8">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -197,7 +194,7 @@ function DashboardContent() {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            ¡Hola!
+            ¡Hola, {seller.store_name}!
           </h1>
           <div className="flex flex-wrap gap-4 text-muted-foreground">
             <span className="flex items-center gap-1">
@@ -215,11 +212,7 @@ function DashboardContent() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <Card className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border-amber-500/30">
               <CardHeader className="pb-2">
                 <CardDescription className="flex items-center gap-2">
@@ -228,19 +221,13 @@ function DashboardContent() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-amber-500">
-                  #{ranking.position}
-                </p>
+                <p className="text-3xl font-bold text-amber-500">#{ranking.position}</p>
                 <p className="text-sm text-muted-foreground">de {ranking.total} vendedores</p>
               </CardContent>
             </Card>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <Card className="bg-gradient-to-br from-green-500/20 to-green-600/10 border-green-500/30">
               <CardHeader className="pb-2">
                 <CardDescription className="flex items-center gap-2">
@@ -249,19 +236,13 @@ function DashboardContent() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-green-500">
-                  {seller.total_points.toLocaleString()}
-                </p>
+                <p className="text-3xl font-bold text-green-500">{seller.total_points.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground">puntos acumulados</p>
               </CardContent>
             </Card>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
             <Card className="bg-gradient-to-br from-blue-500/20 to-blue-600/10 border-blue-500/30">
               <CardHeader className="pb-2">
                 <CardDescription className="flex items-center gap-2">
@@ -270,19 +251,13 @@ function DashboardContent() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-blue-500">
-                  {seller.total_sales}
-                </p>
+                <p className="text-3xl font-bold text-blue-500">{seller.total_sales}</p>
                 <p className="text-sm text-muted-foreground">TVs vendidos</p>
               </CardContent>
             </Card>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
             <Card className="bg-gradient-to-br from-purple-500/20 to-purple-600/10 border-purple-500/30">
               <CardHeader className="pb-2">
                 <CardDescription className="flex items-center gap-2">
@@ -291,9 +266,7 @@ function DashboardContent() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-purple-500">
-                  {coupons.filter(c => c.status === 'ACTIVE').length}
-                </p>
+                <p className="text-3xl font-bold text-purple-500">{coupons.filter(c => c.status === 'ACTIVE').length}</p>
                 <p className="text-sm text-muted-foreground">cupones activos</p>
               </CardContent>
             </Card>
@@ -383,15 +356,11 @@ function DashboardContent() {
             <Card>
               <CardHeader>
                 <CardTitle>Historial de Ventas</CardTitle>
-                <CardDescription>
-                  Todas tus ventas registradas
-                </CardDescription>
+                <CardDescription>Todas tus ventas registradas</CardDescription>
               </CardHeader>
               <CardContent>
                 {sales.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    No tienes ventas registradas aún
-                  </p>
+                  <p className="text-center text-muted-foreground py-8">No tienes ventas registradas aún</p>
                 ) : (
                   <Table>
                     <TableHeader>
@@ -424,15 +393,11 @@ function DashboardContent() {
             <Card>
               <CardHeader>
                 <CardTitle>Mis Cupones</CardTitle>
-                <CardDescription>
-                  Cupones generados por tus ventas
-                </CardDescription>
+                <CardDescription>Cupones generados por tus ventas</CardDescription>
               </CardHeader>
               <CardContent>
                 {coupons.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    No tienes cupones aún. ¡Registra ventas para obtenerlos!
-                  </p>
+                  <p className="text-center text-muted-foreground py-8">¡Registra ventas para obtener cupones!</p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {coupons.map((coupon) => (
@@ -441,10 +406,7 @@ function DashboardContent() {
                           <div className="text-center">
                             <Ticket className="h-8 w-8 mx-auto mb-2 text-primary" />
                             <p className="font-mono text-lg font-bold">{coupon.code}</p>
-                            <Badge 
-                              variant={coupon.status === 'ACTIVE' ? 'default' : 'secondary'}
-                              className="mt-2"
-                            >
+                            <Badge variant={coupon.status === 'ACTIVE' ? 'default' : 'secondary'} className="mt-2">
                               {coupon.status === 'ACTIVE' ? 'Activo' : coupon.status}
                             </Badge>
                           </div>
@@ -457,13 +419,12 @@ function DashboardContent() {
             </Card>
           </TabsContent>
         </Tabs>
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </SellerLayout>
   );
 }
 
-export default function DashboardVendedor() {
+export default function VendedoresDashboard() {
   return (
     <ProtectedRoute requiredRole="seller">
       <DashboardContent />
