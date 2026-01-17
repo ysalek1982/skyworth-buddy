@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,86 +6,95 @@
 
 @layer base {
   :root {
-    /* Skyworth 2026 Design System */
-    --background: 210 100% 12%;
+    /* Layout Variables */
+    --header-h: 72px;
+    
+    /* Skyworth 2026 Design System - Sueño del Hincha / Repechaje Bolivia */
+    --background: 145 60% 8%;
     --foreground: 0 0% 100%;
 
     --card: 0 0% 100%;
-    --card-foreground: 210 100% 12%;
+    --card-foreground: 145 60% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 100% 12%;
+    --popover-foreground: 145 60% 8%;
 
     --primary: 51 100% 50%;
-    --primary-foreground: 210 100% 12%;
+    --primary-foreground: 145 60% 8%;
 
-    --secondary: 120 100% 50%;
-    --secondary-foreground: 210 100% 12%;
+    --secondary: 145 100% 45%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 50% 20%;
-    --muted-foreground: 210 20% 70%;
+    --muted: 145 40% 15%;
+    --muted-foreground: 145 20% 70%;
 
     --accent: 51 100% 50%;
-    --accent-foreground: 210 100% 12%;
+    --accent-foreground: 145 60% 8%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 50% 25%;
-    --input: 210 50% 25%;
+    --border: 145 40% 20%;
+    --input: 145 40% 20%;
     --ring: 51 100% 50%;
 
     --radius: 0.75rem;
 
-    /* Custom Skyworth Colors */
-    --skyworth-dark: 210 100% 12%;
+    /* Custom Skyworth Colors - Verde Cancha */
+    --skyworth-dark: 145 60% 8%;
     --skyworth-gold: 51 100% 50%;
-    --skyworth-green: 120 100% 50%;
-    --skyworth-blue-light: 210 80% 25%;
-    --skyworth-blue-medium: 210 90% 18%;
+    --skyworth-green: 145 100% 45%;
+    --skyworth-green-light: 145 70% 35%;
+    --skyworth-green-dark: 145 80% 12%;
 
-    /* Gradients */
-    --gradient-hero: linear-gradient(180deg, hsl(210 100% 8%) 0%, hsl(210 100% 12%) 50%, hsl(210 80% 18%) 100%);
+    /* Gradients - Campo de Fútbol */
+    --gradient-hero: linear-gradient(180deg, hsl(145 60% 6%) 0%, hsl(145 60% 10%) 40%, hsl(145 50% 15%) 100%);
     --gradient-gold: linear-gradient(135deg, hsl(45 100% 60%) 0%, hsl(51 100% 50%) 50%, hsl(40 100% 45%) 100%);
-    --gradient-green: linear-gradient(135deg, hsl(120 100% 40%) 0%, hsl(120 100% 50%) 100%);
-    --gradient-card-blue: linear-gradient(180deg, hsl(210 80% 25%) 0%, hsl(210 90% 18%) 100%);
-    --gradient-card-green: linear-gradient(180deg, hsl(120 70% 35%) 0%, hsl(120 80% 25%) 100%);
+    --gradient-green: linear-gradient(135deg, hsl(145 100% 35%) 0%, hsl(145 100% 45%) 100%);
+    --gradient-card-green: linear-gradient(180deg, hsl(145 70% 25%) 0%, hsl(145 60% 18%) 100%);
+    --gradient-field: linear-gradient(180deg, 
+      hsl(145 65% 12%) 0%, 
+      hsl(145 60% 15%) 25%,
+      hsl(145 55% 18%) 50%,
+      hsl(145 60% 15%) 75%,
+      hsl(145 65% 12%) 100%
+    );
 
     /* Shadows */
     --shadow-card: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
     --shadow-glow-gold: 0 0 30px rgba(255, 215, 0, 0.3);
-    --shadow-glow-green: 0 0 30px rgba(0, 255, 0, 0.3);
-    --shadow-button: 0 4px 20px rgba(0, 255, 0, 0.4);
+    --shadow-glow-green: 0 0 30px rgba(0, 200, 100, 0.4);
+    --shadow-button: 0 4px 20px rgba(0, 200, 100, 0.5);
 
-    --sidebar-background: 210 100% 8%;
+    --sidebar-background: 145 60% 6%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 51 100% 50%;
-    --sidebar-primary-foreground: 210 100% 12%;
-    --sidebar-accent: 210 80% 20%;
+    --sidebar-primary-foreground: 145 60% 8%;
+    --sidebar-accent: 145 50% 20%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 210 50% 25%;
+    --sidebar-border: 145 40% 20%;
     --sidebar-ring: 51 100% 50%;
   }
 
   .dark {
-    --background: 210 100% 12%;
+    --background: 145 60% 8%;
     --foreground: 0 0% 100%;
     --card: 0 0% 100%;
-    --card-foreground: 210 100% 12%;
+    --card-foreground: 145 60% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 210 100% 12%;
+    --popover-foreground: 145 60% 8%;
     --primary: 51 100% 50%;
-    --primary-foreground: 210 100% 12%;
-    --secondary: 120 100% 50%;
-    --secondary-foreground: 210 100% 12%;
-    --muted: 210 50% 20%;
-    --muted-foreground: 210 20% 70%;
+    --primary-foreground: 145 60% 8%;
+    --secondary: 145 100% 45%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 145 40% 15%;
+    --muted-foreground: 145 20% 70%;
     --accent: 51 100% 50%;
-    --accent-foreground: 210 100% 12%;
+    --accent-foreground: 145 60% 8%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 100%;
-    --border: 210 50% 25%;
-    --input: 210 50% 25%;
+    --border: 145 40% 20%;
+    --input: 145 40% 20%;
     --ring: 51 100% 50%;
   }
 }
@@ -96,18 +105,50 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground antialiased;
     font-family: 'Inter', sans-serif;
     background: var(--gradient-hero);
     min-height: 100vh;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1, h2, h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    @apply tracking-wide;
+  }
+
+  h4, h5, h6 {
     @apply font-bold tracking-tight;
+    font-family: 'Inter', sans-serif;
   }
 }
 
 @layer components {
+  /* Main layout with header offset */
+  .main-content {
+    padding-top: var(--header-h);
+    min-height: calc(100vh - var(--header-h));
+  }
+
+  /* Field pattern overlay */
+  .field-pattern {
+    position: relative;
+  }
+
+  .field-pattern::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 80px,
+        rgba(255,255,255,0.02) 80px,
+        rgba(255,255,255,0.02) 82px
+      );
+    pointer-events: none;
+  }
+
   .text-gradient-gold {
     background: var(--gradient-gold);
     -webkit-background-clip: text;
@@ -127,12 +168,12 @@
     background: var(--gradient-green);
   }
 
-  .bg-gradient-card-blue {
-    background: var(--gradient-card-blue);
-  }
-
   .bg-gradient-card-green {
     background: var(--gradient-card-green);
+  }
+
+  .bg-gradient-field {
+    background: var(--gradient-field);
   }
 
   .shadow-glow-gold {
@@ -148,25 +189,32 @@
   }
 
   .glass-effect {
+    backdrop-filter: blur(12px);
+    background: hsla(145, 60%, 8%, 0.85);
+    border-bottom: 1px solid hsla(51, 100%, 50%, 0.15);
+  }
+
+  .glass-dark {
     backdrop-filter: blur(10px);
-    background: rgba(0, 31, 63, 0.8);
-    border: 1px solid rgba(255, 215, 0, 0.2);
+    background: hsla(145, 60%, 6%, 0.9);
+    border: 1px solid hsla(145, 40%, 25%, 0.5);
   }
 
   .step-card {
     @apply relative overflow-hidden rounded-2xl p-6 transition-all duration-300;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: hsla(145, 50%, 15%, 0.6);
+    border: 1px solid hsla(145, 40%, 25%, 0.5);
   }
 
   .step-card:hover {
     transform: translateY(-4px);
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 215, 0, 0.3);
+    background: hsla(145, 50%, 18%, 0.7);
+    border-color: hsla(51, 100%, 50%, 0.3);
   }
 
   .step-number {
     @apply text-6xl font-black opacity-20 absolute -top-2 -left-2;
+    font-family: 'Bebas Neue', sans-serif;
     background: var(--gradient-gold);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -174,8 +222,8 @@
 
   .countdown-digit {
     @apply flex flex-col items-center justify-center p-4 rounded-xl;
-    background: rgba(255, 215, 0, 0.1);
-    border: 1px solid rgba(255, 215, 0, 0.3);
+    background: hsla(51, 100%, 50%, 0.1);
+    border: 1px solid hsla(51, 100%, 50%, 0.3);
     min-width: 80px;
   }
 
@@ -188,38 +236,45 @@
     transform: translateY(-8px) scale(1.02);
   }
 
-  .path-card.blue {
-    background: var(--gradient-card-blue);
-  }
-
-  .path-card.blue:hover {
-    border-color: hsl(51 100% 50%);
-    box-shadow: 0 20px 60px -20px rgba(0, 100, 200, 0.5), var(--shadow-glow-gold);
-  }
-
   .path-card.green {
     background: var(--gradient-card-green);
   }
 
   .path-card.green:hover {
-    border-color: hsl(120 100% 50%);
-    box-shadow: 0 20px 60px -20px rgba(0, 200, 0, 0.5), var(--shadow-glow-green);
+    border-color: hsl(51 100% 50%);
+    box-shadow: 0 20px 60px -20px rgba(0, 150, 80, 0.5), var(--shadow-glow-gold);
+  }
+
+  .path-card.gold {
+    background: linear-gradient(180deg, hsl(45 80% 25%) 0%, hsl(40 70% 18%) 100%);
+  }
+
+  .path-card.gold:hover {
+    border-color: hsl(51 100% 50%);
+    box-shadow: 0 20px 60px -20px rgba(200, 150, 0, 0.5), var(--shadow-glow-gold);
   }
 
   .btn-cta-primary {
     @apply relative px-8 py-4 rounded-xl font-bold text-lg uppercase tracking-wider transition-all duration-300;
     background: var(--gradient-green);
-    color: hsl(210 100% 12%);
+    color: hsl(0 0% 100%);
     box-shadow: var(--shadow-button);
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.1em;
   }
 
   .btn-cta-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 30px rgba(0, 255, 0, 0.5);
+    box-shadow: 0 6px 30px rgba(0, 200, 100, 0.6);
   }
 
   .btn-cta-primary:active {
     transform: translateY(0);
+  }
+
+  .btn-cta-primary:focus-visible {
+    outline: 2px solid hsl(51 100% 50%);
+    outline-offset: 2px;
   }
 
   .chat-bubble {
@@ -232,6 +287,19 @@
 
   .chat-bubble.bot {
     @apply bg-muted text-foreground mr-auto rounded-bl-md;
+  }
+
+  /* Product cards */
+  .product-card {
+    @apply rounded-2xl overflow-hidden transition-all duration-300;
+    background: hsla(145, 50%, 12%, 0.8);
+    border: 1px solid hsla(145, 40%, 25%, 0.5);
+  }
+
+  .product-card:hover {
+    transform: translateY(-4px);
+    border-color: hsla(51, 100%, 50%, 0.4);
+    box-shadow: var(--shadow-glow-gold);
   }
 }
 
@@ -255,10 +323,10 @@
 
   @keyframes pulse-glow {
     0%, 100% {
-      box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+      box-shadow: 0 0 20px rgba(0, 200, 100, 0.3);
     }
     50% {
-      box-shadow: 0 0 40px rgba(255, 215, 0, 0.6);
+      box-shadow: 0 0 40px rgba(0, 200, 100, 0.6);
     }
   }
 

@@ -492,6 +492,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean
+          model_key: string | null
           model_name: string
           points_value: number
           screen_size: number | null
@@ -507,6 +508,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          model_key?: string | null
           model_name: string
           points_value?: number
           screen_size?: number | null
@@ -522,6 +524,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          model_key?: string | null
           model_name?: string
           points_value?: number
           screen_size?: number | null

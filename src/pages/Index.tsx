@@ -8,11 +8,13 @@ import ChatBot from "@/components/chat/ChatBot";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-gradient-hero">
+    <div className="min-h-screen bg-gradient-hero field-pattern">
       <Header />
-      <main className="pt-16">
+      <main className="main-content">
         <HeroSection />
-        <PathSelector />
+        <section id="registrar-compra">
+          <PathSelector />
+        </section>
         <StepsSection />
         <ProductsSection />
       </main>
