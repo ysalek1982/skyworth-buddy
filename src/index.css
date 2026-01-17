@@ -9,93 +9,88 @@
     /* Layout Variables */
     --header-h: 72px;
     
-    /* Skyworth 2026 Design System - Sueño del Hincha / Repechaje Bolivia */
-    --background: 145 60% 8%;
+    /* El Sueño del Hincha - Estadio Azul Profundo */
+    --background: 210 70% 8%;
     --foreground: 0 0% 100%;
 
     --card: 0 0% 100%;
-    --card-foreground: 145 60% 8%;
+    --card-foreground: 210 70% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 145 60% 8%;
+    --popover-foreground: 210 70% 15%;
 
-    --primary: 51 100% 50%;
-    --primary-foreground: 145 60% 8%;
+    --primary: 25 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 145 100% 45%;
+    --secondary: 200 100% 45%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 145 40% 15%;
-    --muted-foreground: 145 20% 70%;
+    --muted: 210 40% 20%;
+    --muted-foreground: 210 20% 70%;
 
-    --accent: 51 100% 50%;
-    --accent-foreground: 145 60% 8%;
+    --accent: 25 100% 50%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 145 40% 20%;
-    --input: 145 40% 20%;
-    --ring: 51 100% 50%;
+    --border: 210 40% 25%;
+    --input: 210 40% 25%;
+    --ring: 25 100% 50%;
 
     --radius: 0.75rem;
 
-    /* Custom Skyworth Colors - Verde Cancha */
-    --skyworth-dark: 145 60% 8%;
-    --skyworth-gold: 51 100% 50%;
-    --skyworth-green: 145 100% 45%;
-    --skyworth-green-light: 145 70% 35%;
-    --skyworth-green-dark: 145 80% 12%;
+    /* Custom Skyworth Colors - Azul Noche / Estadio */
+    --skyworth-dark: 210 70% 8%;
+    --skyworth-blue: 200 100% 45%;
+    --skyworth-blue-deep: 210 80% 12%;
+    --skyworth-blue-light: 200 70% 35%;
+    --skyworth-orange: 25 100% 50%;
+    --skyworth-orange-glow: 35 100% 55%;
 
-    /* Gradients - Campo de Fútbol */
-    --gradient-hero: linear-gradient(180deg, hsl(145 60% 6%) 0%, hsl(145 60% 10%) 40%, hsl(145 50% 15%) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(45 100% 60%) 0%, hsl(51 100% 50%) 50%, hsl(40 100% 45%) 100%);
-    --gradient-green: linear-gradient(135deg, hsl(145 100% 35%) 0%, hsl(145 100% 45%) 100%);
-    --gradient-card-green: linear-gradient(180deg, hsl(145 70% 25%) 0%, hsl(145 60% 18%) 100%);
-    --gradient-field: linear-gradient(180deg, 
-      hsl(145 65% 12%) 0%, 
-      hsl(145 60% 15%) 25%,
-      hsl(145 55% 18%) 50%,
-      hsl(145 60% 15%) 75%,
-      hsl(145 65% 12%) 100%
-    );
+    /* Gradients - Estadio Nocturno */
+    --gradient-hero: linear-gradient(180deg, hsl(210 70% 5%) 0%, hsl(210 60% 12%) 50%, hsl(210 50% 18%) 100%);
+    --gradient-blue-overlay: linear-gradient(180deg, hsla(210, 70%, 5%, 0.85) 0%, hsla(210, 60%, 10%, 0.7) 100%);
+    --gradient-orange: linear-gradient(135deg, hsl(25 100% 50%) 0%, hsl(35 100% 55%) 100%);
+    --gradient-blue: linear-gradient(135deg, hsl(200 100% 40%) 0%, hsl(210 100% 50%) 100%);
+    --gradient-card-dark: linear-gradient(180deg, hsla(210, 50%, 15%, 0.95) 0%, hsla(210, 60%, 10%, 0.98) 100%);
 
     /* Shadows */
     --shadow-card: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
-    --shadow-glow-gold: 0 0 30px rgba(255, 215, 0, 0.3);
-    --shadow-glow-green: 0 0 30px rgba(0, 200, 100, 0.4);
-    --shadow-button: 0 4px 20px rgba(0, 200, 100, 0.5);
+    --shadow-glow-orange: 0 0 40px rgba(255, 106, 0, 0.5);
+    --shadow-glow-blue: 0 0 30px rgba(11, 111, 191, 0.4);
+    --shadow-button: 0 4px 25px rgba(255, 106, 0, 0.5);
 
-    --sidebar-background: 145 60% 6%;
+    --sidebar-background: 210 70% 6%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 51 100% 50%;
-    --sidebar-primary-foreground: 145 60% 8%;
-    --sidebar-accent: 145 50% 20%;
+    --sidebar-primary: 25 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 50% 20%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 145 40% 20%;
-    --sidebar-ring: 51 100% 50%;
+    --sidebar-border: 210 40% 20%;
+    --sidebar-ring: 25 100% 50%;
   }
 
   .dark {
-    --background: 145 60% 8%;
+    --background: 210 70% 8%;
     --foreground: 0 0% 100%;
     --card: 0 0% 100%;
-    --card-foreground: 145 60% 8%;
+    --card-foreground: 210 70% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 145 60% 8%;
-    --primary: 51 100% 50%;
-    --primary-foreground: 145 60% 8%;
-    --secondary: 145 100% 45%;
+    --popover-foreground: 210 70% 15%;
+    --primary: 25 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 200 100% 45%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 145 40% 15%;
-    --muted-foreground: 145 20% 70%;
-    --accent: 51 100% 50%;
-    --accent-foreground: 145 60% 8%;
+    --muted: 210 40% 20%;
+    --muted-foreground: 210 20% 70%;
+    --accent: 25 100% 50%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 100%;
-    --border: 145 40% 20%;
-    --input: 145 40% 20%;
-    --ring: 51 100% 50%;
+    --border: 210 40% 25%;
+    --input: 210 40% 25%;
+    --ring: 25 100% 50%;
   }
 }
 
@@ -129,28 +124,34 @@
     min-height: calc(100vh - var(--header-h));
   }
 
-  /* Field pattern overlay */
-  .field-pattern {
+  /* Hero with stadium background */
+  .hero-stadium {
     position: relative;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
   }
 
-  .field-pattern::before {
+  .hero-stadium::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: 
-      repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 80px,
-        rgba(255,255,255,0.02) 80px,
-        rgba(255,255,255,0.02) 82px
-      );
-    pointer-events: none;
+    background: linear-gradient(180deg, 
+      hsla(210, 80%, 5%, 0.9) 0%, 
+      hsla(210, 70%, 8%, 0.75) 40%,
+      hsla(210, 60%, 12%, 0.85) 100%
+    );
   }
 
-  .text-gradient-gold {
-    background: var(--gradient-gold);
+  .text-gradient-orange {
+    background: var(--gradient-orange);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-blue {
+    background: var(--gradient-blue);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -160,112 +161,78 @@
     background: var(--gradient-hero);
   }
 
-  .bg-gradient-gold {
-    background: var(--gradient-gold);
+  .bg-gradient-orange {
+    background: var(--gradient-orange);
   }
 
-  .bg-gradient-green {
-    background: var(--gradient-green);
+  .bg-gradient-blue {
+    background: var(--gradient-blue);
   }
 
-  .bg-gradient-card-green {
-    background: var(--gradient-card-green);
+  .bg-gradient-card-dark {
+    background: var(--gradient-card-dark);
   }
 
-  .bg-gradient-field {
-    background: var(--gradient-field);
+  .shadow-glow-orange {
+    box-shadow: var(--shadow-glow-orange);
   }
 
-  .shadow-glow-gold {
-    box-shadow: var(--shadow-glow-gold);
-  }
-
-  .shadow-glow-green {
-    box-shadow: var(--shadow-glow-green);
+  .shadow-glow-blue {
+    box-shadow: var(--shadow-glow-blue);
   }
 
   .shadow-card {
     box-shadow: var(--shadow-card);
   }
 
+  /* Glass effect for dark panels */
   .glass-effect {
     backdrop-filter: blur(12px);
-    background: hsla(145, 60%, 8%, 0.85);
-    border-bottom: 1px solid hsla(51, 100%, 50%, 0.15);
+    background: hsla(210, 60%, 8%, 0.85);
+    border-bottom: 1px solid hsla(200, 100%, 50%, 0.15);
   }
 
   .glass-dark {
     backdrop-filter: blur(10px);
-    background: hsla(145, 60%, 6%, 0.9);
-    border: 1px solid hsla(145, 40%, 25%, 0.5);
+    background: hsla(210, 60%, 6%, 0.95);
+    border: 1px solid hsla(200, 100%, 50%, 0.2);
   }
 
-  .step-card {
-    @apply relative overflow-hidden rounded-2xl p-6 transition-all duration-300;
-    background: hsla(145, 50%, 15%, 0.6);
-    border: 1px solid hsla(145, 40%, 25%, 0.5);
+  /* Prize card - white card */
+  .prize-card {
+    @apply relative overflow-hidden rounded-3xl p-8 md:p-10;
+    background: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 20% 96%) 100%);
+    box-shadow: 0 25px 80px -20px rgba(0, 0, 0, 0.4);
   }
 
-  .step-card:hover {
-    transform: translateY(-4px);
-    background: hsla(145, 50%, 18%, 0.7);
-    border-color: hsla(51, 100%, 50%, 0.3);
-  }
-
-  .step-number {
-    @apply text-6xl font-black opacity-20 absolute -top-2 -left-2;
+  .prize-card .prize-number {
+    @apply text-8xl md:text-9xl font-black leading-none;
     font-family: 'Bebas Neue', sans-serif;
-    background: var(--gradient-gold);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: hsl(200 100% 45%);
   }
 
+  /* Countdown digit */
   .countdown-digit {
     @apply flex flex-col items-center justify-center p-4 rounded-xl;
-    background: hsla(51, 100%, 50%, 0.1);
-    border: 1px solid hsla(51, 100%, 50%, 0.3);
+    background: hsla(200, 100%, 50%, 0.1);
+    border: 1px solid hsla(200, 100%, 50%, 0.3);
     min-width: 80px;
   }
 
-  .path-card {
-    @apply relative overflow-hidden rounded-2xl p-8 transition-all duration-500 cursor-pointer;
-    border: 2px solid transparent;
-  }
-
-  .path-card:hover {
-    transform: translateY(-8px) scale(1.02);
-  }
-
-  .path-card.green {
-    background: var(--gradient-card-green);
-  }
-
-  .path-card.green:hover {
-    border-color: hsl(51 100% 50%);
-    box-shadow: 0 20px 60px -20px rgba(0, 150, 80, 0.5), var(--shadow-glow-gold);
-  }
-
-  .path-card.gold {
-    background: linear-gradient(180deg, hsl(45 80% 25%) 0%, hsl(40 70% 18%) 100%);
-  }
-
-  .path-card.gold:hover {
-    border-color: hsl(51 100% 50%);
-    box-shadow: 0 20px 60px -20px rgba(200, 150, 0, 0.5), var(--shadow-glow-gold);
-  }
-
+  /* CTA Button - Orange with glow */
   .btn-cta-primary {
-    @apply relative px-8 py-4 rounded-xl font-bold text-lg uppercase tracking-wider transition-all duration-300;
-    background: var(--gradient-green);
+    @apply relative px-10 py-5 rounded-xl font-bold text-lg uppercase tracking-wider transition-all duration-300;
+    background: var(--gradient-orange);
     color: hsl(0 0% 100%);
     box-shadow: var(--shadow-button);
     font-family: 'Bebas Neue', sans-serif;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.15em;
+    font-size: 1.25rem;
   }
 
   .btn-cta-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 30px rgba(0, 200, 100, 0.6);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 40px rgba(255, 106, 0, 0.7);
   }
 
   .btn-cta-primary:active {
@@ -273,10 +240,103 @@
   }
 
   .btn-cta-primary:focus-visible {
-    outline: 2px solid hsl(51 100% 50%);
-    outline-offset: 2px;
+    outline: 2px solid hsl(200 100% 50%);
+    outline-offset: 3px;
   }
 
+  /* Icon circles */
+  .icon-circle {
+    @apply flex items-center justify-center w-20 h-20 rounded-full;
+    background: hsl(0 0% 100%);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+  }
+
+  .icon-circle svg {
+    color: hsl(200 100% 45%);
+  }
+
+  /* Products table */
+  .products-table {
+    @apply w-full;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .products-table thead {
+    background: hsla(210, 60%, 12%, 0.95);
+  }
+
+  .products-table thead th {
+    @apply px-4 py-4 text-left text-sm uppercase tracking-wider font-bold;
+    color: hsl(0 0% 100%);
+    border-bottom: 2px solid hsla(200, 100%, 50%, 0.3);
+  }
+
+  .products-table tbody tr {
+    @apply transition-all duration-200;
+    background: hsla(210, 50%, 10%, 0.6);
+  }
+
+  .products-table tbody tr:hover {
+    background: hsla(210, 50%, 15%, 0.8);
+  }
+
+  .products-table tbody td {
+    @apply px-4 py-4 text-sm;
+    color: hsl(0 0% 90%);
+    border-bottom: 1px solid hsla(200, 100%, 50%, 0.1);
+  }
+
+  /* Ticket badge */
+  .ticket-badge {
+    @apply inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-bold;
+  }
+
+  .ticket-badge.tier-4 {
+    background: linear-gradient(135deg, hsl(45 100% 50%) 0%, hsl(35 100% 45%) 100%);
+    color: hsl(210 70% 10%);
+  }
+
+  .ticket-badge.tier-3 {
+    background: linear-gradient(135deg, hsl(25 100% 50%) 0%, hsl(15 100% 45%) 100%);
+    color: hsl(0 0% 100%);
+  }
+
+  .ticket-badge.tier-2 {
+    background: linear-gradient(135deg, hsl(200 100% 45%) 0%, hsl(210 100% 40%) 100%);
+    color: hsl(0 0% 100%);
+  }
+
+  .ticket-badge.tier-1 {
+    background: hsla(200, 50%, 30%, 0.8);
+    color: hsl(0 0% 90%);
+  }
+
+  /* Form styling */
+  .form-dark-panel {
+    @apply rounded-2xl p-6 sm:p-8;
+    backdrop-filter: blur(10px);
+    background: hsla(210, 60%, 8%, 0.95);
+    border: 1px solid hsla(200, 100%, 50%, 0.2);
+  }
+
+  /* Serial validation states */
+  .serial-valid {
+    border-color: hsl(145 80% 45%) !important;
+    box-shadow: 0 0 0 3px hsla(145, 80%, 45%, 0.2);
+  }
+
+  .serial-invalid {
+    border-color: hsl(0 80% 50%) !important;
+    box-shadow: 0 0 0 3px hsla(0, 80%, 50%, 0.2);
+  }
+
+  .serial-checking {
+    border-color: hsl(200 100% 50%) !important;
+    box-shadow: 0 0 0 3px hsla(200, 100%, 50%, 0.2);
+  }
+
+  /* Chat bubbles */
   .chat-bubble {
     @apply p-4 rounded-2xl max-w-[80%] animate-in fade-in slide-in-from-bottom-2 duration-300;
   }
@@ -289,17 +349,20 @@
     @apply bg-muted text-foreground mr-auto rounded-bl-md;
   }
 
-  /* Product cards */
-  .product-card {
-    @apply rounded-2xl overflow-hidden transition-all duration-300;
-    background: hsla(145, 50%, 12%, 0.8);
-    border: 1px solid hsla(145, 40%, 25%, 0.5);
+  /* Brush/geometric bottom decoration */
+  .brush-decoration {
+    position: relative;
   }
 
-  .product-card:hover {
-    transform: translateY(-4px);
-    border-color: hsla(51, 100%, 50%, 0.4);
-    box-shadow: var(--shadow-glow-gold);
+  .brush-decoration::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: linear-gradient(180deg, transparent 0%, hsla(210, 80%, 8%, 0.95) 100%);
+    pointer-events: none;
   }
 }
 
@@ -323,10 +386,10 @@
 
   @keyframes pulse-glow {
     0%, 100% {
-      box-shadow: 0 0 20px rgba(0, 200, 100, 0.3);
+      box-shadow: 0 0 20px rgba(255, 106, 0, 0.3);
     }
     50% {
-      box-shadow: 0 0 40px rgba(0, 200, 100, 0.6);
+      box-shadow: 0 0 50px rgba(255, 106, 0, 0.6);
     }
   }
 

@@ -11,13 +11,6 @@ interface CampaignData {
   end_date: string;
 }
 
-interface DrawResult {
-  id: string;
-  name: string;
-  executed_at: string | null;
-  results: any;
-}
-
 const Resultados = () => {
   const [stats, setStats] = useState({
     participantes: 0,
@@ -37,7 +30,7 @@ const Resultados = () => {
           .from("campaign")
           .select("name, draw_date, end_date")
           .eq("is_active", true)
-          .single();
+          .maybeSingle();
 
         if (campaignData) {
           setCampaign(campaignData);
@@ -113,22 +106,22 @@ const Resultados = () => {
   };
 
   const statsDisplay = [
-    { label: "Participantes", value: formatNumber(stats.participantes), icon: Users, color: "text-primary" },
-    { label: "Cupones Emitidos", value: formatNumber(stats.cupones), icon: Ticket, color: "text-secondary" },
-    { label: "Ventas Registradas", value: formatNumber(stats.ventas), icon: TrendingUp, color: "text-primary" },
-    { label: "Días Restantes", value: formatNumber(stats.diasRestantes), icon: Calendar, color: "text-secondary" },
+    { label: "Participantes", value: formatNumber(stats.participantes), icon: Users, color: "text-[#FF6A00]" },
+    { label: "Cupones Emitidos", value: formatNumber(stats.cupones), icon: Ticket, color: "text-[#0B6FBF]" },
+    { label: "Ventas Registradas", value: formatNumber(stats.ventas), icon: TrendingUp, color: "text-[#FF6A00]" },
+    { label: "Días Restantes", value: formatNumber(stats.diasRestantes), icon: Calendar, color: "text-[#0B6FBF]" },
   ];
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-hero field-pattern flex items-center justify-center">
-        <div className="text-foreground">Cargando resultados...</div>
+      <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
+        <div className="text-white">Cargando resultados...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-hero field-pattern">
+    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #071A2E 0%, #0B2A4A 50%, #071A2E 100%)' }}>
       <Header />
       
       <main className="main-content pb-12 px-4">
@@ -139,14 +132,14 @@ const Resultados = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-12"
           >
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-gold shadow-glow-gold mb-4">
-              <Trophy className="w-8 h-8 text-skyworth-dark" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-orange shadow-glow-orange mb-4">
+              <Trophy className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-4xl md:text-5xl font-black uppercase mb-4">
-              <span className="text-foreground">RESULTADOS DE LA </span>
-              <span className="text-gradient-gold">CAMPAÑA</span>
+              <span className="text-white">RESULTADOS DE LA </span>
+              <span className="text-gradient-orange">CAMPAÑA</span>
             </h1>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+            <p className="text-white/70 text-lg max-w-xl mx-auto">
               Estadísticas en tiempo real del Sueño del Hincha - Repechaje Bolivia rumbo a México 2026
             </p>
           </motion.div>
@@ -164,13 +157,13 @@ const Resultados = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 * index }}
-                className="bg-card rounded-2xl p-6 shadow-card text-center group hover:shadow-glow-gold transition-all duration-300"
+                className="prize-card text-center group hover:shadow-glow-orange transition-all duration-300"
               >
-                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-muted mb-4 ${stat.color}`}>
+                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[#0B6FBF]/10 mb-4 ${stat.color}`}>
                   <stat.icon className="w-6 h-6" />
                 </div>
-                <p className="text-3xl font-black text-card-foreground mb-1">{stat.value}</p>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
+                <p className="text-3xl font-black text-[#0B2A4A] mb-1">{stat.value}</p>
+                <p className="text-sm text-[#0B2A4A]/60">{stat.label}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -182,38 +175,36 @@ const Resultados = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-card rounded-2xl shadow-card overflow-hidden"
+              className="prize-card overflow-hidden"
             >
-              <div className="bg-gradient-gold p-6">
-                <h2 className="text-xl font-black text-skyworth-dark uppercase flex items-center gap-2">
+              <div className="bg-gradient-orange -mx-8 -mt-8 md:-mx-10 md:-mt-10 p-6 mb-6">
+                <h2 className="text-xl font-black text-white uppercase flex items-center gap-2">
                   <Trophy className="w-6 h-6" />
                   Premio Principal
                 </h2>
               </div>
-              <div className="p-6">
-                <div className="text-center py-8">
-                  <motion.div
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ repeat: Infinity, duration: 3 }}
-                    className="text-6xl mb-4"
-                  >
-                    ⚽🏆
-                  </motion.div>
-                  <h3 className="text-2xl font-black text-card-foreground mb-2">
-                    Viaje al Mundial 2026
-                  </h3>
-                  <p className="text-muted-foreground mb-6">
-                    Vuelos + Hotel + Entradas + Gastos incluidos
+              <div className="text-center py-8">
+                <motion.div
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ repeat: Infinity, duration: 3 }}
+                  className="text-6xl mb-4"
+                >
+                  ⚽🏆
+                </motion.div>
+                <h3 className="text-2xl font-black text-[#0B2A4A] mb-2">
+                  Viaje al Repechaje
+                </h3>
+                <p className="text-[#0B2A4A]/70 mb-6">
+                  Vuelos + Hotel + Entradas + Gastos incluidos
+                </p>
+                <div className="bg-[#0B6FBF]/10 rounded-xl p-4 inline-block">
+                  <p className="text-sm text-[#0B6FBF]">Sorteo el</p>
+                  <p className="text-xl font-bold text-[#0B6FBF]">
+                    {campaign?.draw_date 
+                      ? new Date(campaign.draw_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+                      : "15 de Julio, 2026"
+                    }
                   </p>
-                  <div className="bg-muted rounded-xl p-4 inline-block">
-                    <p className="text-sm text-muted-foreground">Sorteo el</p>
-                    <p className="text-xl font-bold text-gradient-gold">
-                      {campaign?.draw_date 
-                        ? new Date(campaign.draw_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
-                        : "15 de Julio, 2026"
-                      }
-                    </p>
-                  </div>
                 </div>
               </div>
             </motion.div>
@@ -223,13 +214,13 @@ const Resultados = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-card rounded-2xl shadow-card overflow-hidden"
+              className="glass-dark rounded-2xl overflow-hidden"
             >
-              <div className="p-6 border-b border-border">
-                <h2 className="text-xl font-bold text-card-foreground">Ganadores Recientes</h2>
-                <p className="text-sm text-muted-foreground">Premios de la promoción</p>
+              <div className="p-6 border-b border-white/10">
+                <h2 className="text-xl font-bold text-white">Ganadores Recientes</h2>
+                <p className="text-sm text-white/60">Premios de la promoción</p>
               </div>
-              <div className="divide-y divide-border">
+              <div className="divide-y divide-white/10">
                 {winners.length > 0 ? (
                   winners.map((winner, index) => (
                     <motion.div
@@ -239,28 +230,28 @@ const Resultados = () => {
                       transition={{ delay: 0.5 + index * 0.1 }}
                       className="p-4 flex items-center gap-4"
                     >
-                      <div className="w-12 h-12 rounded-full bg-gradient-gold flex items-center justify-center">
-                        <Trophy className="w-6 h-6 text-skyworth-dark" />
+                      <div className="w-12 h-12 rounded-full bg-gradient-orange flex items-center justify-center">
+                        <Trophy className="w-6 h-6 text-white" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-bold text-card-foreground">{winner.name}</p>
-                        <p className="text-sm text-muted-foreground">{winner.city}</p>
+                        <p className="font-bold text-white">{winner.name}</p>
+                        <p className="text-sm text-white/60">{winner.city}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium text-primary">{winner.prize}</p>
-                        <p className="text-xs text-muted-foreground">{winner.date}</p>
+                        <p className="text-sm font-medium text-[#FF6A00]">{winner.prize}</p>
+                        <p className="text-xs text-white/50">{winner.date}</p>
                       </div>
                     </motion.div>
                   ))
                 ) : (
-                  <div className="p-8 text-center text-muted-foreground">
+                  <div className="p-8 text-center text-white/60">
                     <p>Aún no hay ganadores.</p>
                     <p className="text-sm">¡Participa para ser el primero!</p>
                   </div>
                 )}
               </div>
-              <div className="p-4 bg-muted/30">
-                <p className="text-center text-sm text-muted-foreground">
+              <div className="p-4 bg-white/5">
+                <p className="text-center text-sm text-white/60">
                   ¡Tú podrías ser el próximo ganador!
                 </p>
               </div>
@@ -275,9 +266,9 @@ const Resultados = () => {
             className="mt-12 text-center"
           >
             <div className="glass-dark rounded-2xl p-8 inline-block">
-              <h3 className="text-xl font-bold text-foreground mb-2">¿Aún no participas?</h3>
-              <p className="text-muted-foreground mb-4">
-                Registra tu compra y obtén tus cupones para el gran sorteo
+              <h3 className="text-xl font-bold text-white mb-2">¿Aún no participas?</h3>
+              <p className="text-white/70 mb-4">
+                Registra tu compra y obtén tus tickets para el gran sorteo
               </p>
               <a href="/#registrar-compra" className="btn-cta-primary inline-flex items-center gap-2">
                 <Trophy className="w-5 h-5" />

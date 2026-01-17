@@ -64,10 +64,11 @@ export default {
         },
         skyworth: {
           dark: "hsl(var(--skyworth-dark))",
-          gold: "hsl(var(--skyworth-gold))",
-          green: "hsl(var(--skyworth-green))",
-          "green-light": "hsl(var(--skyworth-green-light))",
-          "green-dark": "hsl(var(--skyworth-green-dark))",
+          blue: "hsl(var(--skyworth-blue))",
+          "blue-deep": "hsl(var(--skyworth-blue-deep))",
+          "blue-light": "hsl(var(--skyworth-blue-light))",
+          orange: "hsl(var(--skyworth-orange))",
+          "orange-glow": "hsl(var(--skyworth-orange-glow))",
         },
       },
       borderRadius: {
@@ -113,7 +114,7 @@ export default {
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "hero-pattern": "linear-gradient(180deg, hsl(145 60% 6%) 0%, hsl(145 60% 10%) 40%, hsl(145 50% 15%) 100%)",
+        "hero-pattern": "linear-gradient(180deg, hsl(210 70% 5%) 0%, hsl(210 60% 12%) 50%, hsl(210 50% 18%) 100%)",
       },
       spacing: {
         'header': 'var(--header-h)',

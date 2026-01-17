@@ -10,11 +10,11 @@ import { Trophy } from "lucide-react";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-gradient-hero field-pattern">
+    <div className="min-h-screen bg-gradient-hero">
       <Header />
-      <main className="main-content">
-        {/* Hero Section */}
-        <section id="inicio" className="scroll-mt-24">
+      <main>
+        {/* Hero Section - Full screen */}
+        <section id="inicio">
           <HeroSection />
         </section>
 
@@ -33,15 +33,15 @@ const Index = () => {
               viewport={{ once: true }}
               className="text-center mb-12"
             >
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-gold shadow-glow-gold mb-4">
-                <Trophy className="w-8 h-8 text-skyworth-dark" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-orange shadow-glow-orange mb-4">
+                <Trophy className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-4xl md:text-5xl font-black uppercase mb-4">
-                <span className="text-foreground">REGISTRA TU </span>
-                <span className="text-gradient-gold">COMPRA</span>
+                <span className="text-white">REGISTRA TU </span>
+                <span className="text-gradient-orange">COMPRA</span>
               </h2>
               <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-                Completa el formulario con los datos de tu TV Skyworth y participa por el viaje al Mundial 2026
+                Completa el formulario con los datos de tu TV Skyworth y participa por el viaje al Repechaje
               </p>
             </motion.div>
 

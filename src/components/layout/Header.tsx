@@ -56,12 +56,12 @@ const Header = () => {
         <div className="flex items-center justify-between h-[var(--header-h)]">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-gold flex items-center justify-center">
-              <Trophy className="w-5 h-5 text-skyworth-dark" />
+            <div className="w-10 h-10 rounded-full bg-gradient-orange flex items-center justify-center shadow-glow-orange">
+              <Trophy className="w-5 h-5 text-white" />
             </div>
             <div className="hidden sm:block">
-              <span className="font-bold text-foreground text-lg">SKYWORTH</span>
-              <span className="text-primary text-xs block -mt-1">MUNDIAL 2026</span>
+              <span className="font-bold text-white text-lg tracking-wide">SKYWORTH</span>
+              <span className="text-[#FF6A00] text-xs block -mt-1 font-medium">SUEÑO DEL HINCHA</span>
             </div>
           </Link>
 
@@ -72,7 +72,7 @@ const Header = () => {
                 <button
                   key={link.href}
                   onClick={() => handleNavClick(link.href, true)}
-                  className="text-sm font-medium transition-colors text-muted-foreground hover:text-foreground"
+                  className="text-sm font-medium transition-colors text-white/70 hover:text-white"
                 >
                   {link.label}
                 </button>
@@ -82,8 +82,8 @@ const Header = () => {
                   to={link.href}
                   className={`text-sm font-medium transition-colors ${
                     isActive(link.href)
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? "text-[#FF6A00]"
+                      : "text-white/70 hover:text-white"
                   }`}
                 >
                   {link.label}
@@ -106,22 +106,22 @@ const Header = () => {
                         </Button>
                       </Link>
                     )}
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
-                      <User className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-foreground">{user.email?.split("@")[0]}</span>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10">
+                      <User className="w-4 h-4 text-white/70" />
+                      <span className="text-sm text-white">{user.email?.split("@")[0]}</span>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={handleSignOut}
-                      className="text-muted-foreground hover:text-foreground"
+                      className="text-white/70 hover:text-white hover:bg-white/10"
                     >
                       <LogOut className="w-4 h-4" />
                     </Button>
                   </div>
                 ) : (
                   <Link to="/vendedores" className="hidden sm:block">
-                    <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                    <Button variant="outline" size="sm" className="border-[#FF6A00] text-[#FF6A00] hover:bg-[#FF6A00] hover:text-white">
                       <Store className="w-4 h-4 mr-2" />
                       Soy Vendedor
                     </Button>
@@ -133,7 +133,7 @@ const Header = () => {
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-foreground"
+              className="md:hidden p-2 text-white"
             >
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -148,7 +148,7 @@ const Header = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-border bg-background"
+            className="md:hidden border-t border-white/10 bg-[#071A2E]/95 backdrop-blur-lg"
           >
             <nav className="p-4 space-y-2">
               {navLinks.map((link) => (
@@ -156,7 +156,7 @@ const Header = () => {
                   <button
                     key={link.href}
                     onClick={() => handleNavClick(link.href, true)}
-                    className="block w-full text-left px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="block w-full text-left px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors"
                   >
                     {link.label}
                   </button>
@@ -167,15 +167,15 @@ const Header = () => {
                     onClick={() => setIsMenuOpen(false)}
                     className={`block px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       isActive(link.href)
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        ? "bg-[#FF6A00]/20 text-[#FF6A00]"
+                        : "text-white/70 hover:bg-white/10 hover:text-white"
                     }`}
                   >
                     {link.label}
                   </Link>
                 )
               ))}
-              <div className="pt-2 border-t border-border mt-2">
+              <div className="pt-2 border-t border-white/10 mt-2">
                 {user ? (
                   <div className="space-y-2">
                     {isAdmin && (
@@ -188,7 +188,7 @@ const Header = () => {
                         Panel Admin
                       </Link>
                     )}
-                    <div className="flex items-center gap-2 px-4 py-2 text-sm text-foreground">
+                    <div className="flex items-center gap-2 px-4 py-2 text-sm text-white">
                       <User className="w-4 h-4" />
                       {user.email}
                     </div>
@@ -197,7 +197,7 @@ const Header = () => {
                         handleSignOut();
                         setIsMenuOpen(false);
                       }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-destructive w-full"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-red-400 w-full"
                     >
                       <LogOut className="w-4 h-4" />
                       Cerrar Sesión
@@ -207,7 +207,7 @@ const Header = () => {
                   <Link
                     to="/vendedores"
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-primary"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-[#FF6A00]"
                   >
                     <Store className="w-4 h-4" />
                     Soy Vendedor
