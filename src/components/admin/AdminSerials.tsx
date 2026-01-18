@@ -318,45 +318,45 @@ export default function AdminSerials() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card className="bg-card border-border">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Serial</TableHead>
-                <TableHead>Producto</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Comprador</TableHead>
-                <TableHead>Vendedor</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
+              <TableRow className="bg-slate-700 hover:bg-slate-700 border-b border-slate-600">
+                <TableHead className="font-bold text-white">Serial</TableHead>
+                <TableHead className="font-bold text-white">Producto</TableHead>
+                <TableHead className="font-bold text-white">Estado</TableHead>
+                <TableHead className="font-bold text-white">Comprador</TableHead>
+                <TableHead className="font-bold text-white">Vendedor</TableHead>
+                <TableHead className="font-bold text-white text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredSerials.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground bg-white">
                     No hay seriales registrados
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredSerials.map((serial) => (
-                  <TableRow key={serial.id}>
-                    <TableCell className="font-mono">{serial.serial_number}</TableCell>
-                    <TableCell>
-                      {products.find(p => p.id === serial.product_id)?.model_name || '-'}
+                  <TableRow key={serial.id} className="bg-white hover:bg-slate-50 border-b border-slate-200">
+                    <TableCell className="font-mono text-slate-800">{serial.serial_number}</TableCell>
+                    <TableCell className="text-slate-700">
+                      {products.find(p => p.id === serial.product_id)?.model_name || <span className="text-slate-400">-</span>}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={serial.status === 'AVAILABLE' ? 'default' : 'destructive'}>
+                      <Badge className={serial.status === 'AVAILABLE' ? 'bg-orange-500 text-white' : 'bg-red-500 text-white'}>
                         {serial.status === 'AVAILABLE' ? 'Disponible' : 'Bloqueado'}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={serial.buyer_status === 'REGISTERED' ? 'default' : 'outline'}>
+                      <Badge className={serial.buyer_status === 'REGISTERED' ? 'bg-green-500 text-white' : 'bg-slate-300 text-slate-600'}>
                         {serial.buyer_status === 'REGISTERED' ? 'Registrado' : 'No registrado'}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={serial.seller_status === 'REGISTERED' ? 'default' : 'outline'}>
+                      <Badge className={serial.seller_status === 'REGISTERED' ? 'bg-green-500 text-white' : 'bg-slate-300 text-slate-600'}>
                         {serial.seller_status === 'REGISTERED' ? 'Registrado' : 'No registrado'}
                       </Badge>
                     </TableCell>
@@ -366,6 +366,7 @@ export default function AdminSerials() {
                         variant="ghost"
                         onClick={() => handleToggleStatus(serial)}
                         title={serial.status === 'AVAILABLE' ? 'Bloquear' : 'Desbloquear'}
+                        className="text-slate-600 hover:text-slate-900"
                       >
                         {serial.status === 'AVAILABLE' ? (
                           <Lock className="h-4 w-4" />

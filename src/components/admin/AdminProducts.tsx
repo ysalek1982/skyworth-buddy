@@ -331,29 +331,29 @@ export default function AdminProducts() {
       </div>
 
       {/* Products Table */}
-      <Card className="border-border">
+      <Card className="border-border bg-card">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead className="font-bold text-foreground">Modelo</TableHead>
-                  <TableHead className="font-bold text-foreground">Pulgadas</TableHead>
-                  <TableHead className="font-bold text-foreground text-center">Tier</TableHead>
-                  <TableHead className="font-bold text-foreground text-center">
+                <TableRow className="bg-slate-700 hover:bg-slate-700 border-b border-slate-600">
+                  <TableHead className="font-bold text-white">Modelo</TableHead>
+                  <TableHead className="font-bold text-white">Pulgadas</TableHead>
+                  <TableHead className="font-bold text-white text-center">Tier</TableHead>
+                  <TableHead className="font-bold text-white text-center">
                     <div className="flex items-center justify-center gap-1">
                       <Gift className="w-4 h-4" />
                       Cupones
                     </div>
                   </TableHead>
-                  <TableHead className="font-bold text-foreground text-center">
+                  <TableHead className="font-bold text-white text-center">
                     <div className="flex items-center justify-center gap-1">
                       <Star className="w-4 h-4" />
                       Puntos
                     </div>
                   </TableHead>
-                  <TableHead className="font-bold text-foreground text-center">Estado</TableHead>
-                  <TableHead className="font-bold text-foreground text-right">Acciones</TableHead>
+                  <TableHead className="font-bold text-white text-center">Estado</TableHead>
+                  <TableHead className="font-bold text-white text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -367,17 +367,17 @@ export default function AdminProducts() {
                   products.map((product) => (
                     <TableRow 
                       key={product.id} 
-                      className={`hover:bg-muted/30 ${!product.is_active ? 'opacity-50' : ''}`}
+                      className={`hover:bg-slate-50 border-b border-slate-200 ${!product.is_active ? 'opacity-60 bg-slate-100' : 'bg-white'}`}
                     >
                       <TableCell className="font-semibold">
                         <div>
-                          <span className="text-foreground">{product.model_name}</span>
+                          <span className="text-slate-800">{product.model_name || '(Sin nombre)'}</span>
                           {product.model_key && (
-                            <span className="block text-xs text-muted-foreground mt-0.5">{product.model_key}</span>
+                            <span className="block text-xs text-slate-500 mt-0.5">{product.model_key}</span>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="text-slate-600">
                         {product.description || '-'}
                       </TableCell>
                       <TableCell className="text-center">
@@ -391,10 +391,10 @@ export default function AdminProducts() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className="font-semibold text-amber-600">{product.points_value}</span>
+                        <span className="font-bold text-amber-600">{product.points_value}</span>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge variant={product.is_active ? 'default' : 'secondary'}>
+                        <Badge className={product.is_active ? 'bg-green-500 text-white' : 'bg-amber-500 text-white'}>
                           {product.is_active ? 'Activo' : 'Inactivo'}
                         </Badge>
                       </TableCell>
@@ -404,7 +404,7 @@ export default function AdminProducts() {
                             size="icon" 
                             variant="ghost" 
                             onClick={() => handleEdit(product)}
-                            className="h-8 w-8"
+                            className="h-8 w-8 text-slate-600 hover:text-slate-900"
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -413,7 +413,7 @@ export default function AdminProducts() {
                               size="icon" 
                               variant="ghost" 
                               onClick={() => handleDelete(product.id)}
-                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
