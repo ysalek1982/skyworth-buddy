@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,7 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Upload, Loader2, Lock, Unlock, Barcode, AlertCircle } from 'lucide-react';
+import { Plus, Upload, Loader2, Lock, Unlock, Pencil, Download, FileSpreadsheet, AlertTriangle, CheckCircle } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 interface Serial {
   id: string;
@@ -24,7 +25,16 @@ interface Serial {
 interface Product {
   id: string;
   model_name: string;
+  description: string | null;
   tier: string;
+}
+
+interface ParsedSerial {
+  serial_number: string;
+  product_name?: string;
+  product_id?: string;
+  valid: boolean;
+  error?: string;
 }
 
 export default function AdminSerials() {
@@ -33,9 +43,10 @@ export default function AdminSerials() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [csvDialogOpen, setCsvDialogOpen] = useState(false);
-  const [csvPreview, setCsvPreview] = useState<string[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<string>('');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [editingSerial, setEditingSerial] = useState<Serial | null>(null);
+  const [parsedSerials, setParsedSerials] = useState<ParsedSerial[]>([]);
   const [form, setForm] = useState({ serial_number: '', product_id: '' });
   const [filter, setFilter] = useState({ status: 'all', product: 'all' });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,8 +58,8 @@ export default function AdminSerials() {
   const loadData = async () => {
     try {
       const [serialsRes, productsRes] = await Promise.all([
-        supabase.from('tv_serials').select('*').order('created_at', { ascending: false }).limit(100),
-        supabase.from('products').select('id, model_name, tier').eq('is_active', true)
+        supabase.from('tv_serials').select('*').order('created_at', { ascending: false }).limit(200),
+        supabase.from('products').select('id, model_name, description, tier').eq('is_active', true)
       ]);
 
       if (serialsRes.error) throw serialsRes.error;
@@ -70,7 +81,7 @@ export default function AdminSerials() {
 
     try {
       const { error } = await supabase.from('tv_serials').insert({
-        serial_number: form.serial_number,
+        serial_number: form.serial_number.trim().toUpperCase(),
         product_id: form.product_id || null
       });
 
@@ -88,49 +99,145 @@ export default function AdminSerials() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEdit = (serial: Serial) => {
+    setEditingSerial(serial);
+    setForm({
+      serial_number: serial.serial_number,
+      product_id: serial.product_id || ''
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSerial) return;
+    setSaving(true);
+
+    try {
+      const { error } = await supabase
+        .from('tv_serials')
+        .update({
+          serial_number: form.serial_number.trim().toUpperCase(),
+          product_id: form.product_id || null
+        })
+        .eq('id', editingSerial.id);
+
+      if (error) throw error;
+
+      toast.success('Serial actualizado');
+      setEditDialogOpen(false);
+      setEditingSerial(null);
+      setForm({ serial_number: '', product_id: '' });
+      loadData();
+    } catch (error: any) {
+      console.error('Error updating serial:', error);
+      toast.error(error.message || 'Error al actualizar serial');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const downloadTemplate = () => {
+    // Create template with product options
+    const templateData = [
+      { 'SERIAL': 'SKW123456789', 'MODELO': 'Q7500G' },
+      { 'SERIAL': 'SKW987654321', 'MODELO': 'E5500H - E5500G' },
+      { 'SERIAL': '', 'MODELO': '' },
+    ];
+
+    // Add products list as reference
+    const productsRef = products.map(p => ({
+      'MODELOS DISPONIBLES': p.model_name,
+      'DESCRIPCION': p.description || ''
+    }));
+
+    const wb = XLSX.utils.book_new();
+    
+    // Main sheet for serials
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    ws['!cols'] = [{ wch: 25 }, { wch: 25 }];
+    XLSX.utils.book_append_sheet(wb, ws, 'Seriales');
+
+    // Reference sheet for products
+    const wsProducts = XLSX.utils.json_to_sheet(productsRef);
+    wsProducts['!cols'] = [{ wch: 25 }, { wch: 20 }];
+    XLSX.utils.book_append_sheet(wb, wsProducts, 'Productos Referencia');
+
+    XLSX.writeFile(wb, 'plantilla_seriales_skyworth.xlsx');
+    toast.success('Plantilla descargada');
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      const lines = text.split('\n').map(line => line.trim()).filter(line => line);
-      setCsvPreview(lines.slice(0, 10));
-      setCsvDialogOpen(true);
-    };
-    reader.readAsText(file);
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet);
+
+      // Parse and validate serials
+      const parsed: ParsedSerial[] = jsonData.map((row) => {
+        const serialNumber = String(row['SERIAL'] || row['serial'] || row['Serial'] || row['serial_number'] || '').trim().toUpperCase();
+        const productName = String(row['MODELO'] || row['modelo'] || row['Modelo'] || row['product'] || row['PRODUCTO'] || '').trim();
+
+        if (!serialNumber) {
+          return { serial_number: '', valid: false, error: 'Serial vacío' };
+        }
+
+        // Find matching product
+        const matchedProduct = products.find(p => 
+          p.model_name.toLowerCase().includes(productName.toLowerCase()) ||
+          productName.toLowerCase().includes(p.model_name.toLowerCase())
+        );
+
+        return {
+          serial_number: serialNumber,
+          product_name: productName,
+          product_id: matchedProduct?.id,
+          valid: !!matchedProduct,
+          error: matchedProduct ? undefined : `Producto "${productName}" no encontrado`
+        };
+      }).filter(s => s.serial_number);
+
+      setParsedSerials(parsed);
+      setImportDialogOpen(true);
+    } catch (error) {
+      console.error('Error parsing file:', error);
+      toast.error('Error al leer el archivo');
+    }
+
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleCsvUpload = async () => {
-    if (!fileInputRef.current?.files?.[0] || !selectedProduct) {
-      toast.error('Selecciona un producto');
+  const handleBulkImport = async () => {
+    const validSerials = parsedSerials.filter(s => s.valid && s.product_id);
+    
+    if (validSerials.length === 0) {
+      toast.error('No hay seriales válidos para importar');
       return;
     }
 
     setSaving(true);
     try {
-      const file = fileInputRef.current.files[0];
-      const text = await file.text();
-      const lines = text.split('\n').map(line => line.trim()).filter(line => line);
-
-      const serialsToInsert = lines.map(serial_number => ({
-        serial_number,
-        product_id: selectedProduct
+      const serialsToInsert = validSerials.map(s => ({
+        serial_number: s.serial_number,
+        product_id: s.product_id
       }));
 
       const { error } = await supabase.from('tv_serials').insert(serialsToInsert);
 
       if (error) throw error;
 
-      toast.success(`${lines.length} seriales importados`);
-      setCsvDialogOpen(false);
-      setCsvPreview([]);
-      setSelectedProduct('');
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      toast.success(`${validSerials.length} seriales importados exitosamente`);
+      setImportDialogOpen(false);
+      setParsedSerials([]);
       loadData();
     } catch (error: any) {
-      console.error('Error uploading CSV:', error);
+      console.error('Error importing serials:', error);
       toast.error(error.message || 'Error al importar seriales');
     } finally {
       setSaving(false);
@@ -160,6 +267,9 @@ export default function AdminSerials() {
     return true;
   });
 
+  const validCount = parsedSerials.filter(s => s.valid).length;
+  const invalidCount = parsedSerials.filter(s => !s.valid).length;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -178,14 +288,18 @@ export default function AdminSerials() {
         <div className="flex gap-2">
           <input
             type="file"
-            accept=".csv,.txt"
+            accept=".xlsx,.xls,.csv"
             ref={fileInputRef}
             onChange={handleFileChange}
             className="hidden"
           />
+          <Button variant="outline" onClick={downloadTemplate} className="border-green-500/50 text-green-400 hover:bg-green-500/10">
+            <Download className="h-4 w-4 mr-2" />
+            Descargar Plantilla
+          </Button>
           <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
             <Upload className="h-4 w-4 mr-2" />
-            Importar CSV
+            Importar Excel
           </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
@@ -211,7 +325,7 @@ export default function AdminSerials() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="product_id">Producto</Label>
+                  <Label htmlFor="product_id">Producto *</Label>
                   <Select value={form.product_id} onValueChange={(value) => setForm({ ...form, product_id: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Seleccionar producto" />
@@ -219,7 +333,7 @@ export default function AdminSerials() {
                     <SelectContent>
                       {products.map(product => (
                         <SelectItem key={product.id} value={product.id}>
-                          {product.model_name} ({product.tier})
+                          {product.model_name} {product.description && `(${product.description})`}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -229,7 +343,7 @@ export default function AdminSerials() {
                   <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={saving}>
+                  <Button type="submit" disabled={saving || !form.product_id}>
                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Crear'}
                   </Button>
                 </DialogFooter>
@@ -239,42 +353,139 @@ export default function AdminSerials() {
         </div>
       </div>
 
-      {/* CSV Preview Dialog */}
-      <Dialog open={csvDialogOpen} onOpenChange={setCsvDialogOpen}>
-        <DialogContent className="max-w-lg">
+      {/* Edit Serial Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Importar Seriales</DialogTitle>
-            <DialogDescription>Vista previa de los primeros 10 seriales</DialogDescription>
+            <DialogTitle>Editar Serial</DialogTitle>
+            <DialogDescription>Modifica los datos del serial</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <form onSubmit={handleEditSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>Producto para asignar</Label>
-              <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+              <Label htmlFor="edit_serial_number">Número de Serie *</Label>
+              <Input
+                id="edit_serial_number"
+                value={form.serial_number}
+                onChange={(e) => setForm({ ...form, serial_number: e.target.value })}
+                placeholder="Ej: SKW123456789"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit_product_id">Producto *</Label>
+              <Select value={form.product_id} onValueChange={(value) => setForm({ ...form, product_id: value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar producto" />
                 </SelectTrigger>
                 <SelectContent>
                   {products.map(product => (
                     <SelectItem key={product.id} value={product.id}>
-                      {product.model_name} ({product.tier})
+                      {product.model_name} {product.description && `(${product.description})`}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="bg-muted rounded-lg p-4 max-h-48 overflow-auto">
-              {csvPreview.map((serial, i) => (
-                <div key={i} className="font-mono text-sm py-1">{serial}</div>
-              ))}
-              {csvPreview.length >= 10 && (
-                <div className="text-muted-foreground text-sm">...y más</div>
-              )}
+            {editingSerial && (
+              <div className="p-3 bg-slate-100 rounded-lg text-sm text-slate-600">
+                <p><strong>Estado:</strong> {editingSerial.status === 'AVAILABLE' ? 'Disponible' : 'Bloqueado'}</p>
+                <p><strong>Comprador:</strong> {editingSerial.buyer_status === 'REGISTERED' ? 'Registrado' : 'No registrado'}</p>
+                <p><strong>Vendedor:</strong> {editingSerial.seller_status === 'REGISTERED' ? 'Registrado' : 'No registrado'}</p>
+              </div>
+            )}
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={saving || !form.product_id}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Guardar'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Preview Dialog */}
+      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="h-5 w-5 text-green-500" />
+              Importar Seriales desde Excel
+            </DialogTitle>
+            <DialogDescription>
+              Revisa los seriales antes de importar
+            </DialogDescription>
+          </DialogHeader>
+          
+          {/* Summary */}
+          <div className="flex gap-4 py-4">
+            <div className="flex items-center gap-2 bg-green-500/10 text-green-600 px-4 py-2 rounded-lg">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-medium">{validCount} válidos</span>
             </div>
+            {invalidCount > 0 && (
+              <div className="flex items-center gap-2 bg-amber-500/10 text-amber-600 px-4 py-2 rounded-lg">
+                <AlertTriangle className="h-5 w-5" />
+                <span className="font-medium">{invalidCount} con errores</span>
+              </div>
+            )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCsvDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleCsvUpload} disabled={saving || !selectedProduct}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Importar'}
+
+          {/* Preview Table */}
+          <div className="flex-1 overflow-auto border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-100">
+                  <TableHead className="font-bold">Estado</TableHead>
+                  <TableHead className="font-bold">Serial</TableHead>
+                  <TableHead className="font-bold">Modelo (archivo)</TableHead>
+                  <TableHead className="font-bold">Producto Asignado</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {parsedSerials.slice(0, 50).map((serial, i) => (
+                  <TableRow key={i} className={serial.valid ? 'bg-white' : 'bg-amber-50'}>
+                    <TableCell>
+                      {serial.valid ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <AlertTriangle className="h-4 w-4 text-amber-500" />
+                      )}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">{serial.serial_number}</TableCell>
+                    <TableCell className="text-sm">{serial.product_name || '-'}</TableCell>
+                    <TableCell>
+                      {serial.valid ? (
+                        <Badge className="bg-green-500 text-white">
+                          {products.find(p => p.id === serial.product_id)?.model_name}
+                        </Badge>
+                      ) : (
+                        <span className="text-amber-600 text-sm">{serial.error}</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            {parsedSerials.length > 50 && (
+              <div className="p-3 text-center text-sm text-slate-500 bg-slate-50">
+                ...y {parsedSerials.length - 50} más
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="pt-4">
+            <Button variant="outline" onClick={() => setImportDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleBulkImport} 
+              disabled={saving || validCount === 0}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+              Importar {validCount} Seriales
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -313,6 +524,11 @@ export default function AdminSerials() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex items-end">
+              <Badge variant="outline" className="h-10 px-4">
+                {filteredSerials.length} seriales
+              </Badge>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -346,34 +562,45 @@ export default function AdminSerials() {
                       {products.find(p => p.id === serial.product_id)?.model_name || <span className="text-slate-400">-</span>}
                     </TableCell>
                     <TableCell>
-                      <Badge className={serial.status === 'AVAILABLE' ? 'bg-orange-500 text-white' : 'bg-red-500 text-white'}>
+                      <Badge className={serial.status === 'AVAILABLE' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}>
                         {serial.status === 'AVAILABLE' ? 'Disponible' : 'Bloqueado'}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={serial.buyer_status === 'REGISTERED' ? 'bg-green-500 text-white' : 'bg-slate-300 text-slate-600'}>
+                      <Badge className={serial.buyer_status === 'REGISTERED' ? 'bg-blue-500 text-white' : 'bg-slate-300 text-slate-600'}>
                         {serial.buyer_status === 'REGISTERED' ? 'Registrado' : 'No registrado'}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={serial.seller_status === 'REGISTERED' ? 'bg-green-500 text-white' : 'bg-slate-300 text-slate-600'}>
+                      <Badge className={serial.seller_status === 'REGISTERED' ? 'bg-blue-500 text-white' : 'bg-slate-300 text-slate-600'}>
                         {serial.seller_status === 'REGISTERED' ? 'Registrado' : 'No registrado'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleToggleStatus(serial)}
-                        title={serial.status === 'AVAILABLE' ? 'Bloquear' : 'Desbloquear'}
-                        className="text-slate-600 hover:text-slate-900"
-                      >
-                        {serial.status === 'AVAILABLE' ? (
-                          <Lock className="h-4 w-4" />
-                        ) : (
-                          <Unlock className="h-4 w-4" />
-                        )}
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleEdit(serial)}
+                          title="Editar serial"
+                          className="text-slate-600 hover:text-slate-900"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleToggleStatus(serial)}
+                          title={serial.status === 'AVAILABLE' ? 'Bloquear' : 'Desbloquear'}
+                          className="text-slate-600 hover:text-slate-900"
+                        >
+                          {serial.status === 'AVAILABLE' ? (
+                            <Lock className="h-4 w-4" />
+                          ) : (
+                            <Unlock className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
