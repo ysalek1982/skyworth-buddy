@@ -1,6 +1,6 @@
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, AlertTriangle, RefreshCw, LogOut, Home } from 'lucide-react';
+import { Loader2, AlertTriangle, RefreshCw, LogOut, Home, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -14,6 +14,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Show loader while checking auth state or loading roles
   if (loading || !rolesLoaded) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -25,6 +26,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
+  // Handle roles loading error
   if (rolesError && user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -58,12 +60,24 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
+  // Not authenticated - redirect to appropriate login
   if (!user) {
-    const fullPath = location.pathname + location.search;
-    const redirectPath = encodeURIComponent(fullPath.replace(/^\//, ''));
-    return <Navigate to={`/login?redirect=${redirectPath}`} state={{ from: location }} replace />;
+    const isSellerRoute = location.pathname.startsWith('/vendedores');
+    const isAdminRoute = location.pathname.startsWith('/admin');
+    
+    if (isSellerRoute) {
+      return <Navigate to="/vendedores/login" state={{ from: location }} replace />;
+    }
+    
+    if (isAdminRoute) {
+      return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+    
+    // Default fallback
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // User authenticated but missing admin role
   if (requiredRole === 'admin' && !isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -86,21 +100,42 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
+  // User authenticated but missing seller role
   if (requiredRole === 'seller' && !isSeller) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="border-green-500/30 max-w-md w-full">
           <CardHeader className="text-center">
+            <div className="mx-auto mb-4 w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
+              <Store className="h-8 w-8 text-green-500" />
+            </div>
             <CardTitle className="text-xl">No eres vendedor</CardTitle>
-            <CardDescription>Regístrate como vendedor para acceder.</CardDescription>
+            <CardDescription>
+              Para acceder al panel de vendedores, primero debes registrarte como vendedor.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <Button onClick={() => navigate('/registro-vendedor')} className="w-full">
+            <Button 
+              onClick={() => navigate('/vendedores/registro')} 
+              className="w-full bg-gradient-to-r from-green-600 to-green-500"
+            >
+              <Store className="h-4 w-4 mr-2" />
               Registrarme como Vendedor
             </Button>
-            <Button variant="outline" onClick={() => navigate('/')} className="w-full">
+            <Button variant="outline" onClick={() => navigate('/vendedores')} className="w-full">
               <Home className="h-4 w-4 mr-2" />
-              Ir al inicio
+              Portal Vendedores
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={async () => {
+                await signOut();
+                navigate('/vendedores/login', { replace: true });
+              }} 
+              className="w-full text-muted-foreground"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Cerrar sesión e ingresar con otra cuenta
             </Button>
           </CardContent>
         </Card>
@@ -108,5 +143,6 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
+  // User has required role - render children
   return <>{children}</>;
 }

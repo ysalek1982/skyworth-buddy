@@ -889,6 +889,15 @@ export type Database = {
         }
         Returns: Json
       }
+      rpc_register_seller: {
+        Args: {
+          p_phone?: string
+          p_store_city: string
+          p_store_name: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       rpc_register_seller_serial: {
         Args: {
           p_client_name?: string

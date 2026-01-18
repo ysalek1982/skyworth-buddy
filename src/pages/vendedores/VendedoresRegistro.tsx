@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Store, User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, IdCard, Phone, MapPin } from "lucide-react";
+import { Store, User, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle, Phone, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +26,7 @@ const ciudades = [
 
 const VendedoresRegistro = () => {
   const navigate = useNavigate();
-  const { user, signUp } = useAuth();
+  const { user, isSeller, rolesLoaded, signUp, refreshRoles } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -40,77 +40,99 @@ const VendedoresRegistro = () => {
     storeCity: "",
   });
 
+  // If user is already a seller, redirect to dashboard
   useEffect(() => {
-    if (user && !isSuccess) {
-      navigate("/vendedores");
+    if (user && rolesLoaded && isSeller && !isSuccess) {
+      navigate("/vendedores/dashboard", { replace: true });
     }
-  }, [user, navigate, isSuccess]);
+  }, [user, rolesLoaded, isSeller, navigate, isSuccess]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Register with Supabase Auth
-    const { error: authError } = await signUp(formData.email, formData.password, {
-      nombre: formData.nombre,
-      apellido: formData.apellido,
-      telefono: formData.telefono,
-    });
-
-    if (authError) {
-      if (authError.message.includes("User already registered")) {
-        toast.error("Este email ya está registrado. Intenta iniciar sesión.");
-      } else if (authError.message.includes("Password")) {
-        toast.error("La contraseña debe tener al menos 6 caracteres.");
-      } else {
-        toast.error(authError.message);
-      }
-      setIsLoading(false);
-      return;
-    }
-
-    // Get the newly created user
-    const { data: { user: newUser } } = await supabase.auth.getUser();
-    
-    if (newUser) {
-      // Create profile
-      await supabase.from("profiles").insert({
-        user_id: newUser.id,
+    try {
+      // Step 1: Register with Supabase Auth
+      const { error: authError, needsEmailConfirmation } = await signUp(formData.email, formData.password, {
         nombre: formData.nombre,
         apellido: formData.apellido,
         telefono: formData.telefono,
       });
 
-      // Create seller record
-      const { error: sellerError } = await supabase.from("sellers").insert({
-        user_id: newUser.id,
-        store_name: formData.storeName,
-        store_city: formData.storeCity,
-        phone: formData.telefono,
-        is_active: true,
-      });
-
-      if (sellerError) {
-        console.error("Error creating seller:", sellerError);
-        toast.error("Error al crear el perfil de vendedor. Contacta al administrador.");
+      if (authError) {
+        if (authError.message.includes("User already registered")) {
+          toast.error("Este email ya está registrado. Intenta iniciar sesión.");
+        } else if (authError.message.includes("Password")) {
+          toast.error("La contraseña debe tener al menos 6 caracteres.");
+        } else {
+          toast.error(authError.message);
+        }
         setIsLoading(false);
         return;
       }
 
-      // Assign seller role
-      const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: newUser.id,
-        role: "seller",
+      // Step 2: Wait a moment for auth to settle, then get the user
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const { data: { user: newUser } } = await supabase.auth.getUser();
+      
+      if (!newUser) {
+        // If email confirmation is required, show success and let them confirm
+        if (needsEmailConfirmation) {
+          toast.info("Por favor confirma tu email para continuar.");
+          setIsSuccess(true);
+          setIsLoading(false);
+          return;
+        }
+        throw new Error("No se pudo obtener el usuario después del registro");
+      }
+
+      // Step 3: Call the secure RPC to create seller record and assign role
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('rpc_register_seller', {
+        p_user_id: newUser.id,
+        p_store_name: formData.storeName,
+        p_store_city: formData.storeCity,
+        p_phone: formData.telefono,
       });
 
-      if (roleError) {
-        console.error("Error assigning role:", roleError);
+      if (rpcError) {
+        console.error("RPC Error:", rpcError);
+        toast.error("Error al crear el perfil de vendedor. Por favor contacta al administrador.");
+        setIsLoading(false);
+        return;
       }
-    }
 
-    setIsSuccess(true);
-    toast.success("¡Registro completado exitosamente!");
-    setIsLoading(false);
+      const result = rpcResult as { success: boolean; error?: string; seller_id?: string };
+      
+      if (!result.success) {
+        toast.error(result.error || "Error al registrar vendedor");
+        setIsLoading(false);
+        return;
+      }
+
+      // Step 4: Create profile (best effort - non-blocking)
+      try {
+        await supabase.from("profiles").upsert({
+          user_id: newUser.id,
+          nombre: formData.nombre,
+          apellido: formData.apellido,
+          telefono: formData.telefono,
+        }, { onConflict: 'user_id' });
+      } catch (profileError) {
+        console.warn("Profile creation failed (non-blocking):", profileError);
+      }
+
+      // Step 5: Refresh roles to update the auth context
+      await refreshRoles();
+
+      setIsSuccess(true);
+      toast.success("¡Registro completado exitosamente!");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast.error(error.message || "Error en el registro. Intenta nuevamente.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isSuccess) {
@@ -319,7 +341,14 @@ const VendedoresRegistro = () => {
                 disabled={isLoading || !formData.nombre || !formData.apellido || !formData.telefono || !formData.storeName || !formData.storeCity || !formData.email || !formData.password}
                 className="w-full bg-gradient-green text-primary-foreground font-bold uppercase tracking-wider py-6"
               >
-                {isLoading ? "Creando cuenta..." : "Crear cuenta"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creando cuenta...
+                  </>
+                ) : (
+                  "Crear cuenta"
+                )}
               </Button>
             </form>
 
