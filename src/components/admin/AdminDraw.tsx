@@ -8,7 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Loader2, Trophy, Play, Download, Sparkles } from 'lucide-react';
+import { Loader2, Trophy, Play, Download, Sparkles, History, Ticket } from 'lucide-react';
+import DrawTombola from './DrawTombola';
 
 interface Draw {
   id: string;
@@ -20,19 +21,31 @@ interface Draw {
   created_at: string;
 }
 
+interface Winner {
+  code: string;
+  full_name: string;
+  dni: string;
+  city: string;
+  email: string;
+  phone: string;
+}
+
 export default function AdminDraw() {
   const [draws, setDraws] = useState<Draw[]>([]);
   const [loading, setLoading] = useState(true);
-  const [executing, setExecuting] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [setupDialogOpen, setSetupDialogOpen] = useState(false);
+  const [tombolaActive, setTombolaActive] = useState(false);
   const [form, setForm] = useState({
     name: '',
     preselected_count: '20',
     finalists_count: '5'
   });
+  const [activeCouponsCount, setActiveCouponsCount] = useState(0);
 
   useEffect(() => {
     loadDraws();
+    loadCouponsCount();
   }, []);
 
   const loadDraws = async () => {
@@ -52,36 +65,40 @@ export default function AdminDraw() {
     }
   };
 
-  const handleCreateDraw = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setExecuting(true);
+  const loadCouponsCount = async () => {
+    const { count } = await supabase
+      .from('coupons')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'ACTIVE')
+      .eq('owner_type', 'BUYER');
+    
+    setActiveCouponsCount(count || 0);
+  };
 
+  const handleStartDraw = () => {
+    if (!form.name) {
+      toast.error('Ingresa un nombre para el sorteo');
+      return;
+    }
+    setSetupDialogOpen(false);
+    setTombolaActive(true);
+  };
+
+  const handleDrawComplete = async (winners: Winner[]) => {
+    setSaving(true);
     try {
-      // Get active coupons
-      const { data: coupons, error: couponsError } = await supabase
-        .from('coupons')
-        .select('id, code, owner_type')
-        .eq('status', 'ACTIVE');
-
-      if (couponsError) throw couponsError;
-
-      if (!coupons || coupons.length === 0) {
-        toast.error('No hay cupones activos para el sorteo');
-        return;
-      }
-
-      const preselectedCount = parseInt(form.preselected_count);
-      const finalistsCount = parseInt(form.finalists_count);
-
-      // Shuffle and select
-      const shuffled = [...coupons].sort(() => Math.random() - 0.5);
-      const preselected = shuffled.slice(0, Math.min(preselectedCount, shuffled.length));
-      const finalists = preselected.slice(0, Math.min(finalistsCount, preselected.length));
-
       const results = {
-        total_coupons: coupons.length,
-        preselected: preselected.map(c => ({ code: c.code, owner_type: c.owner_type })),
-        finalists: finalists.map(c => ({ code: c.code, owner_type: c.owner_type }))
+        total_coupons: activeCouponsCount,
+        finalists: winners.map(w => ({
+          code: w.code,
+          full_name: w.full_name,
+          dni: w.dni,
+          city: w.city,
+          email: w.email,
+          phone: w.phone,
+          owner_type: 'BUYER'
+        })),
+        preselected: winners.map(w => ({ code: w.code, owner_type: 'BUYER' }))
       };
 
       // Create draw record
@@ -89,31 +106,32 @@ export default function AdminDraw() {
         .from('draws')
         .insert({
           name: form.name,
-          preselected_count: preselectedCount,
-          finalists_count: finalistsCount,
+          preselected_count: parseInt(form.preselected_count),
+          finalists_count: parseInt(form.finalists_count),
           executed_at: new Date().toISOString(),
           results
         });
 
       if (drawError) throw drawError;
 
-      // Mark finalist coupons as used
-      for (const finalist of finalists) {
+      // Mark winner coupons as used
+      for (const winner of winners) {
         await supabase
           .from('coupons')
           .update({ status: 'USED' })
-          .eq('code', finalist.code);
+          .eq('code', winner.code);
       }
 
-      toast.success('¡Sorteo ejecutado exitosamente!');
-      setDialogOpen(false);
+      toast.success('¡Sorteo guardado exitosamente!');
+      setTombolaActive(false);
       setForm({ name: '', preselected_count: '20', finalists_count: '5' });
       loadDraws();
+      loadCouponsCount();
     } catch (error: any) {
-      console.error('Error executing draw:', error);
-      toast.error(error.message || 'Error al ejecutar sorteo');
+      console.error('Error saving draw:', error);
+      toast.error(error.message || 'Error al guardar sorteo');
     } finally {
-      setExecuting(false);
+      setSaving(false);
     }
   };
 
@@ -121,16 +139,10 @@ export default function AdminDraw() {
     if (!draw.results) return;
 
     const results = draw.results;
-    let csv = 'Tipo,Código,Categoría\n';
+    let csv = 'Posición,Código,Nombre,CI,Ciudad,Email,Teléfono\n';
 
-    results.finalists?.forEach((f: any) => {
-      csv += `Finalista,${f.code},${f.owner_type}\n`;
-    });
-
-    results.preselected?.forEach((p: any) => {
-      if (!results.finalists?.find((f: any) => f.code === p.code)) {
-        csv += `Preseleccionado,${p.code},${p.owner_type}\n`;
-      }
+    results.finalists?.forEach((f: any, index: number) => {
+      csv += `${index + 1},${f.code},${f.full_name || ''},${f.dni || ''},${f.city || ''},${f.email || ''},${f.phone || ''}\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -149,38 +161,87 @@ export default function AdminDraw() {
     );
   }
 
+  // Show Tombola if active
+  if (tombolaActive) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <Trophy className="h-6 w-6 text-amber-500" />
+              {form.name}
+            </h2>
+            <p className="text-muted-foreground">Sorteo en progreso...</p>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={() => setTombolaActive(false)}
+            className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+          >
+            Cancelar Sorteo
+          </Button>
+        </div>
+        
+        <DrawTombola 
+          onComplete={handleDrawComplete}
+          finalistsCount={parseInt(form.finalists_count)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Sorteo</h2>
-          <p className="text-muted-foreground">Ejecutar sorteo sobre cupones activos</p>
+          <p className="text-muted-foreground">Ejecutar sorteo interactivo sobre cupones activos</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={setupDialogOpen} onOpenChange={setSetupDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg">
               <Trophy className="h-4 w-4 mr-2" />
               Nuevo Sorteo
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Ejecutar Nuevo Sorteo</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-amber-500" />
+                Configurar Sorteo
+              </DialogTitle>
               <DialogDescription>
-                Configura los parámetros del sorteo
+                Configura los parámetros del sorteo interactivo
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleCreateDraw} className="space-y-4">
+            
+            <div className="space-y-4 py-4">
+              {/* Stats */}
+              <Card className="bg-gradient-to-br from-cyan-500/10 to-blue-600/10 border-cyan-500/30">
+                <CardContent className="py-4">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-full bg-cyan-500/20">
+                      <Ticket className="h-6 w-6 text-cyan-400" />
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-cyan-400">{activeCouponsCount}</p>
+                      <p className="text-sm text-muted-foreground">Cupones Activos Disponibles</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               <div className="space-y-2">
                 <Label htmlFor="name">Nombre del Sorteo *</Label>
                 <Input
                   id="name"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Ej: Sorteo Junio 2026"
-                  required
+                  placeholder="Ej: Sorteo Final Mundial 2026"
+                  className="bg-slate-800 border-slate-600"
                 />
               </div>
+              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="preselected">Preseleccionados</Label>
@@ -190,93 +251,128 @@ export default function AdminDraw() {
                     value={form.preselected_count}
                     onChange={(e) => setForm({ ...form, preselected_count: e.target.value })}
                     min="1"
+                    className="bg-slate-800 border-slate-600"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="finalists">Finalistas</Label>
+                  <Label htmlFor="finalists">Ganadores a Elegir</Label>
                   <Input
                     id="finalists"
                     type="number"
                     value={form.finalists_count}
                     onChange={(e) => setForm({ ...form, finalists_count: e.target.value })}
                     min="1"
+                    className="bg-slate-800 border-slate-600"
                   />
                 </div>
               </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={executing}>
-                  {executing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Ejecutando...
-                    </>
-                  ) : (
-                    <>
-                      <Play className="h-4 w-4 mr-2" />
-                      Ejecutar Sorteo
-                    </>
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
+
+              <Card className="border-amber-500/30 bg-amber-500/5">
+                <CardContent className="py-3">
+                  <p className="text-sm text-amber-400">
+                    💡 La tómbola interactiva te permitirá seleccionar {form.finalists_count} ganador(es) de forma animada y dramática.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setSetupDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleStartDraw} 
+                disabled={!form.name || activeCouponsCount === 0}
+                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Iniciar Tómbola
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Draws List */}
-      <Card className="bg-card border-border">
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-slate-700 hover:bg-slate-700 border-b border-slate-600">
-                <TableHead className="font-bold text-white">Nombre</TableHead>
-                <TableHead className="font-bold text-white">Preseleccionados</TableHead>
-                <TableHead className="font-bold text-white">Finalistas</TableHead>
-                <TableHead className="font-bold text-white">Fecha</TableHead>
-                <TableHead className="font-bold text-white text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {draws.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground bg-white">
-                    No hay sorteos realizados
-                  </TableCell>
-                </TableRow>
-              ) : (
-                draws.map((draw) => (
-                  <TableRow key={draw.id} className="bg-white hover:bg-slate-50 border-b border-slate-200">
-                    <TableCell className="font-medium text-slate-800">{draw.name}</TableCell>
-                    <TableCell className="text-slate-700">{draw.preselected_count}</TableCell>
-                    <TableCell className="text-slate-700">{draw.finalists_count}</TableCell>
-                    <TableCell className="text-slate-600">
-                      {draw.executed_at ? new Date(draw.executed_at).toLocaleString() : '-'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {draw.results && (
-                        <Button size="sm" variant="outline" onClick={() => exportResults(draw)} className="border-slate-300 text-slate-700 hover:bg-slate-100">
-                          <Download className="h-4 w-4 mr-2" />
-                          Exportar
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+      {/* Info Banner */}
+      <Card className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/30">
+        <CardContent className="py-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-full bg-amber-500/20">
+              <Sparkles className="h-6 w-6 text-amber-500" />
+            </div>
+            <div>
+              <p className="font-medium text-foreground">Tómbola Interactiva</p>
+              <p className="text-sm text-muted-foreground">
+                Ejecuta sorteos con una animación estilo "slot machine" para seleccionar ganadores de forma dramática y transparente.
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
+      {/* Previous Draws */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <History className="h-5 w-5" />
+          Historial de Sorteos
+        </h3>
+        
+        <Card className="bg-card border-border">
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-700 hover:bg-slate-700 border-b border-slate-600">
+                  <TableHead className="font-bold text-white">Nombre</TableHead>
+                  <TableHead className="font-bold text-white">Preseleccionados</TableHead>
+                  <TableHead className="font-bold text-white">Finalistas</TableHead>
+                  <TableHead className="font-bold text-white">Fecha</TableHead>
+                  <TableHead className="font-bold text-white text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {draws.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground bg-white">
+                      No hay sorteos realizados
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  draws.map((draw) => (
+                    <TableRow key={draw.id} className="bg-white hover:bg-slate-50 border-b border-slate-200">
+                      <TableCell className="font-medium text-slate-800">{draw.name}</TableCell>
+                      <TableCell className="text-slate-700">{draw.preselected_count}</TableCell>
+                      <TableCell className="text-slate-700">{draw.finalists_count}</TableCell>
+                      <TableCell className="text-slate-600">
+                        {draw.executed_at ? new Date(draw.executed_at).toLocaleString() : '-'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {draw.results && (
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => exportResults(draw)} 
+                            className="border-slate-300 text-slate-700 hover:bg-slate-100"
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Exportar
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Latest Draw Results */}
       {draws[0]?.results && (
-        <Card className="border-amber-500/30">
+        <Card className="border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-orange-500/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-amber-500" />
+              <Trophy className="h-5 w-5 text-amber-500" />
               Últimos Resultados: {draws[0].name}
             </CardTitle>
             <CardDescription>
@@ -286,22 +382,22 @@ export default function AdminDraw() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold mb-2 text-amber-500">🏆 Finalistas</h4>
-                <div className="flex flex-wrap gap-2">
+                <h4 className="font-semibold mb-3 text-amber-500 flex items-center gap-2">
+                  🏆 Ganadores
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {draws[0].results.finalists?.map((f: any, i: number) => (
-                    <Badge key={i} className="bg-amber-500">
-                      {f.code}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2 text-muted-foreground">Preseleccionados</h4>
-                <div className="flex flex-wrap gap-2">
-                  {draws[0].results.preselected?.slice(draws[0].finalists_count || 5).map((p: any, i: number) => (
-                    <Badge key={i} variant="outline">
-                      {p.code}
-                    </Badge>
+                    <Card key={i} className="bg-slate-800/50 border-amber-500/20">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge className="bg-amber-500 text-white">#{i + 1}</Badge>
+                          <span className="font-mono text-cyan-400 text-sm">{f.code}</span>
+                        </div>
+                        <p className="text-white font-medium">{f.full_name || 'Participante'}</p>
+                        {f.city && <p className="text-slate-400 text-sm">{f.city}</p>}
+                        {f.dni && <p className="text-slate-500 text-xs">CI: {f.dni}</p>}
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               </div>
