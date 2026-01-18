@@ -62,7 +62,8 @@ export default function AdminDashboard() {
         totalSerials: serials.length,
         registeredSerials: serials.filter(s => s.buyer_status === 'REGISTERED' || s.seller_status === 'REGISTERED').length,
         totalPurchases: purchases.length,
-        pendingPurchases: purchases.filter(p => p.admin_status === 'PENDING').length,
+        // Backward compatible: older rows may have admin_status NULL (treat as PENDING)
+        pendingPurchases: purchases.filter(p => !p.admin_status || p.admin_status === 'PENDING').length,
         totalSales: salesRes.count || 0,
         totalSellerPoints,
         topSeller: topSellerRes.data ? { name: topSellerRes.data.store_name, points: topSellerRes.data.total_points } : null

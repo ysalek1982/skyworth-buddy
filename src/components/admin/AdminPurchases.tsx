@@ -53,7 +53,12 @@ export default function AdminPurchases() {
         .order('created_at', { ascending: false });
 
       if (filter !== 'all') {
-        query = query.eq('admin_status', filter);
+        // Backward compatible: older rows may have admin_status NULL (treat as PENDING)
+        if (filter === 'PENDING') {
+          query = query.or('admin_status.eq.PENDING,admin_status.is.null');
+        } else {
+          query = query.eq('admin_status', filter);
+        }
       }
 
       const { data, error } = await query.limit(100);
@@ -71,27 +76,22 @@ export default function AdminPurchases() {
   const handleApprove = async (purchase: Purchase) => {
     setProcessing(true);
     try {
-      // Call the RPC to register the buyer serial
-      const { data, error } = await supabase.rpc('rpc_register_buyer_serial', {
-        p_serial_number: purchase.serial_number,
-        p_full_name: purchase.full_name,
-        p_dni: purchase.dni,
-        p_email: purchase.email,
-        p_phone: purchase.phone,
-        p_city: purchase.city || '',
-        p_purchase_date: purchase.purchase_date,
-        p_user_id: null
+      // Centralized backend logic: generates coupons, updates purchase, and sends notifications
+      const { data, error } = await supabase.functions.invoke('process-client-purchase', {
+        body: {
+          purchase_id: purchase.id,
+          action: 'approve'
+        }
       });
 
       if (error) throw error;
 
-      // Update the purchase status
-      await supabase
-        .from('client_purchases')
-        .update({ admin_status: 'APPROVED' })
-        .eq('id', purchase.id);
+      // If the function returns a { success: false } payload, surface it.
+      if (data && typeof data === 'object' && 'success' in data && (data as any).success === false) {
+        throw new Error((data as any).message || 'No se pudo aprobar la compra');
+      }
 
-      toast.success('Compra aprobada y cupones generados');
+      toast.success('Compra aprobada y notificación enviada');
       loadPurchases();
     } catch (error: any) {
       console.error('Error approving purchase:', error);
