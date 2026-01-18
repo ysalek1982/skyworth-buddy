@@ -263,8 +263,11 @@ export default function AdminSettings() {
                   id="gemini-model"
                   value={form.GEMINI_MODEL || ''}
                   onChange={(e) => updateForm('GEMINI_MODEL', e.target.value)}
-                  placeholder="gemini-1.5-flash"
+                  placeholder="gemini-2.5-flash"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Modelos disponibles: gemini-2.5-flash, gemini-2.5-pro, gemini-2.5-flash-lite
+                </p>
               </div>
               <div className="flex gap-2">
                 <Button onClick={() => handleSave('gemini')} disabled={saving}>
