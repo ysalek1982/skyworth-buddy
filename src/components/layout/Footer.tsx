@@ -78,11 +78,13 @@ const Footer = () => {
           <div className="mt-10 pt-8 border-t border-border/50">
             <div className="flex flex-col items-center gap-3">
               <p className="text-xs text-muted-foreground uppercase tracking-wider">Promoción autorizada por</p>
-              <img 
-                src={logoAJ} 
-                alt="Autoridad de Fiscalización del Juego - Juego Justo, Legal y Transparente" 
-                className="h-12 md:h-16 w-auto object-contain"
-              />
+              <div className="bg-white rounded-lg px-6 py-4">
+                <img 
+                  src={logoAJ} 
+                  alt="Autoridad de Fiscalización del Juego - Juego Justo, Legal y Transparente" 
+                  className="h-12 md:h-14 w-auto object-contain"
+                />
+              </div>
             </div>
           </div>
 
@@ -92,11 +94,9 @@ const Footer = () => {
               <p className="text-sm text-muted-foreground">
                 © 2026 Skyworth. Todos los derechos reservados.
               </p>
-              <div className="flex items-center gap-4">
-                <p className="text-xs text-muted-foreground">
-                  Promoción válida hasta el 30 de junio de 2026
-                </p>
-              </div>
+              <p className="text-xs text-muted-foreground">
+                Desarrollado por <a href="mailto:ysalek@gmail.com" className="hover:text-primary transition-colors">@ysalek@gmail.com</a>
+              </p>
               <Link 
                 to="/admin" 
                 className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
