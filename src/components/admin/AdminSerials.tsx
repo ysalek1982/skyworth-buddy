@@ -273,6 +273,42 @@ export default function AdminSerials() {
     if (!serialToDelete) return;
     
     try {
+      // 1. First delete associated coupons
+      const { error: couponsError } = await supabase
+        .from('coupons')
+        .delete()
+        .eq('serial_id', serialToDelete.id);
+
+      if (couponsError) {
+        console.error('Error deleting coupons:', couponsError);
+        // Continue anyway - coupons might not exist
+      }
+
+      // 2. Delete associated client_purchases if any
+      if (serialToDelete.buyer_status === 'REGISTERED') {
+        const { error: purchaseError } = await supabase
+          .from('client_purchases')
+          .delete()
+          .eq('serial_number', serialToDelete.serial_number);
+        
+        if (purchaseError) {
+          console.error('Error deleting purchase:', purchaseError);
+        }
+      }
+
+      // 3. Delete associated seller_sales if any
+      if (serialToDelete.seller_status === 'REGISTERED') {
+        const { error: saleError } = await supabase
+          .from('seller_sales')
+          .delete()
+          .eq('serial_number', serialToDelete.serial_number);
+        
+        if (saleError) {
+          console.error('Error deleting sale:', saleError);
+        }
+      }
+
+      // 4. Now delete the serial
       const { error } = await supabase
         .from('tv_serials')
         .delete()
@@ -280,7 +316,7 @@ export default function AdminSerials() {
 
       if (error) throw error;
       
-      toast.success('Serial eliminado correctamente');
+      toast.success('Serial y registros asociados eliminados correctamente');
       setDeleteDialogOpen(false);
       setSerialToDelete(null);
       loadData();
