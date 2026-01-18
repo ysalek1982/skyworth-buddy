@@ -363,6 +363,23 @@ const RegistroCompraForm = () => {
 
       // Send email notification with coupons (best effort - don't block success)
       try {
+        // Fetch landing settings for destination and draw date
+        const { data: landingSettings } = await supabase
+          .from("landing_settings")
+          .select("prize_destination, draw_date")
+          .eq("is_active", true)
+          .limit(1)
+          .single();
+
+        const destino = landingSettings?.prize_destination || "Monterrey";
+        const fechaSorteo = landingSettings?.draw_date 
+          ? new Date(landingSettings.draw_date).toLocaleDateString('es-BO', { 
+              day: '2-digit', 
+              month: 'long', 
+              year: 'numeric' 
+            })
+          : "15 de Julio, 2026";
+
         await supabase.functions.invoke("send-email", {
           body: {
             to: formData.email,
@@ -373,6 +390,8 @@ const RegistroCompraForm = () => {
               cantidad_cupones: String(result.coupon_count || coupons.length),
               modelo: serialValidation.productName || "TV Skyworth",
               email: formData.email,
+              destino: destino,
+              fecha_sorteo: fechaSorteo,
             },
           },
         });
