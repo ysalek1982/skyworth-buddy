@@ -93,19 +93,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
       if (!mounted) return;
+
       setSession(newSession);
-      setUser(newSession?.user ?? null);
+      const nextUser = newSession?.user ?? null;
+      setUser(nextUser);
       setLoading(false);
+
+      // If signed out, unblock protected routes immediately
+      if (!nextUser) {
+        setRoles([]);
+        setRolesError(null);
+        setRolesLoaded(true);
+        return;
+      }
+
+      // If signed in, (re)load roles.
+      setRolesLoaded(false);
+      setRolesError(null);
+
+      // IMPORTANT: defer backend calls out of the auth callback
+      setTimeout(() => {
+        if (!mounted) return;
+        void loadRolesForUser(nextUser.id);
+      }, 0);
     });
 
     const initializeAuth = async () => {
       try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
         if (!mounted) return;
+
         setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+        const nextUser = currentSession?.user ?? null;
+        setUser(nextUser);
+
+        if (!nextUser) {
+          setRoles([]);
+          setRolesError(null);
+          setRolesLoaded(true);
+        } else {
+          setRolesLoaded(false);
+          setRolesError(null);
+          void loadRolesForUser(nextUser.id);
+        }
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
@@ -126,7 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [loadRolesForUser]);
 
   useEffect(() => {
     if (!user) {

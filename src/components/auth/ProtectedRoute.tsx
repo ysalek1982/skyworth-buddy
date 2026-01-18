@@ -14,8 +14,8 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Show loader while checking auth state or loading roles
-  if (loading || !rolesLoaded) {
+  // Show loader while checking auth state
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -75,6 +75,18 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     
     // Default fallback
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // While loading roles for an authenticated user
+  if (!rolesLoaded) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground text-sm">Verificando permisos...</p>
+        </div>
+      </div>
+    );
   }
 
   // User authenticated but missing admin role
