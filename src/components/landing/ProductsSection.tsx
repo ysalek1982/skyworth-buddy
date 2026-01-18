@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Gift } from "lucide-react";
+import { Gift, Ticket, Star, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -38,39 +38,114 @@ const ProductsSection = () => {
     return "tier-1";
   };
 
+  const getStars = (count: number) => {
+    return Array.from({ length: Math.min(count, 5) });
+  };
+
   return (
-    <section id="modelos" className="py-20 px-4 scroll-mt-24">
-      <div className="max-w-5xl mx-auto">
-        {/* Section Header */}
+    <section id="modelos" className="py-20 px-4 scroll-mt-24 relative overflow-hidden">
+      {/* Background decorations */}
+      <div className="absolute inset-0 pointer-events-none">
+        {[...Array(8)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [-15, 15, -15],
+              rotate: [0, 360],
+              opacity: [0.1, 0.2, 0.1],
+            }}
+            transition={{
+              duration: 8 + Math.random() * 4,
+              repeat: Infinity,
+              delay: Math.random() * 3,
+            }}
+          >
+            <Ticket className="w-8 h-8 text-orange-500/10" />
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="max-w-5xl mx-auto relative z-10">
+        {/* Section Header with enhanced animations */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-blue shadow-glow-blue mb-4">
+          <motion.div 
+            className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-blue shadow-glow-blue mb-4"
+            animate={{ 
+              rotate: [0, 10, -10, 0],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{ duration: 4, repeat: Infinity }}
+          >
             <Gift className="w-8 h-8 text-white" />
-          </div>
+          </motion.div>
           <h2 className="text-4xl md:text-5xl font-black uppercase mb-4">
             <span className="text-white">MODELOS </span>
-            <span className="text-gradient-orange">PARTICIPANTES</span>
+            <motion.span 
+              className="text-gradient-orange inline-block"
+              animate={{ 
+                textShadow: [
+                  "0 0 10px rgba(255,106,0,0.3)",
+                  "0 0 20px rgba(255,106,0,0.5)",
+                  "0 0 10px rgba(255,106,0,0.3)"
+                ]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              PARTICIPANTES
+            </motion.span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            Cada modelo te da un número diferente de cupones para participar
-          </p>
+          <motion.p 
+            className="text-muted-foreground text-lg max-w-xl mx-auto"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            Cada modelo te da un número diferente de cupones para participar ⚽
+          </motion.p>
         </motion.div>
 
-        {/* Products Table - Glass Dark */}
+        {/* Products Table - Enhanced with animations */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.1 }}
-          className="glass-dark rounded-2xl overflow-hidden"
+          transition={{ delay: 0.1, type: "spring" }}
+          className="glass-dark rounded-2xl overflow-hidden relative"
         >
+          {/* Animated border glow */}
+          <motion.div
+            className="absolute -inset-[1px] bg-gradient-to-r from-blue-500/30 via-orange-500/30 to-green-500/30 rounded-2xl -z-10"
+            animate={{ 
+              background: [
+                "linear-gradient(90deg, rgba(59,130,246,0.3), rgba(255,106,0,0.3), rgba(34,197,94,0.3))",
+                "linear-gradient(180deg, rgba(59,130,246,0.3), rgba(255,106,0,0.3), rgba(34,197,94,0.3))",
+                "linear-gradient(270deg, rgba(59,130,246,0.3), rgba(255,106,0,0.3), rgba(34,197,94,0.3))",
+                "linear-gradient(360deg, rgba(59,130,246,0.3), rgba(255,106,0,0.3), rgba(34,197,94,0.3))",
+              ]
+            }}
+            transition={{ duration: 8, repeat: Infinity }}
+          />
+
           {loading ? (
             <div className="p-8 text-center text-muted-foreground">
-              Cargando modelos...
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="inline-block"
+              >
+                <Sparkles className="w-8 h-8 text-orange-400" />
+              </motion.div>
+              <p className="mt-4">Cargando modelos...</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -86,22 +161,60 @@ const ProductsSection = () => {
                   {products.map((product, index) => (
                     <motion.tr
                       key={product.id}
-                      initial={{ opacity: 0, x: -20 }}
+                      initial={{ opacity: 0, x: -30 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
-                      transition={{ delay: index * 0.05 }}
+                      transition={{ delay: index * 0.08, type: "spring" }}
+                      whileHover={{ 
+                        backgroundColor: "rgba(255,106,0,0.05)",
+                        x: 5,
+                        transition: { duration: 0.2 }
+                      }}
+                      className="cursor-pointer"
                     >
-                      <td className="font-bold text-white">{product.model_name}</td>
+                      <td className="font-bold text-white">
+                        <div className="flex items-center gap-2">
+                          <motion.span
+                            animate={{ opacity: [0.5, 1, 0.5] }}
+                            transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
+                          >
+                            📺
+                          </motion.span>
+                          {product.model_name}
+                        </div>
+                      </td>
                       <td>{product.description || "-"}</td>
                       <td className="text-center">
-                        <span className={`ticket-badge ${getCouponBadgeClass(product.ticket_multiplier)}`}>
+                        <motion.span 
+                          className={`ticket-badge ${getCouponBadgeClass(product.ticket_multiplier)} inline-flex items-center gap-1`}
+                          whileHover={{ scale: 1.1 }}
+                          animate={{ 
+                            boxShadow: product.ticket_multiplier >= 3 
+                              ? ["0 0 10px rgba(255,106,0,0.3)", "0 0 20px rgba(255,106,0,0.5)", "0 0 10px rgba(255,106,0,0.3)"]
+                              : "none"
+                          }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                        >
                           {product.ticket_multiplier}
-                          <span className="ml-1.5">
-                            {Array.from({ length: Math.min(product.ticket_multiplier, 4) }).map((_, i) => (
-                              <span key={i} className="inline-block w-1.5 h-1.5 rounded-full bg-current ml-0.5" />
+                          <span className="flex gap-0.5 ml-1">
+                            {getStars(product.ticket_multiplier).map((_, i) => (
+                              <motion.span 
+                                key={i}
+                                animate={{ 
+                                  scale: [1, 1.2, 1],
+                                  opacity: [0.7, 1, 0.7]
+                                }}
+                                transition={{ 
+                                  duration: 1, 
+                                  repeat: Infinity, 
+                                  delay: i * 0.15 
+                                }}
+                              >
+                                <Star className="w-3 h-3 fill-current" />
+                              </motion.span>
                             ))}
                           </span>
-                        </span>
+                        </motion.span>
                       </td>
                     </motion.tr>
                   ))}
@@ -111,30 +224,50 @@ const ProductsSection = () => {
           )}
         </motion.div>
 
-        {/* Legend */}
+        {/* Legend with animations */}
         <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.3 }}
-          className="mt-6 flex flex-wrap justify-center gap-4 text-sm"
+          transition={{ delay: 0.4 }}
+          className="mt-8 flex flex-wrap justify-center gap-6 text-sm"
         >
-          <div className="flex items-center gap-2">
-            <span className="ticket-badge tier-4">4</span>
-            <span className="text-muted-foreground">Máximo</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="ticket-badge tier-3">3</span>
-            <span className="text-muted-foreground">Alto</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="ticket-badge tier-2">2</span>
-            <span className="text-muted-foreground">Medio</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="ticket-badge tier-1">1</span>
-            <span className="text-muted-foreground">Base</span>
-          </div>
+          {[
+            { tier: "tier-4", count: 4, label: "Máximo", emoji: "🏆" },
+            { tier: "tier-3", count: 3, label: "Alto", emoji: "🥇" },
+            { tier: "tier-2", count: 2, label: "Medio", emoji: "🥈" },
+            { tier: "tier-1", count: 1, label: "Base", emoji: "🎫" },
+          ].map((item, i) => (
+            <motion.div 
+              key={item.tier}
+              className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full"
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 + i * 0.1 }}
+              whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.1)" }}
+            >
+              <span className="text-lg">{item.emoji}</span>
+              <span className={`ticket-badge ${item.tier}`}>{item.count}</span>
+              <span className="text-muted-foreground">{item.label}</span>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Call to action */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.6 }}
+          className="mt-10 text-center"
+        >
+          <motion.p 
+            className="text-white/60 text-sm"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          >
+            ¡Mientras más cupones, más oportunidades de ganar! 🎉
+          </motion.p>
         </motion.div>
       </div>
     </section>
