@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Store, Menu, X, LogOut, User, Trophy, BarChart3, Home } from "lucide-react";
+import { Store, Menu, X, LogOut, User, Trophy, BarChart3, Home, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -15,7 +15,8 @@ const SellerHeader = () => {
   const navLinks = [
     { href: "/vendedores", label: "Inicio", icon: Home },
     { href: "/vendedores/dashboard", label: "Mi Dashboard", icon: BarChart3 },
-    { href: "/vendedores/ranking", label: "Ranking", icon: Trophy },
+    { href: "/vendedores/ranking", label: "Rankings", icon: Trophy },
+    { href: "/vendedores/resultados", label: "Resultados", icon: Award },
   ];
 
   const isActive = (path: string) => location.pathname === path;

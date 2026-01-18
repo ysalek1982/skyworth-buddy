@@ -9,16 +9,13 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
-// Public pages
-const Rankings = lazy(() => import("./pages/Rankings"));
-const Resultados = lazy(() => import("./pages/Resultados"));
-
 // Vendedores pages (separate context)
 const VendedoresHome = lazy(() => import("./pages/vendedores/VendedoresHome"));
 const VendedoresLogin = lazy(() => import("./pages/vendedores/VendedoresLogin"));
 const VendedoresRegistro = lazy(() => import("./pages/vendedores/VendedoresRegistro"));
 const VendedoresDashboard = lazy(() => import("./pages/vendedores/VendedoresDashboard"));
 const VendedoresRanking = lazy(() => import("./pages/vendedores/VendedoresRanking"));
+const VendedoresResultados = lazy(() => import("./pages/vendedores/VendedoresResultados"));
 
 // Admin
 const Admin = lazy(() => import("./pages/Admin"));
@@ -43,10 +40,8 @@ const App = () => (
         <BrowserRouter>
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
-              {/* Public routes - one-page landing */}
+              {/* Public route - ONLY landing page */}
               <Route path="/" element={<Index />} />
-              <Route path="/rankings" element={<Rankings />} />
-              <Route path="/resultados" element={<Resultados />} />
 
               {/* Vendedores routes - separate context */}
               <Route path="/vendedores" element={<VendedoresHome />} />
@@ -54,6 +49,7 @@ const App = () => (
               <Route path="/vendedores/registro" element={<VendedoresRegistro />} />
               <Route path="/vendedores/dashboard" element={<VendedoresDashboard />} />
               <Route path="/vendedores/ranking" element={<VendedoresRanking />} />
+              <Route path="/vendedores/resultados" element={<VendedoresResultados />} />
 
               {/* Legacy login redirect */}
               <Route path="/login" element={<Login />} />
