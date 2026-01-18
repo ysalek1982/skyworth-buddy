@@ -380,7 +380,7 @@ const RegistroCompraForm = () => {
             })
           : "15 de Julio, 2026";
 
-        await supabase.functions.invoke("send-email", {
+        const { data: emailData, error: emailInvokeError } = await supabase.functions.invoke("send-email", {
           body: {
             to: formData.email,
             template_type: "purchase_approved",
@@ -395,10 +395,18 @@ const RegistroCompraForm = () => {
             },
           },
         });
-        console.log("Email sent successfully to:", formData.email);
+
+        if (emailInvokeError) throw emailInvokeError;
+
+        if (emailData && typeof emailData === 'object' && 'success' in emailData && (emailData as any).success === false) {
+          console.warn('Email function responded with success=false:', emailData);
+          toast.info('Registro exitoso, pero no se pudo enviar el correo.');
+        } else {
+          console.log("Email sent successfully to:", formData.email);
+        }
       } catch (emailError) {
         console.warn("Could not send email notification:", emailError);
-        // Don't show error to user - registration was successful
+        toast.info('Registro exitoso, pero no se pudo enviar el correo.');
       }
 
     } catch (error: any) {
