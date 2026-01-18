@@ -352,6 +352,22 @@
     border: 1px solid hsla(200, 100%, 50%, 0.2);
   }
 
+  /* Input dark variant - for inputs on dark backgrounds inside white cards */
+  .input-dark {
+    background-color: hsl(210 50% 12%) !important;
+    border-color: hsl(210 40% 25%) !important;
+    color: hsl(0 0% 100%) !important;
+  }
+
+  .input-dark::placeholder {
+    color: hsl(210 20% 60%) !important;
+  }
+
+  .input-dark:focus {
+    border-color: hsl(25 100% 50%) !important;
+    box-shadow: 0 0 0 2px hsla(25, 100%, 50%, 0.2) !important;
+  }
+
   /* Serial validation states */
   .serial-valid {
     border-color: hsl(145 80% 45%) !important;
