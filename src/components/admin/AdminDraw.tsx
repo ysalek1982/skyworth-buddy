@@ -8,8 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Loader2, Trophy, Play, Download, Sparkles, History, Ticket } from 'lucide-react';
+import { Loader2, Trophy, Play, Download, Sparkles, History, Ticket, Crown, Users } from 'lucide-react';
 import DrawTombola from './DrawTombola';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Draw {
   id: string;
@@ -30,12 +31,34 @@ interface Winner {
   phone: string;
 }
 
+interface TopSeller {
+  id: string;
+  store_name: string;
+  store_city: string;
+  total_sales: number;
+  total_points: number;
+  user_id: string;
+  seller_name: string;
+}
+
+interface SellerWinner {
+  id: string;
+  seller_name: string;
+  store_name: string;
+  total_sales: number;
+  total_points: number;
+  won_at: string;
+}
+
 export default function AdminDraw() {
   const [draws, setDraws] = useState<Draw[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [setupDialogOpen, setSetupDialogOpen] = useState(false);
   const [tombolaActive, setTombolaActive] = useState(false);
+  const [topSeller, setTopSeller] = useState<TopSeller | null>(null);
+  const [sellerWinners, setSellerWinners] = useState<SellerWinner[]>([]);
+  const [autoWinnerEnabled, setAutoWinnerEnabled] = useState(false);
   const [form, setForm] = useState({
     name: '',
     preselected_count: '20',
@@ -46,6 +69,9 @@ export default function AdminDraw() {
   useEffect(() => {
     loadDraws();
     loadCouponsCount();
+    loadTopSeller();
+    loadSellerWinners();
+    loadAutoWinnerSetting();
   }, []);
 
   const loadDraws = async () => {
@@ -73,6 +99,125 @@ export default function AdminDraw() {
       .eq('owner_type', 'BUYER');
     
     setActiveCouponsCount(count || 0);
+  };
+
+  const loadTopSeller = async () => {
+    try {
+      const { data: sellersData } = await supabase
+        .from('sellers')
+        .select('id, store_name, store_city, total_sales, total_points, user_id')
+        .eq('is_active', true)
+        .order('total_sales', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (sellersData) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('nombre, apellido')
+          .eq('user_id', sellersData.user_id)
+          .maybeSingle();
+
+        setTopSeller({
+          ...sellersData,
+          seller_name: profileData ? `${profileData.nombre} ${profileData.apellido}` : 'Vendedor'
+        });
+      }
+    } catch (error) {
+      console.error('Error loading top seller:', error);
+    }
+  };
+
+  const loadSellerWinners = async () => {
+    try {
+      const { data } = await supabase
+        .from('seller_winners')
+        .select('id, seller_id, total_sales, total_points, won_at')
+        .order('won_at', { ascending: false });
+
+      if (data && data.length > 0) {
+        const sellerIds = data.map(d => d.seller_id);
+        const { data: sellersData } = await supabase
+          .from('sellers')
+          .select('id, store_name, user_id')
+          .in('id', sellerIds);
+
+        if (sellersData) {
+          const userIds = sellersData.map(s => s.user_id);
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('user_id, nombre, apellido')
+            .in('user_id', userIds);
+
+          const formatted = data.map(sw => {
+            const seller = sellersData.find(s => s.id === sw.seller_id);
+            const profile = profilesData?.find(p => p.user_id === seller?.user_id);
+            return {
+              id: sw.id,
+              seller_name: profile ? `${profile.nombre} ${profile.apellido}` : 'Vendedor',
+              store_name: seller?.store_name || 'Tienda',
+              total_sales: sw.total_sales,
+              total_points: sw.total_points,
+              won_at: sw.won_at
+            };
+          });
+          setSellerWinners(formatted);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading seller winners:', error);
+    }
+  };
+
+  const loadAutoWinnerSetting = async () => {
+    try {
+      const { data } = await supabase
+        .from('secure_settings')
+        .select('is_enabled')
+        .eq('key', 'SELLER_AUTO_WINNER_ENABLED')
+        .maybeSingle();
+
+      setAutoWinnerEnabled(data?.is_enabled || false);
+    } catch (error) {
+      console.error('Error loading auto winner setting:', error);
+    }
+  };
+
+  const handleDeclareSellerWinner = async () => {
+    if (!topSeller) {
+      toast.error('No hay vendedores disponibles');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Get active campaign
+      const { data: campaign } = await supabase
+        .from('campaign')
+        .select('id')
+        .eq('is_active', true)
+        .maybeSingle();
+
+      // Insert seller winner
+      const { error } = await supabase
+        .from('seller_winners')
+        .insert({
+          seller_id: topSeller.id,
+          campaign_id: campaign?.id || null,
+          total_sales: topSeller.total_sales,
+          total_points: topSeller.total_points
+        });
+
+      if (error) throw error;
+
+      toast.success(`¡${topSeller.seller_name} ha sido declarado ganador!`);
+      loadSellerWinners();
+    } catch (error: any) {
+      console.error('Error declaring seller winner:', error);
+      toast.error(error.message || 'Error al declarar ganador');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleStartDraw = () => {
@@ -192,11 +337,29 @@ export default function AdminDraw() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Sorteo</h2>
-          <p className="text-muted-foreground">Ejecutar sorteo interactivo sobre cupones activos</p>
-        </div>
+      <div>
+        <h2 className="text-2xl font-bold text-foreground">Sorteos</h2>
+        <p className="text-muted-foreground">Gestiona sorteos de compradores y vendedores</p>
+      </div>
+
+      <Tabs defaultValue="buyers" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="buyers" className="flex items-center gap-2">
+            <Ticket className="h-4 w-4" />
+            Sorteo Compradores
+          </TabsTrigger>
+          <TabsTrigger value="sellers" className="flex items-center gap-2">
+            <Crown className="h-4 w-4" />
+            Ganador Vendedores
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="buyers" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">Tómbola de Compradores</h3>
+              <p className="text-sm text-muted-foreground">Ejecutar sorteo interactivo sobre cupones activos</p>
+            </div>
         <Dialog open={setupDialogOpen} onOpenChange={setSetupDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg">
@@ -405,6 +568,139 @@ export default function AdminDraw() {
           </CardContent>
         </Card>
       )}
+        </TabsContent>
+
+        {/* Seller Winners Tab */}
+        <TabsContent value="sellers" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">Ganador de Vendedores</h3>
+              <p className="text-sm text-muted-foreground">
+                El vendedor con más ventas al finalizar la campaña
+                {autoWinnerEnabled && (
+                  <Badge className="ml-2 bg-green-500/20 text-green-400 border-green-500/30">
+                    Auto-Ganador Activado
+                  </Badge>
+                )}
+              </p>
+            </div>
+          </div>
+
+          {/* Current Top Seller */}
+          <Card className="bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border-orange-500/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="h-5 w-5 text-orange-500" />
+                Vendedor Líder Actual
+              </CardTitle>
+              <CardDescription>
+                El vendedor con más ventas en la campaña activa
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {topSeller ? (
+                <div className="flex items-center justify-between p-4 bg-card rounded-lg border border-orange-500/20">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-gold flex items-center justify-center">
+                      <Crown className="w-6 h-6 text-skyworth-dark" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-card-foreground">{topSeller.seller_name}</p>
+                      <p className="text-sm text-muted-foreground">{topSeller.store_name} • {topSeller.store_city}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-orange-500">{topSeller.total_sales}</p>
+                    <p className="text-xs text-muted-foreground">ventas ({topSeller.total_points} pts)</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No hay vendedores activos</p>
+                </div>
+              )}
+
+              {topSeller && (
+                <div className="mt-4 flex justify-end">
+                  <Button
+                    onClick={handleDeclareSellerWinner}
+                    disabled={saving}
+                    className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white"
+                  >
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trophy className="h-4 w-4 mr-2" />}
+                    Declarar Ganador
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Seller Winners History */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Historial de Ganadores
+            </h3>
+
+            <Card className="bg-card border-border">
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-700 hover:bg-slate-700 border-b border-slate-600">
+                      <TableHead className="font-bold text-white">Vendedor</TableHead>
+                      <TableHead className="font-bold text-white">Tienda</TableHead>
+                      <TableHead className="font-bold text-white">Ventas</TableHead>
+                      <TableHead className="font-bold text-white">Puntos</TableHead>
+                      <TableHead className="font-bold text-white">Fecha</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sellerWinners.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground bg-white">
+                          No hay ganadores registrados
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      sellerWinners.map((winner) => (
+                        <TableRow key={winner.id} className="bg-white hover:bg-slate-50 border-b border-slate-200">
+                          <TableCell className="font-medium text-slate-800">{winner.seller_name}</TableCell>
+                          <TableCell className="text-slate-700">{winner.store_name}</TableCell>
+                          <TableCell className="text-slate-700 font-bold text-orange-600">{winner.total_sales}</TableCell>
+                          <TableCell className="text-slate-600">{winner.total_points}</TableCell>
+                          <TableCell className="text-slate-600">
+                            {new Date(winner.won_at).toLocaleDateString('es-BO')}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Info about Auto Winner */}
+          <Card className="border-muted bg-muted/20">
+            <CardContent className="py-4">
+              <div className="flex items-start gap-4">
+                <div className="p-2 rounded-full bg-muted">
+                  <Sparkles className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Modo Automático</p>
+                  <p className="text-sm text-muted-foreground">
+                    {autoWinnerEnabled 
+                      ? "El ganador automático está activado. Al finalizar la campaña, el vendedor con más ventas será declarado ganador automáticamente."
+                      : "El ganador automático está desactivado. Puedes activarlo en Configuración → Campaña."}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
