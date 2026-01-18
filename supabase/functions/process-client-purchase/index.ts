@@ -105,6 +105,7 @@ serve(async (req) => {
 
     if (action === "approve") {
       // Call the RPC to register the buyer serial and generate coupons
+      // Pass the existing purchase_id so it updates instead of creating a new one
       const { data: rpcResult, error: rpcError } = await supabase.rpc("rpc_register_buyer_serial", {
         p_serial_number: purchase.serial_number,
         p_full_name: purchase.full_name,
@@ -114,6 +115,7 @@ serve(async (req) => {
         p_city: purchase.city || "",
         p_purchase_date: purchase.purchase_date,
         p_user_id: purchase.user_id,
+        p_existing_purchase_id: purchase.id, // Pass the existing purchase ID
       });
 
       if (rpcError) {
@@ -131,11 +133,10 @@ serve(async (req) => {
         );
       }
 
-      // Update purchase status
+      // The RPC already updated the purchase status, just sync the coupons_generated field
       await supabase
         .from("client_purchases")
         .update({
-          admin_status: "APPROVED",
           coupons_generated: rpcResult.coupon_count,
           updated_at: new Date().toISOString(),
         })
