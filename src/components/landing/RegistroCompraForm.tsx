@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { 
   Trophy, User, IdCard, Phone, Upload, CheckCircle, Mail, Tv, ArrowLeft, 
-  Loader2, AlertCircle, XCircle, Gift, Calendar, MapPin, FileText, Shield, Tag
+  Loader2, AlertCircle, XCircle, Calendar, MapPin, FileText, Shield, Tag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import PurchaseConfirmation from "./PurchaseConfirmation";
 
 const departamentos = [
   "La Paz",
@@ -31,6 +32,10 @@ interface SerialValidation {
   productName: string | null;
   couponCount: number | null;
   serialId: string | null;
+}
+
+interface GeneratedCoupon {
+  code: string;
 }
 
 interface FormData {
@@ -55,6 +60,7 @@ const RegistroCompraForm = () => {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [generatedCoupons, setGeneratedCoupons] = useState<GeneratedCoupon[]>([]);
   const [serialValidation, setSerialValidation] = useState<SerialValidation>({
     isValid: false,
     isChecking: false,
@@ -313,40 +319,50 @@ const RegistroCompraForm = () => {
         console.warn("Storage upload failed (continuing):", storageError);
       }
 
-      // Create purchase record with PENDING status (no coupons yet)
-      const { data: purchaseData, error: purchaseError } = await supabase
-        .from("client_purchases")
-        .insert({
-          serial_number: normalizedSerial,
-          full_name: formData.nombreCompleto,
-          dni: formData.ci,
-          email: formData.email,
-          phone: formData.telefono,
-          city: formData.ciudad,
-          purchase_date: formData.fechaCompra,
-          admin_status: "PENDING",
-          invoice_url: invoiceUrl,
-          id_front_url: polizaUrl, // Using existing field for poliza
-          id_back_url: tagUrl, // Using existing field for tag
-        })
-        .select()
-        .single();
+      // Call the RPC function to register purchase AND generate coupons atomically
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('rpc_register_buyer_serial', {
+        p_serial_number: normalizedSerial,
+        p_full_name: formData.nombreCompleto,
+        p_dni: formData.ci,
+        p_email: formData.email,
+        p_phone: formData.telefono,
+        p_city: formData.ciudad,
+        p_purchase_date: formData.fechaCompra,
+      });
 
-      if (purchaseError) throw purchaseError;
+      if (rpcError) {
+        console.error("RPC Error:", rpcError);
+        throw new Error(rpcError.message);
+      }
 
-      // Reserve the serial (mark as REGISTERED but status stays for admin approval)
-      await supabase
-        .from("tv_serials")
-        .update({ 
-          buyer_status: "REGISTERED",
-          buyer_purchase_id: purchaseData.id,
-          updated_at: new Date().toISOString()
-        })
-        .eq("serial_number", normalizedSerial);
+      const result = rpcResult as { success: boolean; error?: string; coupons?: string[]; coupon_count?: number; purchase_id?: string };
+      
+      if (!result.success) {
+        throw new Error(result.error || "Error al registrar la compra");
+      }
 
+      // Update purchase record with document URLs if we have them
+      if (result.purchase_id && (invoiceUrl || polizaUrl || tagUrl)) {
+        await supabase
+          .from("client_purchases")
+          .update({
+            invoice_url: invoiceUrl,
+            id_front_url: polizaUrl,
+            id_back_url: tagUrl,
+          })
+          .eq("id", result.purchase_id);
+      }
+
+      // Store the generated coupons for display
+      const coupons = (result.coupons || []).map((code: string) => ({ code }));
+      setGeneratedCoupons(coupons);
+      
       setIsSuccess(true);
       setStep(4); // Success step
-      toast.success("¡Registro enviado exitosamente!");
+      toast.success(`¡GOLAZO! Se generaron ${result.coupon_count || coupons.length} cupones.`);
+
+      // Note: Notifications will be sent manually by admin if needed
+      // The RPC already auto-approves the purchase
 
     } catch (error: any) {
       console.error("Error registering purchase:", error);
@@ -890,50 +906,15 @@ const RegistroCompraForm = () => {
           </>
         )}
 
-        {/* SUCCESS STEP */}
+        {/* SUCCESS STEP - New Football-themed confirmation */}
         {step === 4 && isSuccess && (
-          <div className="text-center py-8">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", duration: 0.5 }}
-              className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-orange mb-6 shadow-glow-orange"
-            >
-              <CheckCircle className="w-10 h-10 text-white" />
-            </motion.div>
-            
-            <h3 className="text-2xl font-black text-white uppercase mb-2">
-              ¡Registro Enviado!
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              Tu registro ha sido recibido y está en proceso de validación.
-            </p>
-
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-6 mb-8">
-              <Gift className="w-10 h-10 text-blue-400 mx-auto mb-4" />
-              <p className="text-white font-medium mb-2">¿Qué sigue?</p>
-              <p className="text-sm text-muted-foreground">
-                Una vez que validemos tu compra, recibirás tus <span className="text-primary font-bold">CUPONES</span> por Email y/o WhatsApp.
-              </p>
-            </div>
-
-            <div className="bg-muted/30 rounded-xl p-4 mb-8 border border-border">
-              <div className="flex items-center justify-center gap-4">
-                <Trophy className="w-8 h-8 text-primary" />
-                <div className="text-left">
-                  <p className="text-sm text-muted-foreground">Cupones potenciales</p>
-                  <p className="text-3xl font-black text-gradient-orange">{serialValidation.couponCount || 1}</p>
-                </div>
-              </div>
-            </div>
-
-            <Button
-              onClick={resetForm}
-              className="bg-gradient-orange text-white font-bold uppercase tracking-wider hover:opacity-90"
-            >
-              Registrar otra compra
-            </Button>
-          </div>
+          <PurchaseConfirmation
+            coupons={generatedCoupons}
+            productName={serialValidation.productName || "TV Skyworth"}
+            serialNumber={normalizeSerial(formData.serialNumber)}
+            couponCount={generatedCoupons.length || serialValidation.couponCount || 1}
+            onReset={resetForm}
+          />
         )}
       </motion.div>
     </div>
