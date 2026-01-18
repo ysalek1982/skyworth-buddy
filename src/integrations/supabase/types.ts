@@ -407,6 +407,7 @@ export type Database = {
           prize_destination: string
           requirements: Json
           sections: Json
+          terms_conditions: string | null
           theme: Json
           updated_at: string
           updated_by: string | null
@@ -429,6 +430,7 @@ export type Database = {
           prize_destination?: string
           requirements?: Json
           sections?: Json
+          terms_conditions?: string | null
           theme?: Json
           updated_at?: string
           updated_by?: string | null
@@ -451,6 +453,7 @@ export type Database = {
           prize_destination?: string
           requirements?: Json
           sections?: Json
+          terms_conditions?: string | null
           theme?: Json
           updated_at?: string
           updated_by?: string | null
