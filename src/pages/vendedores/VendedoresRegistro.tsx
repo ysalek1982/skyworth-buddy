@@ -138,25 +138,25 @@ const VendedoresRegistro = () => {
   if (isSuccess) {
     return (
       <SellerLayout showFooter={false}>
-        <div className="flex items-center justify-center px-4 py-12 min-h-[calc(100vh-var(--header-h))]">
+        <div className="flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12 min-h-[calc(100vh-var(--header-h))]">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md bg-card rounded-2xl p-8 shadow-card text-center"
+            className="w-full max-w-md bg-card rounded-2xl p-6 sm:p-8 shadow-card text-center"
           >
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", duration: 0.5 }}
-              className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-green mb-6"
+              className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-green mb-4 sm:mb-6"
             >
-              <CheckCircle className="w-10 h-10 text-white" />
+              <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
             </motion.div>
             
-            <h1 className="text-2xl font-black text-card-foreground uppercase mb-2">
+            <h1 className="text-xl sm:text-2xl font-black text-card-foreground uppercase mb-2">
               ¡Registro Exitoso!
             </h1>
-            <p className="text-muted-foreground mb-8">
+            <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8">
               Tu cuenta de vendedor ha sido creada. Ya puedes iniciar sesión.
             </p>
 
@@ -174,7 +174,7 @@ const VendedoresRegistro = () => {
 
   return (
     <SellerLayout showFooter={false}>
-      <div className="flex items-center justify-center px-4 py-12">
+      <div className="flex items-center justify-center px-4 sm:px-6 py-6 sm:py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -183,49 +183,49 @@ const VendedoresRegistro = () => {
           {/* Back Link */}
           <Link
             to="/vendedores"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4 sm:mb-8"
           >
             <ArrowLeft className="w-4 h-4" />
             Volver al portal vendedores
           </Link>
 
           {/* Card */}
-          <div className="bg-card rounded-2xl p-8 shadow-card">
+          <div className="bg-card rounded-xl sm:rounded-2xl p-5 sm:p-8 shadow-card">
             {/* Header */}
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-green shadow-glow-green mb-4">
-                <Store className="w-8 h-8 text-white" />
+            <div className="text-center mb-5 sm:mb-8">
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-green shadow-glow-green mb-3 sm:mb-4">
+                <Store className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h1 className="text-2xl font-black text-card-foreground uppercase mb-2">
+              <h1 className="text-xl sm:text-2xl font-black text-card-foreground uppercase mb-1 sm:mb-2">
                 Registro Vendedor
               </h1>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground text-xs sm:text-sm">
                 Crea tu cuenta para registrar ventas y ganar puntos
               </p>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nombre" className="text-card-foreground">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="nombre" className="text-card-foreground text-sm">
                     Nombre
                   </Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                     <Input
                       id="nombre"
                       placeholder="Tu nombre"
                       value={formData.nombre}
                       onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                      className="pl-10 bg-background border-input text-foreground"
+                      className="pl-9 sm:pl-10 bg-background border-input text-foreground text-sm h-10 sm:h-11"
                       required
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="apellido" className="text-card-foreground">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="apellido" className="text-card-foreground text-sm">
                     Apellido
                   </Label>
                   <Input
@@ -233,53 +233,53 @@ const VendedoresRegistro = () => {
                     placeholder="Tu apellido"
                     value={formData.apellido}
                     onChange={(e) => setFormData({ ...formData, apellido: e.target.value })}
-                    className="bg-background border-input text-foreground"
+                    className="bg-background border-input text-foreground text-sm h-10 sm:h-11"
                     required
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="telefono" className="text-card-foreground">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="telefono" className="text-card-foreground text-sm">
                   Teléfono
                 </Label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                   <Input
                     id="telefono"
                     placeholder="+591 12345678"
                     value={formData.telefono}
                     onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                    className="pl-10 bg-background border-input text-foreground"
+                    className="pl-9 sm:pl-10 bg-background border-input text-foreground text-sm h-10 sm:h-11"
                     required
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="storeName" className="text-card-foreground">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="storeName" className="text-card-foreground text-sm">
                   Nombre de la Tienda
                 </Label>
                 <div className="relative">
-                  <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                   <Input
                     id="storeName"
                     placeholder="Ej: Electrónica Central"
                     value={formData.storeName}
                     onChange={(e) => setFormData({ ...formData, storeName: e.target.value })}
-                    className="pl-10 bg-background border-input text-foreground"
+                    className="pl-9 sm:pl-10 bg-background border-input text-foreground text-sm h-10 sm:h-11"
                     required
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-card-foreground">Ciudad</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-card-foreground text-sm">Ciudad</Label>
                 <Select
                   value={formData.storeCity}
                   onValueChange={(value) => setFormData({ ...formData, storeCity: value })}
                 >
-                  <SelectTrigger className="bg-background border-input text-foreground">
+                  <SelectTrigger className="bg-background border-input text-foreground text-sm h-10 sm:h-11">
                     <SelectValue placeholder="Selecciona tu ciudad" />
                   </SelectTrigger>
                   <SelectContent>
@@ -292,37 +292,37 @@ const VendedoresRegistro = () => {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-card-foreground">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="email" className="text-card-foreground text-sm">
                   Correo electrónico
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="tu@email.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="pl-10 bg-background border-input text-foreground"
+                    className="pl-9 sm:pl-10 bg-background border-input text-foreground text-sm h-10 sm:h-11"
                     required
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-card-foreground">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="password" className="text-card-foreground text-sm">
                   Contraseña
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="pl-10 pr-10 bg-background border-input text-foreground"
+                    className="pl-9 sm:pl-10 pr-10 bg-background border-input text-foreground text-sm h-10 sm:h-11"
                     required
                     minLength={6}
                   />
@@ -331,7 +331,7 @@ const VendedoresRegistro = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
                   </button>
                 </div>
               </div>
@@ -339,7 +339,7 @@ const VendedoresRegistro = () => {
               <Button
                 type="submit"
                 disabled={isLoading || !formData.nombre || !formData.apellido || !formData.telefono || !formData.storeName || !formData.storeCity || !formData.email || !formData.password}
-                className="w-full bg-gradient-green text-primary-foreground font-bold uppercase tracking-wider py-6"
+                className="w-full bg-gradient-green text-primary-foreground font-bold uppercase tracking-wider py-5 sm:py-6 text-sm sm:text-base mt-2"
               >
                 {isLoading ? (
                   <>
@@ -353,8 +353,8 @@ const VendedoresRegistro = () => {
             </form>
 
             {/* Footer */}
-            <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
+            <div className="mt-4 sm:mt-6 text-center">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 ¿Ya tienes cuenta?{" "}
                 <Link to="/vendedores/login" className="text-primary hover:underline font-medium">
                   Inicia sesión
