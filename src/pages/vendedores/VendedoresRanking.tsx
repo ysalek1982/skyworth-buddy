@@ -7,9 +7,24 @@ import { supabase } from "@/integrations/supabase/client";
 const VendedoresRanking = () => {
   const [topSellers, setTopSellers] = useState<{ rank: number; name: string; store: string; city: string; points: number; sales: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [campaignInfo, setCampaignInfo] = useState<{ name: string; drawDate: string } | null>(null);
 
   useEffect(() => {
     const fetchRankings = async () => {
+      // Fetch campaign info from landing_settings
+      const { data: landingData } = await supabase
+        .from("landing_settings")
+        .select("campaign_name, draw_date")
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (landingData) {
+        setCampaignInfo({
+          name: landingData.campaign_name,
+          drawDate: landingData.draw_date
+        });
+      }
+
       const { data: sellers, error } = await supabase
         .from("sellers")
         .select("id, user_id, store_name, store_city, total_points, total_sales")
@@ -100,7 +115,9 @@ const VendedoresRanking = () => {
               <span className="text-gradient-gold">VENDEDORES</span>
             </h1>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Top vendedores del Sueño del Hincha 2026
+              {campaignInfo?.name || "El Sueño del Hincha"} - Sorteo: {campaignInfo?.drawDate 
+                ? new Date(campaignInfo.drawDate).toLocaleDateString("es-BO", { day: "numeric", month: "long", year: "numeric" })
+                : "Próximamente"}
             </p>
           </motion.div>
 

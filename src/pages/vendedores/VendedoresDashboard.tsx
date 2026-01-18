@@ -60,6 +60,7 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [registeringSerial, setRegisteringSerial] = useState(false);
   const [serialValidation, setSerialValidation] = useState<SerialValidation>({ status: 'idle', message: '' });
+  const [campaignInfo, setCampaignInfo] = useState<{ name: string; drawDate: string } | null>(null);
   
   const [serialForm, setSerialForm] = useState({
     serial_number: '',
@@ -78,6 +79,20 @@ function DashboardContent() {
     if (!user) return;
     
     try {
+      // Fetch campaign info from landing_settings
+      const { data: landingData } = await supabase
+        .from('landing_settings')
+        .select('campaign_name, draw_date')
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (landingData) {
+        setCampaignInfo({
+          name: landingData.campaign_name,
+          drawDate: landingData.draw_date
+        });
+      }
+
       const { data: sellerData, error: sellerError } = await supabase
         .from('sellers')
         .select('*')
@@ -377,7 +392,7 @@ function DashboardContent() {
                         value={serialForm.serial_number}
                         onChange={(e) => handleSerialChange(e.target.value)}
                         placeholder="Ej: SKW123456789"
-                        className={getSerialInputClass()}
+                        className={`input-dark ${getSerialInputClass()}`}
                         required
                       />
                       {serialValidation.status !== 'idle' && (
@@ -404,6 +419,7 @@ function DashboardContent() {
                         value={serialForm.client_name}
                         onChange={(e) => setSerialForm({ ...serialForm, client_name: e.target.value })}
                         placeholder="Nombre completo"
+                        className="input-dark"
                         required
                       />
                     </div>
@@ -414,6 +430,7 @@ function DashboardContent() {
                         value={serialForm.client_phone}
                         onChange={(e) => setSerialForm({ ...serialForm, client_phone: e.target.value })}
                         placeholder="Opcional"
+                        className="input-dark"
                       />
                     </div>
                     <div className="space-y-2 md:col-span-2">
@@ -423,6 +440,7 @@ function DashboardContent() {
                         value={serialForm.invoice_number}
                         onChange={(e) => setSerialForm({ ...serialForm, invoice_number: e.target.value })}
                         placeholder="Opcional"
+                        className="input-dark"
                       />
                     </div>
                   </div>

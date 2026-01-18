@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface CampaignData {
   name: string;
-  draw_date: string | null;
+  draw_date: string;
   end_date: string;
 }
 
@@ -30,18 +30,22 @@ const VendedoresResultados = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch active campaign
-        const { data: campaignData } = await supabase
-          .from("campaign")
-          .select("name, draw_date, end_date")
+        // Fetch active campaign from landing_settings
+        const { data: landingData } = await supabase
+          .from("landing_settings")
+          .select("campaign_name, draw_date, campaign_end_date")
           .eq("is_active", true)
           .maybeSingle();
 
-        if (campaignData) {
-          setCampaign(campaignData);
+        if (landingData) {
+          setCampaign({
+            name: landingData.campaign_name,
+            draw_date: landingData.draw_date,
+            end_date: landingData.campaign_end_date
+          });
           
           // Calculate days remaining
-          const endDate = new Date(campaignData.end_date);
+          const endDate = new Date(landingData.campaign_end_date);
           const today = new Date();
           const diffTime = endDate.getTime() - today.getTime();
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
