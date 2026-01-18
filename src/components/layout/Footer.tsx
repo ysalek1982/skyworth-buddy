@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Trophy, Mail, Phone, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import TermsModal from "@/components/landing/TermsModal";
+import logoAJ from "@/assets/logo-aj-full.png";
 
 const Footer = () => {
   const [termsOpen, setTermsOpen] = useState(false);
@@ -73,13 +74,25 @@ const Footer = () => {
             </div>
           </div>
 
+          {/* AJ Logo - Autoridad de Fiscalización del Juego */}
+          <div className="mt-10 pt-8 border-t border-border/50">
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">Promoción autorizada por</p>
+              <img 
+                src={logoAJ} 
+                alt="Autoridad de Fiscalización del Juego - Juego Justo, Legal y Transparente" 
+                className="h-12 md:h-16 w-auto object-contain"
+              />
+            </div>
+          </div>
+
           {/* Bottom */}
-          <div className="mt-12 pt-8 border-t border-border">
+          <div className="mt-8 pt-6 border-t border-border/30">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-sm text-muted-foreground">
                 © 2026 Skyworth. Todos los derechos reservados.
               </p>
-            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4">
                 <p className="text-xs text-muted-foreground">
                   Promoción válida hasta el 30 de junio de 2026
                 </p>

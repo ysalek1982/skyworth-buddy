@@ -224,31 +224,32 @@ const ProductsSection = () => {
           )}
         </motion.div>
 
-        {/* Legend with animations */}
+        {/* Legend with cleaner labels */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.4 }}
-          className="mt-8 flex flex-wrap justify-center gap-6 text-sm"
+          className="mt-8 flex flex-wrap justify-center gap-4 text-sm"
         >
           {[
-            { tier: "tier-4", count: 4, label: "Máximo", emoji: "🏆" },
-            { tier: "tier-3", count: 3, label: "Alto", emoji: "🥇" },
-            { tier: "tier-2", count: 2, label: "Medio", emoji: "🥈" },
-            { tier: "tier-1", count: 1, label: "Base", emoji: "🎫" },
+            { tier: "tier-4", count: 4 },
+            { tier: "tier-3", count: 3 },
+            { tier: "tier-2", count: 2 },
+            { tier: "tier-1", count: 1 },
           ].map((item, i) => (
             <motion.div 
               key={item.tier}
-              className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full"
+              className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10"
               initial={{ opacity: 0, scale: 0.8 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 + i * 0.1 }}
               whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.1)" }}
             >
-              <span className="text-lg">{item.emoji}</span>
               <span className={`ticket-badge ${item.tier}`}>{item.count}</span>
-              <span className="text-muted-foreground">{item.label}</span>
+              <span className="text-white/80 font-medium">
+                {item.count} {item.count === 1 ? "Cupón" : "Cupones"}
+              </span>
             </motion.div>
           ))}
         </motion.div>
