@@ -12,35 +12,26 @@ const Header = () => {
   const navigate = useNavigate();
   const { user, signOut, loading, isAdmin } = useAuth();
 
+  // Only anchor links for single-page landing
   const navLinks = [
-    { href: "/", label: "Inicio" },
-    { href: "/#modelos", label: "Modelos", isAnchor: true },
-    { href: "/#registrar-compra", label: "Registrar Compra", isAnchor: true },
-    { href: "/rankings", label: "Rankings" },
-    { href: "/resultados", label: "Resultados" },
+    { href: "#inicio", label: "Inicio", isAnchor: true },
+    { href: "#registrar-compra", label: "Registrar Compra", isAnchor: true },
   ];
 
-  const isActive = (path: string) => {
-    if (path.startsWith("/#")) return false;
-    return location.pathname === path;
-  };
-
-  const handleNavClick = (href: string, isAnchor?: boolean) => {
+  const handleNavClick = (href: string) => {
     setIsMenuOpen(false);
-    if (isAnchor) {
-      const anchor = href.replace("/", "");
-      if (location.pathname === "/") {
-        // Already on home, just scroll
+    const anchor = href;
+    if (location.pathname === "/") {
+      // Already on home, just scroll
+      const element = document.querySelector(anchor);
+      element?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      // Navigate to home then scroll
+      navigate("/");
+      setTimeout(() => {
         const element = document.querySelector(anchor);
         element?.scrollIntoView({ behavior: "smooth" });
-      } else {
-        // Navigate to home then scroll
-        navigate("/");
-        setTimeout(() => {
-          const element = document.querySelector(anchor);
-          element?.scrollIntoView({ behavior: "smooth" });
-        }, 100);
-      }
+      }, 100);
     }
   };
 
@@ -68,27 +59,13 @@ const Header = () => {
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
-              link.isAnchor ? (
-                <button
-                  key={link.href}
-                  onClick={() => handleNavClick(link.href, true)}
-                  className="text-sm font-medium transition-colors text-white/70 hover:text-white"
-                >
-                  {link.label}
-                </button>
-              ) : (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  className={`text-sm font-medium transition-colors ${
-                    isActive(link.href)
-                      ? "text-[#FF6A00]"
-                      : "text-white/70 hover:text-white"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              )
+              <button
+                key={link.href}
+                onClick={() => handleNavClick(link.href)}
+                className="text-sm font-medium transition-colors text-white/70 hover:text-white"
+              >
+                {link.label}
+              </button>
             ))}
           </nav>
 
@@ -152,28 +129,13 @@ const Header = () => {
           >
             <nav className="p-4 space-y-2">
               {navLinks.map((link) => (
-                link.isAnchor ? (
-                  <button
-                    key={link.href}
-                    onClick={() => handleNavClick(link.href, true)}
-                    className="block w-full text-left px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                  >
-                    {link.label}
-                  </button>
-                ) : (
-                  <Link
-                    key={link.href}
-                    to={link.href}
-                    onClick={() => setIsMenuOpen(false)}
-                    className={`block px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      isActive(link.href)
-                        ? "bg-[#FF6A00]/20 text-[#FF6A00]"
-                        : "text-white/70 hover:bg-white/10 hover:text-white"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                )
+                <button
+                  key={link.href}
+                  onClick={() => handleNavClick(link.href)}
+                  className="block w-full text-left px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  {link.label}
+                </button>
               ))}
               <div className="pt-2 border-t border-white/10 mt-2">
                 {user ? (

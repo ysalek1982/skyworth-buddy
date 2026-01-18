@@ -124,7 +124,7 @@
     min-height: calc(100vh - var(--header-h));
   }
 
-  /* Hero with stadium background */
+  /* Hero with stadium background - Enhanced for Mundial theme */
   .hero-stadium {
     position: relative;
     background-size: cover;
@@ -140,6 +140,26 @@
       hsla(210, 80%, 5%, 0.9) 0%, 
       hsla(210, 70%, 8%, 0.75) 40%,
       hsla(210, 60%, 12%, 0.85) 100%
+    );
+  }
+
+  /* Enhanced hero with more visible stadium */
+  .hero-stadium-enhanced {
+    position: relative;
+    background-size: cover;
+    background-position: center 30%;
+    background-attachment: fixed;
+  }
+
+  .hero-stadium-enhanced::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, 
+      hsla(210, 80%, 5%, 0.75) 0%, 
+      hsla(140, 50%, 20%, 0.4) 30%,
+      hsla(210, 70%, 8%, 0.65) 60%,
+      hsla(210, 60%, 6%, 0.9) 100%
     );
   }
 
