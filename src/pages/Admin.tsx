@@ -27,9 +27,12 @@ import AdminSellers from '@/components/admin/AdminSellers';
 import AdminDraw from '@/components/admin/AdminDraw';
 import AdminKnowledgeBase from '@/components/admin/AdminKnowledgeBase';
 import AdminSettings from '@/components/admin/AdminSettings';
+import AdminLandingCMS from '@/components/admin/AdminLandingCMS';
+import { FileText } from 'lucide-react';
 
 const tabs = [
   { value: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { value: 'landing', label: 'CMS Landing', icon: FileText },
   { value: 'products', label: 'Productos', icon: Package },
   { value: 'serials', label: 'Seriales', icon: Barcode },
   { value: 'coupons', label: 'Cupones', icon: Ticket },
@@ -48,6 +51,8 @@ function AdminContent() {
     switch (activeTab) {
       case 'dashboard':
         return <AdminDashboard />;
+      case 'landing':
+        return <AdminLandingCMS />;
       case 'products':
         return <AdminProducts />;
       case 'serials':

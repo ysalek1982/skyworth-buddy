@@ -388,6 +388,75 @@ export type Database = {
         }
         Relationships: []
       }
+      landing_settings: {
+        Row: {
+          benefits: Json
+          campaign_end_date: string
+          campaign_name: string
+          campaign_start_date: string
+          campaign_tagline: string
+          created_at: string
+          cta_text: string
+          disclaimer: string | null
+          draw_date: string
+          hero_background_url: string | null
+          hero_banner_url: string | null
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          prize_destination: string
+          requirements: Json
+          sections: Json
+          theme: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          benefits?: Json
+          campaign_end_date?: string
+          campaign_name?: string
+          campaign_start_date?: string
+          campaign_tagline?: string
+          created_at?: string
+          cta_text?: string
+          disclaimer?: string | null
+          draw_date?: string
+          hero_background_url?: string | null
+          hero_banner_url?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          prize_destination?: string
+          requirements?: Json
+          sections?: Json
+          theme?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          benefits?: Json
+          campaign_end_date?: string
+          campaign_name?: string
+          campaign_start_date?: string
+          campaign_tagline?: string
+          created_at?: string
+          cta_text?: string
+          disclaimer?: string | null
+          draw_date?: string
+          hero_background_url?: string | null
+          hero_banner_url?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          prize_destination?: string
+          requirements?: Json
+          sections?: Json
+          theme?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       notification_templates: {
         Row: {
           body: string
