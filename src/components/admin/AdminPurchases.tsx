@@ -106,17 +106,56 @@ export default function AdminPurchases() {
 
     setProcessing(true);
     try {
+      // 1. Delete coupons associated with this purchase
+      const { error: couponError } = await supabase
+        .from('coupons')
+        .delete()
+        .eq('buyer_purchase_id', selectedPurchase.id);
+      
+      if (couponError) {
+        console.error('Error deleting coupons:', couponError);
+      }
+
+      // 2. Reset serial status back to available
+      const { error: serialError } = await supabase
+        .from('tv_serials')
+        .update({ 
+          buyer_status: 'NOT_REGISTERED',
+          buyer_purchase_id: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('serial_number', selectedPurchase.serial_number);
+      
+      if (serialError) {
+        console.error('Error resetting serial:', serialError);
+      }
+
+      // 3. Update purchase status to rejected
       const { error } = await supabase
         .from('client_purchases')
         .update({ 
           admin_status: 'REJECTED',
-          rejection_reason: rejectionReason 
+          rejection_reason: rejectionReason,
+          coupons_generated: 0
         })
         .eq('id', selectedPurchase.id);
 
       if (error) throw error;
 
-      toast.success('Compra rechazada');
+      // 4. Send rejection notification (best effort)
+      try {
+        await supabase.functions.invoke('process-client-purchase', {
+          body: {
+            purchase_id: selectedPurchase.id,
+            action: 'reject',
+            rejection_reason: rejectionReason
+          }
+        });
+      } catch (notifError) {
+        console.warn('Could not send rejection notification:', notifError);
+      }
+
+      toast.success('Compra rechazada. Serial liberado y cupones eliminados.');
       setRejectOpen(false);
       setRejectionReason('');
       setSelectedPurchase(null);
