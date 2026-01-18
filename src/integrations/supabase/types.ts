@@ -876,34 +876,20 @@ export type Database = {
         }
         Returns: boolean
       }
-      rpc_register_buyer_serial:
-        | {
-            Args: {
-              p_city?: string
-              p_dni: string
-              p_email: string
-              p_existing_purchase_id?: string
-              p_full_name: string
-              p_phone: string
-              p_purchase_date?: string
-              p_serial_number: string
-              p_user_id?: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_city: string
-              p_dni: string
-              p_email: string
-              p_full_name: string
-              p_phone: string
-              p_purchase_date: string
-              p_serial_number: string
-              p_user_id?: string
-            }
-            Returns: Json
-          }
+      rpc_register_buyer_serial: {
+        Args: {
+          p_city?: string
+          p_dni: string
+          p_email: string
+          p_existing_purchase_id?: string
+          p_full_name: string
+          p_phone: string
+          p_purchase_date?: string
+          p_serial_number: string
+          p_user_id?: string
+        }
+        Returns: Json
+      }
       rpc_register_seller: {
         Args: {
           p_phone?: string
