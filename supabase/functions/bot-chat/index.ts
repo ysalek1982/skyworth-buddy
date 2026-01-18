@@ -37,7 +37,7 @@ serve(async (req) => {
     }
 
     const geminiKey = settingsMap["GEMINI_API_KEY"]?.value;
-    const geminiModel = settingsMap["GEMINI_MODEL"]?.value || "gemini-1.5-flash";
+    const geminiModel = settingsMap["GEMINI_MODEL"]?.value || "gemini-2.5-flash";
 
     if (!geminiKey) {
       return new Response(
