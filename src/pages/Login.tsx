@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Trophy, Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Trophy, Mail, Lock, Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,8 @@ import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, signIn, isAdmin, isSeller, rolesLoaded } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { user, signIn, isAdmin, isSeller, rolesLoaded, loading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -18,18 +19,22 @@ const Login = () => {
     password: "",
   });
 
+  const redirectPath = searchParams.get("redirect");
+
+  // Handle redirect after roles are loaded
   useEffect(() => {
-    if (user && rolesLoaded) {
-      // Redirect based on role
-      if (isAdmin) {
-        navigate("/admin");
+    if (user && rolesLoaded && !loading) {
+      if (redirectPath) {
+        navigate(`/${redirectPath}`, { replace: true });
+      } else if (isAdmin) {
+        navigate("/admin", { replace: true });
       } else if (isSeller) {
-        navigate("/dashboard-vendedor");
+        navigate("/vendedores/dashboard", { replace: true });
       } else {
-        navigate("/");
+        navigate("/", { replace: true });
       }
     }
-  }, [user, rolesLoaded, isAdmin, isSeller, navigate]);
+  }, [user, rolesLoaded, isAdmin, isSeller, loading, navigate, redirectPath]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,13 +54,11 @@ const Login = () => {
       return;
     }
 
-    toast.success("¡Bienvenido de vuelta!");
-    navigate("/");
-    setIsLoading(false);
+    toast.success("¡Bienvenido!");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-hero flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -71,17 +74,17 @@ const Login = () => {
         </Link>
 
         {/* Card */}
-        <div className="bg-card rounded-2xl p-8 shadow-card">
+        <div className="bg-card rounded-2xl p-8 shadow-card border border-border">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-gold shadow-glow-gold mb-4">
-              <Trophy className="w-8 h-8 text-skyworth-dark" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-orange shadow-glow-orange mb-4">
+              <Trophy className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-2xl font-black text-card-foreground uppercase mb-2">
               Iniciar Sesión
             </h1>
             <p className="text-muted-foreground text-sm">
-              Accede a tu cuenta Skyworth
+              Accede a tu cuenta
             </p>
           </div>
 
@@ -133,25 +136,32 @@ const Login = () => {
 
             <Button
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-green text-primary-foreground font-bold uppercase tracking-wider py-6"
+              disabled={isLoading || (user && !rolesLoaded)}
+              className="w-full bg-gradient-orange text-primary-foreground font-bold uppercase tracking-wider py-6"
             >
-              {isLoading ? "Ingresando..." : "Ingresar"}
+              {isLoading || (user && !rolesLoaded) ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Verificando...
+                </>
+              ) : (
+                "Ingresar"
+              )}
             </Button>
           </form>
 
           {/* Footer */}
           <div className="mt-6 text-center space-y-2">
             <p className="text-sm text-muted-foreground">
-              ¿No tienes cuenta?{" "}
-              <Link to="/registro-vendedor" className="text-primary hover:underline font-medium">
-                Regístrate como vendedor
+              ¿Eres vendedor?{" "}
+              <Link to="/vendedores/login" className="text-primary hover:underline font-medium">
+                Ingresa aquí
               </Link>
             </p>
             <p className="text-sm text-muted-foreground">
-              ¿Eres cliente?{" "}
-              <Link to="/registro-cliente" className="text-primary hover:underline font-medium">
-                Registra tu compra
+              ¿No tienes cuenta de vendedor?{" "}
+              <Link to="/vendedores/registro" className="text-primary hover:underline font-medium">
+                Regístrate
               </Link>
             </p>
           </div>
