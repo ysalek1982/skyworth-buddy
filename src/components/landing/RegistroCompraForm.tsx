@@ -361,8 +361,26 @@ const RegistroCompraForm = () => {
       setStep(4); // Success step
       toast.success(`¡GOLAZO! Se generaron ${result.coupon_count || coupons.length} cupones.`);
 
-      // Note: Notifications will be sent manually by admin if needed
-      // The RPC already auto-approves the purchase
+      // Send email notification with coupons (best effort - don't block success)
+      try {
+        await supabase.functions.invoke("send-email", {
+          body: {
+            to: formData.email,
+            template_type: "purchase_approved",
+            variables: {
+              nombre: formData.nombreCompleto,
+              cupones: (result.coupons || []).join(", "),
+              cantidad_cupones: String(result.coupon_count || coupons.length),
+              modelo: serialValidation.productName || "TV Skyworth",
+              email: formData.email,
+            },
+          },
+        });
+        console.log("Email sent successfully to:", formData.email);
+      } catch (emailError) {
+        console.warn("Could not send email notification:", emailError);
+        // Don't show error to user - registration was successful
+      }
 
     } catch (error: any) {
       console.error("Error registering purchase:", error);
