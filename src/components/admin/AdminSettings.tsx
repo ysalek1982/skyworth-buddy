@@ -48,14 +48,19 @@ export default function AdminSettings() {
 
       (data || []).forEach(setting => {
         settingsMap[setting.key] = setting;
-        formValues[setting.key] = setting.value || '';
+        // Para keys tipo *_ENABLED, usar is_enabled como 'true'/'false'
+        if (setting.key.endsWith('_ENABLED')) {
+          formValues[setting.key] = setting.is_enabled ? 'true' : 'false';
+        } else {
+          formValues[setting.key] = setting.value || '';
+        }
       });
 
       // Initialize missing settings
       const allKeys = [...settingsKeys.gemini, ...settingsKeys.whatsapp, ...settingsKeys.smtp];
       allKeys.forEach(key => {
-        if (!formValues[key]) {
-          formValues[key] = '';
+        if (formValues[key] === undefined) {
+          formValues[key] = key.endsWith('_ENABLED') ? 'false' : '';
         }
       });
 
