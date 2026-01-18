@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Loader2, Gift, Star } from 'lucide-react';
+import { Plus, Pencil, Loader2, Gift, Star, Power, Eye, EyeOff } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 interface Product {
   id: string;
@@ -42,6 +43,7 @@ export default function AdminProducts() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [form, setForm] = useState(initialFormState);
+  const [showInactive, setShowInactive] = useState(false);
 
   useEffect(() => {
     loadProducts();
@@ -125,23 +127,31 @@ export default function AdminProducts() {
     setDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de desactivar este producto?')) return;
+  const handleToggleActive = async (product: Product) => {
+    const newStatus = !product.is_active;
+    const action = newStatus ? 'activar' : 'desactivar';
+    
+    if (!confirm(`¿Estás seguro de ${action} este producto?`)) return;
 
     try {
       const { error } = await supabase
         .from('products')
-        .update({ is_active: false })
-        .eq('id', id);
+        .update({ is_active: newStatus })
+        .eq('id', product.id);
 
       if (error) throw error;
-      toast.success('Producto desactivado');
+      toast.success(`Producto ${newStatus ? 'activado' : 'desactivado'}`);
       loadProducts();
     } catch (error) {
-      console.error('Error deleting product:', error);
-      toast.error('Error al desactivar producto');
+      console.error('Error updating product:', error);
+      toast.error(`Error al ${action} producto`);
     }
   };
+
+  // Filter products based on showInactive toggle
+  const filteredProducts = showInactive 
+    ? products 
+    : products.filter(p => p.is_active);
 
   const handleOpenDialog = () => {
     setEditingProduct(null);
@@ -181,13 +191,23 @@ export default function AdminProducts() {
           <h2 className="text-2xl font-bold text-foreground">Productos</h2>
           <p className="text-muted-foreground">Gestiona los TVs Skyworth y sus cupones</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleOpenDialog} className="bg-primary hover:bg-primary/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Nuevo Producto
-            </Button>
-          </DialogTrigger>
+        <div className="flex items-center gap-4">
+          {/* Toggle to show inactive products */}
+          <div className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-2">
+            {showInactive ? <Eye className="h-4 w-4 text-slate-400" /> : <EyeOff className="h-4 w-4 text-slate-400" />}
+            <span className="text-sm text-slate-300">Ver inactivos</span>
+            <Switch 
+              checked={showInactive} 
+              onCheckedChange={setShowInactive}
+            />
+          </div>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={handleOpenDialog} className="bg-primary hover:bg-primary/90">
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo Producto
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-xl">
             <DialogHeader>
               <DialogTitle className="text-xl">
@@ -326,8 +346,9 @@ export default function AdminProducts() {
                 </Button>
               </DialogFooter>
             </form>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Products Table */}
@@ -357,14 +378,14 @@ export default function AdminProducts() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {products.length === 0 ? (
+                {filteredProducts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                      No hay productos registrados
+                    <TableCell colSpan={7} className="text-center py-12 text-muted-foreground bg-white">
+                      {showInactive ? 'No hay productos registrados' : 'No hay productos activos'}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  products.map((product) => (
+                  filteredProducts.map((product) => (
                     <TableRow 
                       key={product.id} 
                       className={`hover:bg-slate-50 border-b border-slate-200 ${!product.is_active ? 'opacity-60 bg-slate-100' : 'bg-white'}`}
@@ -394,31 +415,26 @@ export default function AdminProducts() {
                         <span className="font-bold text-amber-600">{product.points_value}</span>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge className={product.is_active ? 'bg-green-500 text-white' : 'bg-amber-500 text-white'}>
-                          {product.is_active ? 'Activo' : 'Inactivo'}
-                        </Badge>
+                        <div className="flex items-center justify-center gap-2">
+                          <Switch 
+                            checked={product.is_active}
+                            onCheckedChange={() => handleToggleActive(product)}
+                            className="data-[state=checked]:bg-green-500"
+                          />
+                          <span className={`text-xs font-medium ${product.is_active ? 'text-green-600' : 'text-slate-400'}`}>
+                            {product.is_active ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button 
-                            size="icon" 
-                            variant="ghost" 
-                            onClick={() => handleEdit(product)}
-                            className="h-8 w-8 text-slate-600 hover:text-slate-900"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          {product.is_active && (
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              onClick={() => handleDelete(product.id)}
-                              className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          onClick={() => handleEdit(product)}
+                          className="h-8 w-8 text-slate-600 hover:text-slate-900"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
