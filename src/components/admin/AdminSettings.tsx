@@ -112,7 +112,18 @@ export default function AdminSettings() {
     setTesting(type);
     try {
       const functionName = `test-${type}`;
-      const { data, error } = await supabase.functions.invoke(functionName);
+      
+      // Prepare body based on the test type
+      let body: Record<string, string> = {};
+      if (type === 'smtp') {
+        body = { test_email: form.SMTP_FROM || 'test@example.com' };
+      } else if (type === 'whatsapp') {
+        body = { test: 'true' };
+      } else if (type === 'gemini') {
+        body = { test: 'true' };
+      }
+      
+      const { data, error } = await supabase.functions.invoke(functionName, { body });
 
       if (error) throw error;
 

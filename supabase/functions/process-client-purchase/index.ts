@@ -32,16 +32,70 @@ serve(async (req) => {
       );
     }
 
+    // Get landing settings for campaign info
+    const { data: landingSettings } = await supabase
+      .from("landing_settings")
+      .select("campaign_name, prize_destination, draw_date")
+      .eq("is_active", true)
+      .limit(1)
+      .single();
+
+    const prizeDestination = landingSettings?.prize_destination || "Monterrey";
+    const drawDate = landingSettings?.draw_date 
+      ? new Date(landingSettings.draw_date).toLocaleDateString('es-BO', { 
+          day: '2-digit', 
+          month: 'long', 
+          year: 'numeric' 
+        })
+      : "Por definir";
+
     if (action === "reject") {
+      const rejectionText = rejection_reason || "Documentos inválidos o incompletos";
+      
       // Update purchase status to rejected
       await supabase
         .from("client_purchases")
         .update({
           admin_status: "REJECTED",
-          rejection_reason: rejection_reason || "Documentos inválidos",
+          rejection_reason: rejectionText,
           updated_at: new Date().toISOString(),
         })
         .eq("id", purchase_id);
+
+      // Send rejection notifications (best effort)
+      const notificationVars = {
+        nombre: purchase.full_name,
+        motivo_rechazo: rejectionText,
+        email: purchase.email,
+      };
+
+      // Try to send email
+      try {
+        await supabase.functions.invoke("send-email", {
+          body: {
+            to: purchase.email,
+            template_type: "purchase_rejected",
+            variables: notificationVars,
+          },
+        });
+        console.log("Rejection email sent to:", purchase.email);
+      } catch (emailError) {
+        console.error("Error sending rejection email:", emailError);
+      }
+
+      // Try to send WhatsApp
+      try {
+        await supabase.functions.invoke("send-whatsapp", {
+          body: {
+            to: purchase.phone,
+            template_name: "purchase_rejected",
+            variables: notificationVars,
+          },
+        });
+        console.log("Rejection WhatsApp sent to:", purchase.phone);
+      } catch (whatsappError) {
+        console.error("Error sending rejection WhatsApp:", whatsappError);
+      }
 
       return new Response(
         JSON.stringify({ success: true, message: "Compra rechazada" }),
@@ -87,43 +141,46 @@ serve(async (req) => {
         })
         .eq("id", purchase_id);
 
-      // Send notifications
-      const couponsText = rpcResult.coupons.join(", ");
+      // Prepare notification variables
+      const couponsText = rpcResult.coupons?.join(", ") || "";
       const productModel = purchase.products?.model_name || "TV Skyworth";
+      
+      const notificationVars = {
+        nombre: purchase.full_name,
+        cupones: couponsText,
+        cantidad_cupones: String(rpcResult.coupon_count || 0),
+        modelo: productModel,
+        destino: prizeDestination,
+        fecha_sorteo: drawDate,
+        email: purchase.email,
+      };
 
-      // Try to send email
+      // Try to send email (best effort - don't fail the whole process)
       try {
         await supabase.functions.invoke("send-email", {
           body: {
             to: purchase.email,
             template_type: "purchase_approved",
-            variables: {
-              nombre: purchase.full_name,
-              cupones: couponsText,
-              modelo: productModel,
-              cantidad_cupones: rpcResult.coupon_count,
-            },
+            variables: notificationVars,
           },
         });
+        console.log("Approval email sent to:", purchase.email);
       } catch (emailError) {
-        console.error("Error sending email:", emailError);
+        console.error("Error sending approval email:", emailError);
       }
 
-      // Try to send WhatsApp
+      // Try to send WhatsApp (best effort)
       try {
         await supabase.functions.invoke("send-whatsapp", {
           body: {
             to: purchase.phone,
             template_name: "purchase_approved",
-            variables: {
-              nombre: purchase.full_name,
-              cupones: couponsText,
-              modelo: productModel,
-            },
+            variables: notificationVars,
           },
         });
+        console.log("Approval WhatsApp sent to:", purchase.phone);
       } catch (whatsappError) {
-        console.error("Error sending WhatsApp:", whatsappError);
+        console.error("Error sending approval WhatsApp:", whatsappError);
       }
 
       return new Response(
