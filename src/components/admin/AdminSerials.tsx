@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { Plus, Upload, Loader2, Lock, Unlock, Pencil, Download, FileSpreadsheet, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Plus, Upload, Loader2, Lock, Unlock, Pencil, Download, FileSpreadsheet, AlertTriangle, CheckCircle, Trash2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface Serial {
@@ -45,6 +46,8 @@ export default function AdminSerials() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [serialToDelete, setSerialToDelete] = useState<Serial | null>(null);
   const [editingSerial, setEditingSerial] = useState<Serial | null>(null);
   const [parsedSerials, setParsedSerials] = useState<ParsedSerial[]>([]);
   const [form, setForm] = useState({ serial_number: '', product_id: '' });
@@ -258,6 +261,32 @@ export default function AdminSerials() {
     } catch (error) {
       console.error('Error toggling status:', error);
       toast.error('Error al cambiar estado');
+    }
+  };
+
+  const handleDeleteClick = (serial: Serial) => {
+    setSerialToDelete(serial);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!serialToDelete) return;
+    
+    try {
+      const { error } = await supabase
+        .from('tv_serials')
+        .delete()
+        .eq('id', serialToDelete.id);
+
+      if (error) throw error;
+      
+      toast.success('Serial eliminado correctamente');
+      setDeleteDialogOpen(false);
+      setSerialToDelete(null);
+      loadData();
+    } catch (error: any) {
+      console.error('Error deleting serial:', error);
+      toast.error(error.message || 'Error al eliminar serial');
     }
   };
 
@@ -491,6 +520,42 @@ export default function AdminSerials() {
         </DialogContent>
       </Dialog>
 
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Eliminar Serial
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de eliminar el serial <strong className="text-foreground">{serialToDelete?.serial_number}</strong>?
+              <br /><br />
+              Esta acción no se puede deshacer.
+              {serialToDelete?.buyer_status === 'REGISTERED' && (
+                <span className="block mt-2 text-amber-600 font-medium">
+                  ⚠️ Este serial ya fue registrado por un comprador.
+                </span>
+              )}
+              {serialToDelete?.seller_status === 'REGISTERED' && (
+                <span className="block mt-2 text-amber-600 font-medium">
+                  ⚠️ Este serial ya fue registrado por un vendedor.
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSerialToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -599,6 +664,15 @@ export default function AdminSerials() {
                           ) : (
                             <Unlock className="h-4 w-4" />
                           )}
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleDeleteClick(serial)}
+                          title="Eliminar serial"
+                          className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
