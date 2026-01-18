@@ -222,54 +222,54 @@ export default function AdminKnowledgeBase() {
         </Dialog>
       </div>
 
-      <Card>
+      <Card className="bg-card border-border">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Título</TableHead>
-                <TableHead>Categoría</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Actualizado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
+              <TableRow className="bg-slate-700 hover:bg-slate-700 border-b border-slate-600">
+                <TableHead className="font-bold text-white">Título</TableHead>
+                <TableHead className="font-bold text-white">Categoría</TableHead>
+                <TableHead className="font-bold text-white">Estado</TableHead>
+                <TableHead className="font-bold text-white">Actualizado</TableHead>
+                <TableHead className="font-bold text-white text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {entries.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground bg-white">
                     No hay artículos
                   </TableCell>
                 </TableRow>
               ) : (
                 entries.map((entry) => (
-                  <TableRow key={entry.id}>
-                    <TableCell className="font-medium">{entry.title}</TableCell>
+                  <TableRow key={entry.id} className="bg-white hover:bg-slate-50 border-b border-slate-200">
+                    <TableCell className="font-medium text-slate-800">{entry.title}</TableCell>
                     <TableCell>
                       {entry.category ? (
-                        <Badge variant="outline">{entry.category}</Badge>
-                      ) : '-'}
+                        <Badge className="bg-blue-500 text-white">{entry.category}</Badge>
+                      ) : <span className="text-slate-400">-</span>}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={entry.is_active ? 'default' : 'secondary'}>
+                      <Badge className={entry.is_active ? 'bg-green-500 text-white' : 'bg-amber-500 text-white'}>
                         {entry.is_active ? 'Activo' : 'Inactivo'}
                       </Badge>
                     </TableCell>
-                    <TableCell>{new Date(entry.updated_at).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-slate-600">{new Date(entry.updated_at).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button size="icon" variant="ghost" onClick={() => handleToggleActive(entry)}>
+                        <Button size="icon" variant="ghost" onClick={() => handleToggleActive(entry)} className="text-slate-600 hover:text-slate-900">
                           {entry.is_active ? (
                             <EyeOff className="h-4 w-4" />
                           ) : (
                             <Eye className="h-4 w-4" />
                           )}
                         </Button>
-                        <Button size="icon" variant="ghost" onClick={() => handleEdit(entry)}>
+                        <Button size="icon" variant="ghost" onClick={() => handleEdit(entry)} className="text-slate-600 hover:text-slate-900">
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button size="icon" variant="ghost" onClick={() => handleDelete(entry.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                        <Button size="icon" variant="ghost" onClick={() => handleDelete(entry.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>

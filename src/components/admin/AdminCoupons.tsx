@@ -167,43 +167,39 @@ export default function AdminCoupons() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card className="bg-card border-border">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/30">
-                <TableHead className="font-bold">Código</TableHead>
-                <TableHead className="font-bold">Estado</TableHead>
-                <TableHead className="font-bold">Fecha de Creación</TableHead>
+              <TableRow className="bg-slate-700 hover:bg-slate-700 border-b border-slate-600">
+                <TableHead className="font-bold text-white">Código</TableHead>
+                <TableHead className="font-bold text-white">Estado</TableHead>
+                <TableHead className="font-bold text-white">Fecha de Creación</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredCoupons.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={3} className="text-center py-8 text-muted-foreground bg-white">
                     No hay cupones de compradores
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredCoupons.map((coupon) => (
-                  <TableRow key={coupon.id}>
-                    <TableCell className="font-mono font-medium">{coupon.code}</TableCell>
+                  <TableRow key={coupon.id} className="bg-white hover:bg-slate-50 border-b border-slate-200">
+                    <TableCell className="font-mono font-medium text-slate-800">{coupon.code}</TableCell>
                     <TableCell>
                       <Badge 
-                        variant={
-                          coupon.status === 'ACTIVE' ? 'default' : 
-                          coupon.status === 'USED' ? 'secondary' : 'destructive'
-                        }
                         className={
-                          coupon.status === 'ACTIVE' ? 'bg-green-500 hover:bg-green-600' :
-                          coupon.status === 'USED' ? 'bg-gray-500' : ''
+                          coupon.status === 'ACTIVE' ? 'bg-green-500 text-white' :
+                          coupon.status === 'USED' ? 'bg-slate-400 text-white' : 'bg-red-500 text-white'
                         }
                       >
                         {coupon.status === 'ACTIVE' ? 'Activo' : 
                          coupon.status === 'USED' ? 'Usado' : coupon.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{new Date(coupon.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-slate-600">{new Date(coupon.created_at).toLocaleDateString()}</TableCell>
                   </TableRow>
                 ))
               )}
