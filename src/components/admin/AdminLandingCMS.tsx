@@ -21,7 +21,8 @@ import {
   Loader2,
   Plus,
   X,
-  ExternalLink
+  ExternalLink,
+  FileText
 } from "lucide-react";
 import { useLandingSettings, useUpdateLandingSettings, DEFAULT_LANDING_SETTINGS, LandingSettings } from "@/hooks/useLandingSettings";
 import { toast } from "sonner";
@@ -112,7 +113,8 @@ export default function AdminLandingCMS() {
       hero_banner_url: formData.hero_banner_url,
       logo_url: formData.logo_url,
       theme: formData.theme,
-      sections: formData.sections
+      sections: formData.sections,
+      terms_conditions: formData.terms_conditions
     });
     setHasChanges(false);
   };
@@ -203,6 +205,10 @@ export default function AdminLandingCMS() {
           <TabsTrigger value="settings" className="data-[state=active]:bg-primary">
             <Settings2 className="w-4 h-4 mr-2" />
             Configuración
+          </TabsTrigger>
+          <TabsTrigger value="terms" className="data-[state=active]:bg-primary">
+            <FileText className="w-4 h-4 mr-2" />
+            T&C
           </TabsTrigger>
         </TabsList>
 
@@ -541,6 +547,42 @@ export default function AdminLandingCMS() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Terms & Conditions Tab */}
+        <TabsContent value="terms">
+          <Card className="glass-effect border-white/10">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Términos y Condiciones
+              </CardTitle>
+              <CardDescription>
+                Contenido HTML de los términos y condiciones que se muestran al hacer clic en el enlace del footer.
+                Puedes usar etiquetas HTML como &lt;h2&gt;, &lt;h3&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;ol&gt;, &lt;li&gt;, &lt;strong&gt;, &lt;table&gt;, etc.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="terms_conditions">Contenido HTML</Label>
+                <Textarea
+                  id="terms_conditions"
+                  value={formData.terms_conditions || ''}
+                  onChange={(e) => handleChange('terms_conditions', e.target.value)}
+                  placeholder="<h2>Términos y Condiciones</h2>..."
+                  className="bg-white/5 border-white/10 font-mono text-sm min-h-[400px]"
+                  rows={20}
+                />
+              </div>
+
+              <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                <p className="text-sm text-blue-400">
+                  <strong>Tip:</strong> Puedes usar clases de Tailwind dentro del HTML. 
+                  El contenido se renderiza con estilos predefinidos para h2, h3, h4, p, ul, ol, li, table, etc.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

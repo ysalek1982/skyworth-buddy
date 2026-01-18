@@ -31,6 +31,7 @@ export interface LandingSettings {
   logo_url: string | null;
   theme: LandingTheme;
   sections: LandingSections;
+  terms_conditions: string | null;
   is_active: boolean;
   updated_at: string;
   updated_by: string | null;
@@ -72,6 +73,7 @@ export const DEFAULT_LANDING_SETTINGS: Omit<LandingSettings, 'id' | 'updated_at'
     showRequirements: true,
     showBot: true
   },
+  terms_conditions: null,
   is_active: true
 };
 
@@ -139,6 +141,7 @@ export function useUpdateLandingSettings() {
       if (updateData.logo_url !== undefined) dbPayload.logo_url = updateData.logo_url;
       if (updateData.theme !== undefined) dbPayload.theme = JSON.stringify(updateData.theme);
       if (updateData.sections !== undefined) dbPayload.sections = JSON.stringify(updateData.sections);
+      if (updateData.terms_conditions !== undefined) dbPayload.terms_conditions = updateData.terms_conditions;
 
       const { data, error } = await supabase
         .from("landing_settings")
