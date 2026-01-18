@@ -23,16 +23,30 @@ const VendedoresLogin = () => {
 
   // Handle redirect after roles are loaded
   useEffect(() => {
-    if (user && rolesLoaded && !loading) {
+    // Only act when authentication is done and roles are loaded
+    if (!loading && user && rolesLoaded) {
       if (isSeller) {
         navigate("/vendedores/dashboard", { replace: true });
       } else {
-        // User is authenticated but not a seller
+        // User is authenticated but not a seller - show error and stop loading
         setRoleError("No tienes rol de vendedor. Por favor regístrate como vendedor primero.");
         setIsLoading(false);
       }
     }
   }, [user, rolesLoaded, isSeller, loading, navigate]);
+
+  // Reset loading state when roles are fully loaded (handles edge cases)
+  useEffect(() => {
+    if (rolesLoaded && isLoading) {
+      // Give a brief moment for navigation to happen before clearing loading
+      const timer = setTimeout(() => {
+        if (!isSeller) {
+          setIsLoading(false);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [rolesLoaded, isLoading, isSeller]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
