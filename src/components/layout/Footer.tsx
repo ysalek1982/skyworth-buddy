@@ -38,11 +38,6 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/rankings" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Rankings
-                </Link>
-              </li>
-              <li>
                 <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                   Términos y Condiciones
                 </a>

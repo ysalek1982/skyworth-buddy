@@ -715,6 +715,51 @@ export type Database = {
           },
         ]
       }
+      seller_winners: {
+        Row: {
+          campaign_id: string | null
+          created_at: string
+          id: string
+          seller_id: string
+          total_points: number
+          total_sales: number
+          won_at: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string
+          id?: string
+          seller_id: string
+          total_points: number
+          total_sales: number
+          won_at?: string
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string
+          id?: string
+          seller_id?: string
+          total_points?: number
+          total_sales?: number
+          won_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_winners_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaign"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_winners_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sellers: {
         Row: {
           created_at: string

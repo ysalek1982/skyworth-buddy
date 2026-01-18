@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Award, Trophy, Calendar, Users, Gift, CheckCircle } from "lucide-react";
+import { Award, Trophy, Calendar, Users, Gift, CheckCircle, Crown } from "lucide-react";
 import SellerLayout from "@/components/layout/SellerLayout";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -16,6 +16,15 @@ interface Winner {
   created_at: string;
 }
 
+interface SellerWinner {
+  id: string;
+  seller_name: string;
+  store_name: string;
+  total_sales: number;
+  total_points: number;
+  won_at: string;
+}
+
 const VendedoresResultados = () => {
   const [campaign, setCampaign] = useState<CampaignData | null>(null);
   const [stats, setStats] = useState({
@@ -25,6 +34,7 @@ const VendedoresResultados = () => {
     daysRemaining: 0,
   });
   const [winners, setWinners] = useState<Winner[]>([]);
+  const [sellerWinners, setSellerWinners] = useState<SellerWinner[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -85,6 +95,49 @@ const VendedoresResultados = () => {
           // Parse winners from results
           const results = drawData.results as { winners?: Winner[] };
           setWinners(results.winners || []);
+        }
+
+        // Fetch seller winners
+        const { data: sellerWinnersData } = await supabase
+          .from("seller_winners")
+          .select(`
+            id,
+            total_sales,
+            total_points,
+            won_at,
+            seller_id
+          `)
+          .order("won_at", { ascending: false });
+
+        if (sellerWinnersData && sellerWinnersData.length > 0) {
+          // Fetch seller details
+          const sellerIds = sellerWinnersData.map(sw => sw.seller_id);
+          const { data: sellersData } = await supabase
+            .from("sellers")
+            .select("id, store_name, user_id")
+            .in("id", sellerIds);
+
+          if (sellersData) {
+            const userIds = sellersData.map(s => s.user_id);
+            const { data: profilesData } = await supabase
+              .from("profiles")
+              .select("user_id, nombre, apellido")
+              .in("user_id", userIds);
+
+            const formattedWinners = sellerWinnersData.map(sw => {
+              const seller = sellersData.find(s => s.id === sw.seller_id);
+              const profile = profilesData?.find(p => p.user_id === seller?.user_id);
+              return {
+                id: sw.id,
+                seller_name: profile ? `${profile.nombre} ${profile.apellido}` : "Vendedor",
+                store_name: seller?.store_name || "Tienda",
+                total_sales: sw.total_sales,
+                total_points: sw.total_points,
+                won_at: sw.won_at
+              };
+            });
+            setSellerWinners(formattedWinners);
+          }
         }
 
       } catch (error) {
@@ -221,7 +274,59 @@ const VendedoresResultados = () => {
             </div>
           </motion.div>
 
-          {/* Prize Info */}
+          {/* Seller Winners Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="bg-card rounded-2xl shadow-card overflow-hidden mb-8"
+          >
+            <div className="p-6 border-b border-border">
+              <h2 className="text-xl font-bold text-card-foreground flex items-center gap-2">
+                <Crown className="w-5 h-5 text-orange-500" />
+                Vendedor Ganador
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                El vendedor con más ventas al finalizar la campaña
+              </p>
+            </div>
+            
+            <div className="p-6">
+              {sellerWinners.length > 0 ? (
+                <div className="space-y-3">
+                  {sellerWinners.map((winner, index) => (
+                    <div
+                      key={winner.id}
+                      className="flex items-center gap-4 p-4 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-lg border border-orange-500/20"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-gradient-gold flex items-center justify-center">
+                        <Crown className="w-6 h-6 text-skyworth-dark" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-bold text-card-foreground">{winner.seller_name}</p>
+                        <p className="text-sm text-muted-foreground">{winner.store_name}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-orange-500">{winner.total_sales} ventas</p>
+                        <p className="text-xs text-muted-foreground">{winner.total_points} pts</p>
+                      </div>
+                      <Trophy className="w-6 h-6 text-yellow-500" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Crown className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                  <h3 className="text-lg font-bold text-card-foreground mb-1">
+                    Pendiente de Resultados
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    El ganador se determinará al finalizar la campaña.
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

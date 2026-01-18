@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Loader2, Save, TestTube, Bot, MessageSquare, Mail, Settings2 } from 'lucide-react';
+import { Loader2, Save, TestTube, Bot, MessageSquare, Mail, Trophy } from 'lucide-react';
 
 interface SecureSetting {
   id: string;
@@ -21,7 +21,8 @@ interface SecureSetting {
 const settingsKeys = {
   gemini: ['GEMINI_API_KEY', 'GEMINI_MODEL', 'BOT_ENABLED'],
   whatsapp: ['WHATSAPP_PROVIDER', 'WHATSAPP_API_URL', 'WHATSAPP_TOKEN', 'WHATSAPP_PHONE_ID', 'WHATSAPP_ENABLED'],
-  smtp: ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM', 'EMAIL_ENABLED']
+  smtp: ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM', 'EMAIL_ENABLED'],
+  campaign: ['SELLER_AUTO_WINNER_ENABLED']
 };
 
 export default function AdminSettings() {
@@ -74,7 +75,7 @@ export default function AdminSettings() {
     }
   };
 
-  const handleSave = async (category: 'gemini' | 'whatsapp' | 'smtp') => {
+  const handleSave = async (category: 'gemini' | 'whatsapp' | 'smtp' | 'campaign') => {
     setSaving(true);
     try {
       const keys = settingsKeys[category];
@@ -172,8 +173,12 @@ export default function AdminSettings() {
         <p className="text-muted-foreground">Integraciones y API keys</p>
       </div>
 
-      <Tabs defaultValue="gemini" className="space-y-6">
+      <Tabs defaultValue="campaign" className="space-y-6">
         <TabsList>
+          <TabsTrigger value="campaign" className="flex items-center gap-2">
+            <Trophy className="h-4 w-4" />
+            Campaña
+          </TabsTrigger>
           <TabsTrigger value="gemini" className="flex items-center gap-2">
             <Bot className="h-4 w-4" />
             Gemini AI
@@ -187,6 +192,37 @@ export default function AdminSettings() {
             Email SMTP
           </TabsTrigger>
         </TabsList>
+
+        {/* Campaign Settings */}
+        <TabsContent value="campaign">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5" />
+                Configuración de Campaña
+              </CardTitle>
+              <CardDescription>Opciones del sorteo y ganadores</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="space-y-1">
+                  <Label className="text-base font-medium">Ganador Automático de Vendedores</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Al finalizar la campaña, el vendedor con más ventas será declarado ganador automáticamente.
+                  </p>
+                </div>
+                <Switch
+                  checked={isEnabled('SELLER_AUTO_WINNER_ENABLED')}
+                  onCheckedChange={() => toggleEnabled('SELLER_AUTO_WINNER_ENABLED')}
+                />
+              </div>
+              <Button onClick={() => handleSave('campaign')} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                Guardar Configuración
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Gemini Settings */}
         <TabsContent value="gemini">
