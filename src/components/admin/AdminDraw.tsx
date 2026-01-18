@@ -227,37 +227,37 @@ export default function AdminDraw() {
       </div>
 
       {/* Draws List */}
-      <Card>
+      <Card className="bg-card border-border">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Preseleccionados</TableHead>
-                <TableHead>Finalistas</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
+              <TableRow className="bg-slate-700 hover:bg-slate-700 border-b border-slate-600">
+                <TableHead className="font-bold text-white">Nombre</TableHead>
+                <TableHead className="font-bold text-white">Preseleccionados</TableHead>
+                <TableHead className="font-bold text-white">Finalistas</TableHead>
+                <TableHead className="font-bold text-white">Fecha</TableHead>
+                <TableHead className="font-bold text-white text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {draws.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground bg-white">
                     No hay sorteos realizados
                   </TableCell>
                 </TableRow>
               ) : (
                 draws.map((draw) => (
-                  <TableRow key={draw.id}>
-                    <TableCell className="font-medium">{draw.name}</TableCell>
-                    <TableCell>{draw.preselected_count}</TableCell>
-                    <TableCell>{draw.finalists_count}</TableCell>
-                    <TableCell>
+                  <TableRow key={draw.id} className="bg-white hover:bg-slate-50 border-b border-slate-200">
+                    <TableCell className="font-medium text-slate-800">{draw.name}</TableCell>
+                    <TableCell className="text-slate-700">{draw.preselected_count}</TableCell>
+                    <TableCell className="text-slate-700">{draw.finalists_count}</TableCell>
+                    <TableCell className="text-slate-600">
                       {draw.executed_at ? new Date(draw.executed_at).toLocaleString() : '-'}
                     </TableCell>
                     <TableCell className="text-right">
                       {draw.results && (
-                        <Button size="sm" variant="outline" onClick={() => exportResults(draw)}>
+                        <Button size="sm" variant="outline" onClick={() => exportResults(draw)} className="border-slate-300 text-slate-700 hover:bg-slate-100">
                           <Download className="h-4 w-4 mr-2" />
                           Exportar
                         </Button>

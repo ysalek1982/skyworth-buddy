@@ -175,55 +175,52 @@ export default function AdminSellers() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card className="bg-card border-border">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/30">
-                <TableHead className="font-bold w-16">Rank</TableHead>
-                <TableHead className="font-bold">Tienda</TableHead>
-                <TableHead className="font-bold">Ciudad</TableHead>
-                <TableHead className="font-bold">Teléfono</TableHead>
-                <TableHead className="font-bold text-center">
+              <TableRow className="bg-slate-700 hover:bg-slate-700 border-b border-slate-600">
+                <TableHead className="font-bold text-white w-16">Rank</TableHead>
+                <TableHead className="font-bold text-white">Tienda</TableHead>
+                <TableHead className="font-bold text-white">Ciudad</TableHead>
+                <TableHead className="font-bold text-white">Teléfono</TableHead>
+                <TableHead className="font-bold text-white text-center">
                   <div className="flex items-center justify-center gap-1">
-                    <Star className="h-4 w-4 text-amber-500" />
+                    <Star className="h-4 w-4 text-amber-400" />
                     Puntos
                   </div>
                 </TableHead>
-                <TableHead className="font-bold text-center">Ventas</TableHead>
-                <TableHead className="font-bold text-center">Estado</TableHead>
-                <TableHead className="font-bold text-right">Acciones</TableHead>
+                <TableHead className="font-bold text-white text-center">Ventas</TableHead>
+                <TableHead className="font-bold text-white text-center">Estado</TableHead>
+                <TableHead className="font-bold text-white text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredSellers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground bg-white">
                     No hay vendedores
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredSellers.map((seller, index) => (
-                  <TableRow key={seller.id} className={!seller.is_active ? 'opacity-50' : ''}>
+                  <TableRow key={seller.id} className={`bg-white hover:bg-slate-50 border-b border-slate-200 ${!seller.is_active ? 'opacity-60' : ''}`}>
                     <TableCell className="font-medium">
                       <div className="flex items-center justify-center">
                         {getRankBadge(index)}
                       </div>
                     </TableCell>
-                    <TableCell className="font-semibold text-foreground">{seller.store_name}</TableCell>
-                    <TableCell className="text-muted-foreground">{seller.store_city}</TableCell>
-                    <TableCell className="text-muted-foreground">{seller.phone || '-'}</TableCell>
+                    <TableCell className="font-semibold text-slate-800">{seller.store_name}</TableCell>
+                    <TableCell className="text-slate-600">{seller.store_city}</TableCell>
+                    <TableCell className="text-slate-600">{seller.phone || '-'}</TableCell>
                     <TableCell className="text-center">
-                      <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30">
+                      <Badge className="bg-amber-500 text-white">
                         {seller.total_points.toLocaleString()}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-center text-muted-foreground">{seller.total_sales}</TableCell>
+                    <TableCell className="text-center text-slate-700 font-medium">{seller.total_sales}</TableCell>
                     <TableCell className="text-center">
-                      <Badge 
-                        variant={seller.is_active ? 'default' : 'destructive'}
-                        className={seller.is_active ? 'bg-green-500 hover:bg-green-600' : ''}
-                      >
+                      <Badge className={seller.is_active ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}>
                         {seller.is_active ? 'Activo' : 'Bloqueado'}
                       </Badge>
                     </TableCell>
@@ -233,10 +230,10 @@ export default function AdminSellers() {
                         variant="ghost"
                         onClick={() => handleToggleActive(seller)}
                         title={seller.is_active ? 'Bloquear' : 'Activar'}
-                        className="h-8 w-8"
+                        className="h-8 w-8 text-slate-600 hover:text-slate-900"
                       >
                         {seller.is_active ? (
-                          <Ban className="h-4 w-4 text-destructive" />
+                          <Ban className="h-4 w-4 text-red-500" />
                         ) : (
                           <CheckCircle className="h-4 w-4 text-green-500" />
                         )}

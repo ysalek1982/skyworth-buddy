@@ -300,40 +300,40 @@ export default function AdminPurchases() {
       </Dialog>
 
       {/* Table */}
-      <Card>
+      <Card className="bg-card border-border">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Serial</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
+              <TableRow className="bg-slate-700 hover:bg-slate-700 border-b border-slate-600">
+                <TableHead className="font-bold text-white">Cliente</TableHead>
+                <TableHead className="font-bold text-white">Serial</TableHead>
+                <TableHead className="font-bold text-white">Fecha</TableHead>
+                <TableHead className="font-bold text-white">Estado</TableHead>
+                <TableHead className="font-bold text-white text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {purchases.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground bg-white">
                     No hay compras
                   </TableCell>
                 </TableRow>
               ) : (
                 purchases.map((purchase) => (
-                  <TableRow key={purchase.id}>
+                  <TableRow key={purchase.id} className="bg-white hover:bg-slate-50 border-b border-slate-200">
                     <TableCell>
                       <div>
-                        <p className="font-medium">{purchase.full_name}</p>
-                        <p className="text-sm text-muted-foreground">{purchase.email}</p>
+                        <p className="font-medium text-slate-800">{purchase.full_name}</p>
+                        <p className="text-sm text-slate-500">{purchase.email}</p>
                       </div>
                     </TableCell>
-                    <TableCell className="font-mono">{purchase.serial_number}</TableCell>
-                    <TableCell>{new Date(purchase.purchase_date).toLocaleDateString()}</TableCell>
+                    <TableCell className="font-mono text-slate-700">{purchase.serial_number}</TableCell>
+                    <TableCell className="text-slate-600">{new Date(purchase.purchase_date).toLocaleDateString()}</TableCell>
                     <TableCell>{getStatusBadge(purchase.admin_status)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button size="icon" variant="ghost" onClick={() => openDetails(purchase)}>
+                        <Button size="icon" variant="ghost" onClick={() => openDetails(purchase)} className="text-slate-600 hover:text-slate-900">
                           <Eye className="h-4 w-4" />
                         </Button>
                         {purchase.admin_status === 'PENDING' && (
@@ -341,7 +341,7 @@ export default function AdminPurchases() {
                             <Button 
                               size="icon" 
                               variant="ghost" 
-                              className="text-green-500" 
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50" 
                               onClick={() => handleApprove(purchase)}
                               disabled={processing}
                             >
@@ -350,7 +350,7 @@ export default function AdminPurchases() {
                             <Button 
                               size="icon" 
                               variant="ghost" 
-                              className="text-destructive" 
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50" 
                               onClick={() => openReject(purchase)}
                             >
                               <X className="h-4 w-4" />
