@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Users, Ticket, Barcode, ShoppingCart, TrendingUp, Package, Star, Trophy } from 'lucide-react';
+import { Loader2, Users, Ticket, Barcode, TrendingUp, Star, Trophy, UserCheck, Store } from 'lucide-react';
 
 interface DashboardStats {
   totalClients: number;
@@ -9,10 +9,8 @@ interface DashboardStats {
   totalCoupons: number;
   activeCoupons: number;
   totalSerials: number;
-  registeredSerials: number;
-  totalPurchases: number;
-  pendingPurchases: number;
-  totalSales: number;
+  buyerRegisteredSerials: number;
+  sellerRegisteredSerials: number;
   totalSellerPoints: number;
   topSeller: { name: string; points: number } | null;
 }
@@ -32,26 +30,19 @@ export default function AdminDashboard() {
         sellersRes,
         couponsRes,
         serialsRes,
-        purchasesRes,
-        salesRes,
         topSellerRes
       ] = await Promise.all([
         supabase.from('client_purchases').select('id', { count: 'exact', head: true }),
         supabase.from('sellers').select('id, total_points', { count: 'exact' }),
-        // Only count BUYER coupons
         supabase.from('coupons').select('id, status').eq('owner_type', 'BUYER'),
         supabase.from('tv_serials').select('id, buyer_status, seller_status'),
-        supabase.from('client_purchases').select('id, admin_status'),
-        supabase.from('seller_sales').select('id', { count: 'exact', head: true }),
         supabase.from('sellers').select('store_name, total_points').order('total_points', { ascending: false }).limit(1).single()
       ]);
 
       const coupons = couponsRes.data || [];
       const serials = serialsRes.data || [];
-      const purchases = purchasesRes.data || [];
       const sellers = sellersRes.data || [];
       
-      // Calculate total seller points
       const totalSellerPoints = sellers.reduce((sum, s) => sum + (s.total_points || 0), 0);
 
       setStats({
@@ -60,11 +51,8 @@ export default function AdminDashboard() {
         totalCoupons: coupons.length,
         activeCoupons: coupons.filter(c => c.status === 'ACTIVE').length,
         totalSerials: serials.length,
-        registeredSerials: serials.filter(s => s.buyer_status === 'REGISTERED' || s.seller_status === 'REGISTERED').length,
-        totalPurchases: purchases.length,
-        // Backward compatible: older rows may have admin_status NULL (treat as PENDING)
-        pendingPurchases: purchases.filter(p => !p.admin_status || p.admin_status === 'PENDING').length,
-        totalSales: salesRes.count || 0,
+        buyerRegisteredSerials: serials.filter(s => s.buyer_status === 'REGISTERED').length,
+        sellerRegisteredSerials: serials.filter(s => s.seller_status === 'REGISTERED').length,
         totalSellerPoints,
         topSeller: topSellerRes.data ? { name: topSellerRes.data.store_name, points: topSellerRes.data.total_points } : null
       });
@@ -131,10 +119,10 @@ export default function AdminDashboard() {
       valueColor: 'text-amber-700'
     },
     {
-      title: 'Seriales',
-      value: stats.registeredSerials,
-      description: `${stats.totalSerials} totales`,
-      icon: Barcode,
+      title: 'Reg. Compradores',
+      value: stats.buyerRegisteredSerials,
+      description: `de ${stats.totalSerials} seriales`,
+      icon: UserCheck,
       iconColor: 'text-cyan-600',
       iconBg: 'bg-cyan-100',
       bgColor: 'from-cyan-50 to-cyan-100/50',
@@ -142,10 +130,10 @@ export default function AdminDashboard() {
       valueColor: 'text-cyan-700'
     },
     {
-      title: 'Pendientes',
-      value: stats.pendingPurchases,
-      description: `${stats.totalPurchases} compras`,
-      icon: ShoppingCart,
+      title: 'Reg. Vendedores',
+      value: stats.sellerRegisteredSerials,
+      description: `de ${stats.totalSerials} seriales`,
+      icon: Store,
       iconColor: 'text-rose-600',
       iconBg: 'bg-rose-100',
       bgColor: 'from-rose-50 to-rose-100/50',
