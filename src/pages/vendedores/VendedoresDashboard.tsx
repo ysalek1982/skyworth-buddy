@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +22,12 @@ import {
   Phone,
   Star,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Upload,
+  Calendar,
+  Camera,
+  FileText,
+  X
 } from 'lucide-react';
 
 interface Seller {
@@ -52,6 +57,12 @@ interface SerialValidation {
   points?: number;
 }
 
+interface FileUpload {
+  file: File | null;
+  preview: string | null;
+  uploading: boolean;
+}
+
 function DashboardContent() {
   const { user } = useAuth();
   const [seller, setSeller] = useState<Seller | null>(null);
@@ -62,11 +73,22 @@ function DashboardContent() {
   const [serialValidation, setSerialValidation] = useState<SerialValidation>({ status: 'idle', message: '' });
   const [campaignInfo, setCampaignInfo] = useState<{ name: string; drawDate: string } | null>(null);
   
+  // File upload refs
+  const warrantyTagRef = useRef<HTMLInputElement>(null);
+  const warrantyPolicyRef = useRef<HTMLInputElement>(null);
+  const invoicePhotoRef = useRef<HTMLInputElement>(null);
+  
+  // File upload states
+  const [warrantyTagFile, setWarrantyTagFile] = useState<FileUpload>({ file: null, preview: null, uploading: false });
+  const [warrantyPolicyFile, setWarrantyPolicyFile] = useState<FileUpload>({ file: null, preview: null, uploading: false });
+  const [invoicePhotoFile, setInvoicePhotoFile] = useState<FileUpload>({ file: null, preview: null, uploading: false });
+  
   const [serialForm, setSerialForm] = useState({
     serial_number: '',
     client_name: '',
     client_phone: '',
-    invoice_number: ''
+    invoice_number: '',
+    sale_date: new Date().toISOString().split('T')[0]
   });
 
   useEffect(() => {
@@ -209,6 +231,51 @@ function DashboardContent() {
     return () => clearTimeout(timeoutId);
   };
 
+  // Handle file selection
+  const handleFileSelect = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setFile: React.Dispatch<React.SetStateAction<FileUpload>>
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('El archivo no debe superar 5MB');
+        return;
+      }
+      const preview = URL.createObjectURL(file);
+      setFile({ file, preview, uploading: false });
+    }
+  };
+
+  // Upload file to storage
+  const uploadFile = async (file: File, folder: string): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${seller?.id}/${Date.now()}.${fileExt}`;
+      const filePath = `${folder}/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('seller-documents')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('seller-documents')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      return null;
+    }
+  };
+
+  // Clear file
+  const clearFile = (setFile: React.Dispatch<React.SetStateAction<FileUpload>>) => {
+    setFile({ file: null, preview: null, uploading: false });
+  };
+
   const handleRegisterSerial = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!seller) return;
@@ -218,15 +285,40 @@ function DashboardContent() {
       return;
     }
 
+    // Validate required files
+    if (!warrantyTagFile.file) {
+      toast.error('Debes subir la foto del TAG de póliza de garantía');
+      return;
+    }
+    if (!warrantyPolicyFile.file) {
+      toast.error('Debes subir la foto de la Póliza de Garantía');
+      return;
+    }
+    if (!invoicePhotoFile.file) {
+      toast.error('Debes subir la foto de la factura o nota de venta');
+      return;
+    }
+
     setRegisteringSerial(true);
     try {
+      // Upload files
+      const [warrantyTagUrl, warrantyPolicyUrl, invoicePhotoUrl] = await Promise.all([
+        uploadFile(warrantyTagFile.file, 'warranty-tags'),
+        uploadFile(warrantyPolicyFile.file, 'warranty-policies'),
+        uploadFile(invoicePhotoFile.file, 'invoices')
+      ]);
+
+      if (!warrantyTagUrl || !warrantyPolicyUrl || !invoicePhotoUrl) {
+        throw new Error('Error al subir los documentos');
+      }
+
       const { data, error } = await supabase.rpc('rpc_register_seller_serial', {
         p_seller_id: seller.id,
         p_serial_number: serialForm.serial_number,
         p_client_name: serialForm.client_name,
         p_client_phone: serialForm.client_phone || null,
         p_invoice_number: serialForm.invoice_number || null,
-        p_sale_date: new Date().toISOString().split('T')[0]
+        p_sale_date: serialForm.sale_date
       });
 
       if (error) throw error;
@@ -236,9 +328,30 @@ function DashboardContent() {
         throw new Error(result.error || 'Error al registrar');
       }
 
+      // Update the sale with file URLs
+      if (result.sale_id) {
+        await supabase
+          .from('seller_sales')
+          .update({
+            warranty_tag_url: warrantyTagUrl,
+            warranty_policy_url: warrantyPolicyUrl,
+            invoice_photo_url: invoicePhotoUrl
+          })
+          .eq('id', result.sale_id);
+      }
+
       toast.success(`¡Venta registrada! +${result.points} puntos`);
-      setSerialForm({ serial_number: '', client_name: '', client_phone: '', invoice_number: '' });
+      setSerialForm({ 
+        serial_number: '', 
+        client_name: '', 
+        client_phone: '', 
+        invoice_number: '',
+        sale_date: new Date().toISOString().split('T')[0]
+      });
       setSerialValidation({ status: 'idle', message: '' });
+      clearFile(setWarrantyTagFile);
+      clearFile(setWarrantyPolicyFile);
+      clearFile(setInvoicePhotoFile);
       loadSellerData();
     } catch (error: any) {
       console.error('Error registering serial:', error);
@@ -383,10 +496,29 @@ function DashboardContent() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleRegisterSerial} className="space-y-4">
+                <form onSubmit={handleRegisterSerial} className="space-y-6">
+                  {/* Basic Info */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="serial_number">Número de Serial del TV *</Label>
+                    {/* Sale Date */}
+                    <div className="space-y-2">
+                      <Label htmlFor="sale_date" className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Fecha de Venta *
+                      </Label>
+                      <Input
+                        id="sale_date"
+                        type="date"
+                        value={serialForm.sale_date}
+                        onChange={(e) => setSerialForm({ ...serialForm, sale_date: e.target.value })}
+                        className="input-dark"
+                        required
+                        max={new Date().toISOString().split('T')[0]}
+                      />
+                    </div>
+                    
+                    {/* Serial Number */}
+                    <div className="space-y-2">
+                      <Label htmlFor="serial_number">Número de Serie *</Label>
                       <Input
                         id="serial_number"
                         value={serialForm.serial_number}
@@ -412,6 +544,7 @@ function DashboardContent() {
                         </div>
                       )}
                     </div>
+
                     <div className="space-y-2">
                       <Label htmlFor="client_name">Nombre del Cliente *</Label>
                       <Input
@@ -434,16 +567,150 @@ function DashboardContent() {
                       />
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="invoice_number">Número de Factura</Label>
+                      <Label htmlFor="invoice_number">Número de Factura/Nota de Venta</Label>
                       <Input
                         id="invoice_number"
                         value={serialForm.invoice_number}
                         onChange={(e) => setSerialForm({ ...serialForm, invoice_number: e.target.value })}
-                        placeholder="Opcional"
+                        placeholder="Número de documento"
                         className="input-dark"
                       />
                     </div>
                   </div>
+
+                  {/* Document Uploads Section */}
+                  <div className="border-t border-border pt-6">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <Camera className="h-5 w-5" />
+                      Documentos Requeridos
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Los documentos deben coincidir con el número de serie y fecha de venta
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Warranty Tag Photo */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">TAG de Póliza de Garantía *</Label>
+                        <input
+                          ref={warrantyTagRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleFileSelect(e, setWarrantyTagFile)}
+                        />
+                        {warrantyTagFile.preview ? (
+                          <div className="relative">
+                            <img 
+                              src={warrantyTagFile.preview} 
+                              alt="TAG Preview" 
+                              className="w-full h-32 object-cover rounded-lg border border-border"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-1 right-1 h-6 w-6"
+                              onClick={() => clearFile(setWarrantyTagFile)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full h-32 flex flex-col items-center justify-center gap-2 border-dashed"
+                            onClick={() => warrantyTagRef.current?.click()}
+                          >
+                            <Upload className="h-8 w-8 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">Subir foto del TAG</span>
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Warranty Policy Photo */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Póliza de Garantía *</Label>
+                        <input
+                          ref={warrantyPolicyRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleFileSelect(e, setWarrantyPolicyFile)}
+                        />
+                        {warrantyPolicyFile.preview ? (
+                          <div className="relative">
+                            <img 
+                              src={warrantyPolicyFile.preview} 
+                              alt="Policy Preview" 
+                              className="w-full h-32 object-cover rounded-lg border border-border"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-1 right-1 h-6 w-6"
+                              onClick={() => clearFile(setWarrantyPolicyFile)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full h-32 flex flex-col items-center justify-center gap-2 border-dashed"
+                            onClick={() => warrantyPolicyRef.current?.click()}
+                          >
+                            <FileText className="h-8 w-8 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">Subir póliza</span>
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Invoice Photo */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Factura / Nota de Venta *</Label>
+                        <input
+                          ref={invoicePhotoRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleFileSelect(e, setInvoicePhotoFile)}
+                        />
+                        {invoicePhotoFile.preview ? (
+                          <div className="relative">
+                            <img 
+                              src={invoicePhotoFile.preview} 
+                              alt="Invoice Preview" 
+                              className="w-full h-32 object-cover rounded-lg border border-border"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-1 right-1 h-6 w-6"
+                              onClick={() => clearFile(setInvoicePhotoFile)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full h-32 flex flex-col items-center justify-center gap-2 border-dashed"
+                            onClick={() => invoicePhotoRef.current?.click()}
+                          >
+                            <Upload className="h-8 w-8 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">Subir factura</span>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   <Button 
                     type="submit" 
                     disabled={registeringSerial || serialValidation.status !== 'valid'} 

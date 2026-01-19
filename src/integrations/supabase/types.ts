@@ -671,11 +671,14 @@ export type Database = {
           created_at: string
           id: string
           invoice_number: string | null
+          invoice_photo_url: string | null
           points_earned: number
           product_id: string | null
           sale_date: string
           seller_id: string
           serial_number: string
+          warranty_policy_url: string | null
+          warranty_tag_url: string | null
         }
         Insert: {
           client_name: string
@@ -683,11 +686,14 @@ export type Database = {
           created_at?: string
           id?: string
           invoice_number?: string | null
+          invoice_photo_url?: string | null
           points_earned?: number
           product_id?: string | null
           sale_date?: string
           seller_id: string
           serial_number: string
+          warranty_policy_url?: string | null
+          warranty_tag_url?: string | null
         }
         Update: {
           client_name?: string
@@ -695,11 +701,14 @@ export type Database = {
           created_at?: string
           id?: string
           invoice_number?: string | null
+          invoice_photo_url?: string | null
           points_earned?: number
           product_id?: string | null
           sale_date?: string
           seller_id?: string
           serial_number?: string
+          warranty_policy_url?: string | null
+          warranty_tag_url?: string | null
         }
         Relationships: [
           {
