@@ -36,7 +36,7 @@ export default function AdminDashboard() {
         supabase.from('sellers').select('id, total_points', { count: 'exact' }),
         supabase.from('coupons').select('id, status').eq('owner_type', 'BUYER'),
         supabase.from('tv_serials').select('id, buyer_status, seller_status'),
-        supabase.from('sellers').select('store_name, total_points').order('total_points', { ascending: false }).limit(1).single()
+        supabase.from('sellers').select('store_name, total_points').order('total_points', { ascending: false }).limit(1).maybeSingle()
       ]);
 
       const coupons = couponsRes.data || [];
@@ -162,7 +162,7 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <p className={`text-3xl font-bold ${stat.valueColor}`}>
-                {stat.value.toLocaleString()}
+                {(stat.value ?? 0).toLocaleString()}
               </p>
               <p className="text-sm text-gray-500">{stat.description}</p>
             </CardContent>
