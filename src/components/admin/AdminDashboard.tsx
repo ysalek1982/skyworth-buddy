@@ -91,54 +91,66 @@ export default function AdminDashboard() {
       value: stats.totalClients,
       description: 'Compras registradas',
       icon: Users,
-      color: 'text-blue-500',
-      bgColor: 'from-blue-500/20 to-blue-600/10',
-      borderColor: 'border-blue-500/30'
+      iconColor: 'text-blue-600',
+      iconBg: 'bg-blue-100',
+      bgColor: 'from-blue-50 to-blue-100/50',
+      borderColor: 'border-blue-200',
+      valueColor: 'text-blue-700'
     },
     {
       title: 'Vendedores',
       value: stats.totalSellers,
       description: 'Vendedores activos',
       icon: TrendingUp,
-      color: 'text-green-500',
-      bgColor: 'from-green-500/20 to-green-600/10',
-      borderColor: 'border-green-500/30'
+      iconColor: 'text-green-600',
+      iconBg: 'bg-green-100',
+      bgColor: 'from-green-50 to-green-100/50',
+      borderColor: 'border-green-200',
+      valueColor: 'text-green-700'
     },
     {
-      title: 'Cupones Compradores',
+      title: 'Cupones',
       value: stats.activeCoupons,
       description: `${stats.totalCoupons} totales`,
       icon: Ticket,
-      color: 'text-purple-500',
-      bgColor: 'from-purple-500/20 to-purple-600/10',
-      borderColor: 'border-purple-500/30'
+      iconColor: 'text-purple-600',
+      iconBg: 'bg-purple-100',
+      bgColor: 'from-purple-50 to-purple-100/50',
+      borderColor: 'border-purple-200',
+      valueColor: 'text-purple-700'
     },
     {
       title: 'Puntos Vendedores',
       value: stats.totalSellerPoints,
-      description: 'Puntos totales acumulados',
+      description: 'Puntos acumulados',
       icon: Star,
-      color: 'text-amber-500',
-      bgColor: 'from-amber-500/20 to-amber-600/10',
-      borderColor: 'border-amber-500/30'
+      iconColor: 'text-amber-600',
+      iconBg: 'bg-amber-100',
+      bgColor: 'from-amber-50 to-amber-100/50',
+      borderColor: 'border-amber-200',
+      valueColor: 'text-amber-700'
     },
     {
       title: 'Seriales',
       value: stats.registeredSerials,
       description: `${stats.totalSerials} totales`,
       icon: Barcode,
-      color: 'text-cyan-500',
-      bgColor: 'from-cyan-500/20 to-cyan-600/10',
-      borderColor: 'border-cyan-500/30'
+      iconColor: 'text-cyan-600',
+      iconBg: 'bg-cyan-100',
+      bgColor: 'from-cyan-50 to-cyan-100/50',
+      borderColor: 'border-cyan-200',
+      valueColor: 'text-cyan-700'
     },
     {
-      title: 'Compras Pendientes',
+      title: 'Pendientes',
       value: stats.pendingPurchases,
-      description: `${stats.totalPurchases} totales`,
+      description: `${stats.totalPurchases} compras`,
       icon: ShoppingCart,
-      color: 'text-red-500',
-      bgColor: 'from-red-500/20 to-red-600/10',
-      borderColor: 'border-red-500/30'
+      iconColor: 'text-rose-600',
+      iconBg: 'bg-rose-100',
+      bgColor: 'from-rose-50 to-rose-100/50',
+      borderColor: 'border-rose-200',
+      valueColor: 'text-rose-700'
     }
   ];
 
@@ -151,20 +163,20 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {statCards.map((stat, index) => (
-          <Card key={index} className={`bg-gradient-to-br ${stat.bgColor} ${stat.borderColor}`}>
+          <Card key={index} className={`bg-gradient-to-br ${stat.bgColor} ${stat.borderColor} border`}>
             <CardHeader className="pb-2">
-              <CardDescription className="flex items-center gap-2 text-foreground/80 font-medium">
-                <div className={`p-1.5 rounded-md ${stat.color} bg-current/10`}>
-                  <stat.icon className="h-5 w-5" strokeWidth={2.5} />
+              <CardDescription className="flex items-center gap-3 text-gray-700 font-medium">
+                <div className={`p-2 rounded-lg ${stat.iconBg}`}>
+                  <stat.icon className={`h-5 w-5 ${stat.iconColor}`} strokeWidth={2} />
                 </div>
-                <span className="text-sm">{stat.title}</span>
+                <span className="text-sm font-semibold">{stat.title}</span>
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className={`text-3xl font-bold ${stat.color}`}>
+              <p className={`text-3xl font-bold ${stat.valueColor}`}>
                 {stat.value.toLocaleString()}
               </p>
-              <p className="text-sm text-muted-foreground">{stat.description}</p>
+              <p className="text-sm text-gray-500">{stat.description}</p>
             </CardContent>
           </Card>
         ))}
@@ -172,7 +184,7 @@ export default function AdminDashboard() {
 
       {/* Top Seller Card */}
       {stats.topSeller && (
-        <Card className="bg-gradient-to-br from-amber-500/10 to-orange-600/10 border-amber-500/30">
+        <Card className="bg-gradient-to-br from-amber-50 to-orange-100/50 border border-amber-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-amber-500" />
