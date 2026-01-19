@@ -8,7 +8,6 @@ import {
   Package, 
   Barcode, 
   Ticket, 
-  ShoppingCart, 
   Users, 
   Trophy, 
   BookOpen, 
@@ -22,7 +21,6 @@ import AdminDashboard from '@/components/admin/AdminDashboard';
 import AdminProducts from '@/components/admin/AdminProducts';
 import AdminSerials from '@/components/admin/AdminSerials';
 import AdminCoupons from '@/components/admin/AdminCoupons';
-import AdminPurchases from '@/components/admin/AdminPurchases';
 import AdminSellers from '@/components/admin/AdminSellers';
 import AdminDraw from '@/components/admin/AdminDraw';
 import AdminKnowledgeBase from '@/components/admin/AdminKnowledgeBase';
@@ -36,7 +34,6 @@ const tabs = [
   { value: 'products', label: 'Productos', icon: Package },
   { value: 'serials', label: 'Seriales', icon: Barcode },
   { value: 'coupons', label: 'Cupones', icon: Ticket },
-  { value: 'purchases', label: 'Compras', icon: ShoppingCart },
   { value: 'sellers', label: 'Vendedores', icon: Users },
   { value: 'draw', label: 'Sorteo', icon: Trophy },
   { value: 'knowledge', label: 'Base de Conocimientos', icon: BookOpen },
@@ -59,8 +56,6 @@ function AdminContent() {
         return <AdminSerials />;
       case 'coupons':
         return <AdminCoupons />;
-      case 'purchases':
-        return <AdminPurchases />;
       case 'sellers':
         return <AdminSellers />;
       case 'draw':
