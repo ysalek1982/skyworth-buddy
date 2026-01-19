@@ -63,25 +63,18 @@ const VendedoresResultados = () => {
           setStats(prev => ({ ...prev, daysRemaining: Math.max(0, diffDays) }));
         }
 
-        // Fetch statistics
-        const { count: clientsCount } = await supabase
-          .from("client_purchases")
-          .select("*", { count: "exact", head: true });
+        // Use RPC function to get stats (bypasses RLS for aggregate counts only)
+        const { data: statsData, error: statsError } = await supabase.rpc('get_campaign_stats');
 
-        const { count: couponsCount } = await supabase
-          .from("coupons")
-          .select("*", { count: "exact", head: true });
-
-        const { count: salesCount } = await supabase
-          .from("seller_sales")
-          .select("*", { count: "exact", head: true });
-
-        setStats(prev => ({
-          ...prev,
-          totalParticipants: clientsCount || 0,
-          totalCoupons: couponsCount || 0,
-          totalSales: salesCount || 0,
-        }));
+        if (!statsError && statsData) {
+          const typedStats = statsData as { totalParticipants: number; totalCoupons: number; totalSales: number };
+          setStats(prev => ({
+            ...prev,
+            totalParticipants: typedStats.totalParticipants || 0,
+            totalCoupons: typedStats.totalCoupons || 0,
+            totalSales: typedStats.totalSales || 0,
+          }));
+        }
 
         // Fetch recent draw results (if any)
         const { data: drawData } = await supabase
