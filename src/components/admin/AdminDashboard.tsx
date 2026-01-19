@@ -153,9 +153,11 @@ export default function AdminDashboard() {
         {statCards.map((stat, index) => (
           <Card key={index} className={`bg-gradient-to-br ${stat.bgColor} ${stat.borderColor}`}>
             <CardHeader className="pb-2">
-              <CardDescription className="flex items-center gap-2">
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
-                {stat.title}
+              <CardDescription className="flex items-center gap-2 text-foreground/80 font-medium">
+                <div className={`p-1.5 rounded-md ${stat.color} bg-current/10`}>
+                  <stat.icon className="h-5 w-5" strokeWidth={2.5} />
+                </div>
+                <span className="text-sm">{stat.title}</span>
               </CardDescription>
             </CardHeader>
             <CardContent>
