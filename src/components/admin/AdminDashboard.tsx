@@ -186,20 +186,20 @@ export default function AdminDashboard() {
       {stats.topSeller && (
         <Card className="bg-gradient-to-br from-amber-50 to-orange-100/50 border border-amber-200">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-amber-500" />
+            <CardTitle className="flex items-center gap-2 text-amber-700">
+              <Trophy className="h-5 w-5 text-amber-600" />
               Top Vendedor
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xl font-bold text-foreground">{stats.topSeller.name}</p>
-                <p className="text-muted-foreground">Líder del ranking</p>
+                <p className="text-xl font-bold text-gray-800">{stats.topSeller.name}</p>
+                <p className="text-gray-600">Líder del ranking</p>
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold text-amber-500">{stats.topSeller.points.toLocaleString()}</p>
-                <p className="text-sm text-muted-foreground">puntos</p>
+                <p className="text-3xl font-bold text-amber-600">{stats.topSeller.points.toLocaleString()}</p>
+                <p className="text-sm text-gray-600">puntos</p>
               </div>
             </div>
           </CardContent>
