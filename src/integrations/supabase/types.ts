@@ -674,9 +674,13 @@ export type Database = {
           invoice_photo_url: string | null
           points_earned: number
           product_id: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           sale_date: string
           seller_id: string
           serial_number: string
+          status: string | null
           warranty_policy_url: string | null
           warranty_tag_url: string | null
         }
@@ -689,9 +693,13 @@ export type Database = {
           invoice_photo_url?: string | null
           points_earned?: number
           product_id?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sale_date?: string
           seller_id: string
           serial_number: string
+          status?: string | null
           warranty_policy_url?: string | null
           warranty_tag_url?: string | null
         }
@@ -704,9 +712,13 @@ export type Database = {
           invoice_photo_url?: string | null
           points_earned?: number
           product_id?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sale_date?: string
           seller_id?: string
           serial_number?: string
+          status?: string | null
           warranty_policy_url?: string | null
           warranty_tag_url?: string | null
         }
@@ -774,6 +786,8 @@ export type Database = {
       }
       sellers: {
         Row: {
+          blocked_at: string | null
+          blocked_reason: string | null
           created_at: string
           id: string
           is_active: boolean
@@ -786,6 +800,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          blocked_at?: string | null
+          blocked_reason?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -798,6 +814,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          blocked_at?: string | null
+          blocked_reason?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -815,8 +833,10 @@ export type Database = {
         Row: {
           buyer_purchase_id: string | null
           buyer_status: Database["public"]["Enums"]["buyer_status"]
+          campaign_type: string | null
           created_at: string
           id: string
+          legacy_registered_at: string | null
           product_id: string | null
           seller_sale_id: string | null
           seller_status: Database["public"]["Enums"]["seller_status"]
@@ -827,8 +847,10 @@ export type Database = {
         Insert: {
           buyer_purchase_id?: string | null
           buyer_status?: Database["public"]["Enums"]["buyer_status"]
+          campaign_type?: string | null
           created_at?: string
           id?: string
+          legacy_registered_at?: string | null
           product_id?: string | null
           seller_sale_id?: string | null
           seller_status?: Database["public"]["Enums"]["seller_status"]
@@ -839,8 +861,10 @@ export type Database = {
         Update: {
           buyer_purchase_id?: string | null
           buyer_status?: Database["public"]["Enums"]["buyer_status"]
+          campaign_type?: string | null
           created_at?: string
           id?: string
+          legacy_registered_at?: string | null
           product_id?: string | null
           seller_sale_id?: string | null
           seller_status?: Database["public"]["Enums"]["seller_status"]
@@ -927,12 +951,28 @@ export type Database = {
     }
     Functions: {
       get_campaign_stats: { Args: never; Returns: Json }
+      get_seller_ranking_by_department: {
+        Args: { p_department: string; p_limit?: number }
+        Returns: Json
+      }
+      get_seller_stats: {
+        Args: {
+          p_department?: string
+          p_end_date?: string
+          p_start_date?: string
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      rpc_approve_seller_sale: {
+        Args: { p_reviewer_id: string; p_sale_id: string }
+        Returns: Json
       }
       rpc_register_buyer_serial: {
         Args: {
@@ -968,13 +1008,19 @@ export type Database = {
         }
         Returns: Json
       }
+      rpc_reject_seller_sale: {
+        Args: { p_reason?: string; p_reviewer_id: string; p_sale_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "cliente" | "vendedor" | "seller"
       buyer_status: "NOT_REGISTERED" | "REGISTERED"
       coupon_status: "ACTIVE" | "USED" | "EXPIRED" | "CANCELLED"
       owner_type: "BUYER" | "SELLER"
+      seller_sale_status: "PENDING" | "APPROVED" | "REJECTED"
       seller_status: "NOT_REGISTERED" | "REGISTERED"
+      serial_campaign_type: "CURRENT" | "LEGACY"
       serial_status: "AVAILABLE" | "BLOCKED"
     }
     CompositeTypes: {
@@ -1107,7 +1153,9 @@ export const Constants = {
       buyer_status: ["NOT_REGISTERED", "REGISTERED"],
       coupon_status: ["ACTIVE", "USED", "EXPIRED", "CANCELLED"],
       owner_type: ["BUYER", "SELLER"],
+      seller_sale_status: ["PENDING", "APPROVED", "REJECTED"],
       seller_status: ["NOT_REGISTERED", "REGISTERED"],
+      serial_campaign_type: ["CURRENT", "LEGACY"],
       serial_status: ["AVAILABLE", "BLOCKED"],
     },
   },

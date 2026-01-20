@@ -13,7 +13,10 @@ import {
   BookOpen, 
   Settings,
   Menu,
-  X
+  X,
+  FileText,
+  ClipboardCheck,
+  BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -26,7 +29,8 @@ import AdminDraw from '@/components/admin/AdminDraw';
 import AdminKnowledgeBase from '@/components/admin/AdminKnowledgeBase';
 import AdminSettings from '@/components/admin/AdminSettings';
 import AdminLandingCMS from '@/components/admin/AdminLandingCMS';
-import { FileText } from 'lucide-react';
+import AdminSellerSales from '@/components/admin/AdminSellerSales';
+import AdminSellerStats from '@/components/admin/AdminSellerStats';
 
 const tabs = [
   { value: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -35,6 +39,8 @@ const tabs = [
   { value: 'serials', label: 'Seriales', icon: Barcode },
   { value: 'coupons', label: 'Cupones', icon: Ticket },
   { value: 'sellers', label: 'Vendedores', icon: Users },
+  { value: 'seller-sales', label: 'Revisión Ventas', icon: ClipboardCheck },
+  { value: 'seller-stats', label: 'Estadísticas Vendedores', icon: BarChart3 },
   { value: 'draw', label: 'Sorteo', icon: Trophy },
   { value: 'knowledge', label: 'Base de Conocimientos', icon: BookOpen },
   { value: 'settings', label: 'Configuración', icon: Settings },
@@ -58,6 +64,10 @@ function AdminContent() {
         return <AdminCoupons />;
       case 'sellers':
         return <AdminSellers />;
+      case 'seller-sales':
+        return <AdminSellerSales />;
+      case 'seller-stats':
+        return <AdminSellerStats />;
       case 'draw':
         return <AdminDraw />;
       case 'knowledge':
