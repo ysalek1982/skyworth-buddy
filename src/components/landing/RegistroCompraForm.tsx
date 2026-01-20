@@ -691,11 +691,32 @@ const RegistroCompraForm = () => {
             </div>
 
             <form className="space-y-6">
-              {/* Serial Number Field */}
+              {/* Serial Number Field with Help */}
               <div className="space-y-2">
-                <Label htmlFor="serialNumber" className="text-white text-lg font-bold">
-                  Número de Serie *
-                </Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="serialNumber" className="text-white text-lg font-bold">
+                    Número de Serie *
+                  </Label>
+                  <div className="relative group">
+                    <div className="w-5 h-5 rounded-full bg-blue-500/30 text-blue-400 text-xs flex items-center justify-center cursor-help font-bold">?</div>
+                    <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-72 p-3 bg-slate-800 rounded-lg border border-slate-600 shadow-xl">
+                      <p className="text-sm text-white font-medium mb-2">¿Dónde encontrar el serial?</p>
+                      <ul className="text-xs text-muted-foreground space-y-1">
+                        <li>• En la <span className="text-cyan-400">póliza de garantía</span></li>
+                        <li>• En la etiqueta trasera del TV</li>
+                        <li>• Formato: letras y números (ej: SKW123456789)</li>
+                      </ul>
+                      <p className="text-xs text-amber-400 mt-2">⚠️ No confundir con el número de modelo</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Help text always visible */}
+                <p className="text-xs text-cyan-400/80 flex items-center gap-1">
+                  <Tv className="w-3 h-3" />
+                  Encuéntralo en tu póliza de garantía o en la parte trasera del TV. Ej: SKW123456789
+                </p>
+                
                 <div className="relative">
                   <Tv className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
                   <Input
@@ -730,10 +751,15 @@ const RegistroCompraForm = () => {
                 )}
 
                 {serialValidation.error && (
-                  <p className="text-red-400 text-sm flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4" />
-                    {serialValidation.error}
-                  </p>
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mt-2">
+                    <p className="text-red-400 text-sm flex items-center gap-2 font-medium">
+                      <AlertCircle className="w-4 h-4" />
+                      {serialValidation.error}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Verifica que el número sea correcto. Encuéntralo en tu póliza de garantía o etiqueta trasera del TV.
+                    </p>
+                  </div>
                 )}
 
                 {serialValidation.isValid && (

@@ -3,11 +3,24 @@ import { motion } from "framer-motion";
 import { Trophy, Medal, Award, Star } from "lucide-react";
 import SellerLayout from "@/components/layout/SellerLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const DEPARTMENTS = ['Santa Cruz', 'Cochabamba', 'La Paz'];
+
+interface RankedSeller {
+  rank: number;
+  name: string;
+  store: string;
+  city: string;
+  points: number;
+  sales: number;
+}
 
 const VendedoresRanking = () => {
-  const [topSellers, setTopSellers] = useState<{ rank: number; name: string; store: string; city: string; points: number; sales: number }[]>([]);
+  const [rankingsByDept, setRankingsByDept] = useState<Record<string, RankedSeller[]>>({});
   const [loading, setLoading] = useState(true);
   const [campaignInfo, setCampaignInfo] = useState<{ name: string; drawDate: string } | null>(null);
+  const [activeTab, setActiveTab] = useState('Santa Cruz');
 
   useEffect(() => {
     const fetchRankings = async () => {
@@ -25,36 +38,45 @@ const VendedoresRanking = () => {
         });
       }
 
-      const { data: sellers, error } = await supabase
-        .from("sellers")
-        .select("id, user_id, store_name, store_city, total_points, total_sales")
-        .eq("is_active", true)
-        .order("total_points", { ascending: false })
-        .limit(20);
+      // Fetch rankings for each department
+      const rankings: Record<string, RankedSeller[]> = {};
 
-      if (!error && sellers) {
-        const userIds = sellers.map(s => s.user_id);
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("user_id, nombre, apellido")
-          .in("user_id", userIds);
+      for (const dept of DEPARTMENTS) {
+        const { data: sellers, error } = await supabase
+          .from("sellers")
+          .select("id, user_id, store_name, store_city, total_points, total_sales")
+          .eq("is_active", true)
+          .eq("store_city", dept)
+          .order("total_points", { ascending: false })
+          .order("total_sales", { ascending: false })
+          .limit(20);
 
-        const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+        if (!error && sellers) {
+          const userIds = sellers.map(s => s.user_id);
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("user_id, nombre, apellido")
+            .in("user_id", userIds);
 
-        const formattedData = sellers.map((s, index) => {
-          const profile = profileMap.get(s.user_id);
-          return {
-            rank: index + 1,
-            name: profile ? `${profile.nombre} ${profile.apellido}` : "Vendedor",
-            store: s.store_name,
-            city: s.store_city,
-            points: s.total_points,
-            sales: s.total_sales,
-          };
-        });
+          const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
-        setTopSellers(formattedData);
+          rankings[dept] = sellers.map((s, index) => {
+            const profile = profileMap.get(s.user_id);
+            return {
+              rank: index + 1,
+              name: profile ? `${profile.nombre} ${profile.apellido}` : "Vendedor",
+              store: s.store_name,
+              city: s.store_city,
+              points: s.total_points,
+              sales: s.total_sales,
+            };
+          });
+        } else {
+          rankings[dept] = [];
+        }
       }
+
+      setRankingsByDept(rankings);
       setLoading(false);
     };
 
@@ -87,6 +109,19 @@ const VendedoresRanking = () => {
     }
   };
 
+  const getDeptColor = (dept: string) => {
+    switch (dept) {
+      case 'Santa Cruz':
+        return 'text-green-500';
+      case 'Cochabamba':
+        return 'text-blue-500';
+      case 'La Paz':
+        return 'text-red-500';
+      default:
+        return 'text-primary';
+    }
+  };
+
   if (loading) {
     return (
       <SellerLayout>
@@ -112,7 +147,7 @@ const VendedoresRanking = () => {
             </div>
             <h1 className="text-4xl md:text-5xl font-black uppercase mb-4">
               <span className="text-foreground">RANKING </span>
-              <span className="text-gradient-gold">VENDEDORES</span>
+              <span className="text-gradient-gold">POR DEPARTAMENTO</span>
             </h1>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
               {campaignInfo?.name || "El Sueño del Hincha"} - Sorteo: {campaignInfo?.drawDate 
@@ -121,65 +156,97 @@ const VendedoresRanking = () => {
             </p>
           </motion.div>
 
-          {/* Empty State */}
-          {topSellers.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-card rounded-2xl shadow-card p-12 text-center"
-            >
-              <Trophy className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-bold text-card-foreground mb-2">
-                Aún no hay vendedores en el ranking
-              </h3>
-              <p className="text-muted-foreground">
-                ¡Sé el primero en registrar ventas y aparecer aquí!
-              </p>
-            </motion.div>
-          )}
+          {/* Department Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              {DEPARTMENTS.map(dept => (
+                <TabsTrigger 
+                  key={dept} 
+                  value={dept}
+                  className="data-[state=active]:bg-primary"
+                >
+                  <span className={activeTab === dept ? 'text-primary-foreground' : getDeptColor(dept)}>
+                    {dept}
+                  </span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-          {/* Ranking List */}
-          {topSellers.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-card rounded-2xl shadow-card overflow-hidden"
-            >
-              <div className="p-6 border-b border-border">
-                <h2 className="text-xl font-bold text-card-foreground">Tabla de Posiciones</h2>
-              </div>
+            {DEPARTMENTS.map(dept => (
+              <TabsContent key={dept} value={dept}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-card rounded-2xl shadow-card overflow-hidden"
+                >
+                  <div className="p-6 border-b border-border">
+                    <h2 className="text-xl font-bold text-card-foreground flex items-center gap-2">
+                      <Trophy className={`h-5 w-5 ${getDeptColor(dept)}`} />
+                      Top Vendedores - {dept}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Solo ventas aprobadas suman puntos al ranking
+                    </p>
+                  </div>
 
-              <div className="divide-y divide-border">
-                {topSellers.map((seller, index) => (
-                  <motion.div
-                    key={seller.rank}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.05 * index }}
-                    className={`p-4 flex items-center gap-4 ${getRankBg(seller.rank)} border-l-4`}
-                  >
-                    <div className="w-12 flex items-center justify-center">
-                      {getRankIcon(seller.rank)}
+                  {rankingsByDept[dept]?.length === 0 ? (
+                    <div className="p-12 text-center">
+                      <Trophy className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="text-xl font-bold text-card-foreground mb-2">
+                        Aún no hay vendedores en {dept}
+                      </h3>
+                      <p className="text-muted-foreground">
+                        ¡Sé el primero en registrar ventas y aparecer aquí!
+                      </p>
                     </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-card-foreground truncate">{seller.name}</p>
-                      <p className="text-sm text-muted-foreground truncate">{seller.store} - {seller.city}</p>
-                    </div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {rankingsByDept[dept]?.map((seller, index) => (
+                        <motion.div
+                          key={seller.rank}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.05 * index }}
+                          className={`p-4 flex items-center gap-4 ${getRankBg(seller.rank)} border-l-4`}
+                        >
+                          <div className="w-12 flex items-center justify-center">
+                            {getRankIcon(seller.rank)}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-card-foreground truncate">{seller.name}</p>
+                            <p className="text-sm text-muted-foreground truncate">{seller.store}</p>
+                          </div>
 
-                    <div className="text-right">
-                      <div className="flex items-center gap-1 text-primary">
-                        <Star className="w-4 h-4 fill-primary" />
-                        <span className="font-bold">{seller.points}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{seller.sales} ventas</p>
+                          <div className="text-right">
+                            <div className="flex items-center gap-1 text-primary">
+                              <Star className="w-4 h-4 fill-primary" />
+                              <span className="font-bold">{seller.points}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">{seller.sales} ventas</p>
+                          </div>
+                        </motion.div>
+                      ))}
                     </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
+                  )}
+                </motion.div>
+              </TabsContent>
+            ))}
+          </Tabs>
+
+          {/* Info banner */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-8 p-4 bg-primary/10 rounded-lg border border-primary/30"
+          >
+            <p className="text-sm text-center text-muted-foreground">
+              <Star className="inline w-4 h-4 text-primary mr-1" />
+              Los <strong>puntos</strong> solo se acumulan cuando tus ventas son <strong>aprobadas</strong> por el administrador.
+              Cuantos más puntos acumules, mejor tu posición en el ranking de tu departamento.
+            </p>
+          </motion.div>
         </div>
       </div>
     </SellerLayout>
