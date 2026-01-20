@@ -15,16 +15,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import PurchaseConfirmation from "./PurchaseConfirmation";
 
+// Only 3 departments allowed per business requirement
 const departamentos = [
-  "La Paz",
-  "Cochabamba",
   "Santa Cruz",
-  "Oruro",
-  "Potosí",
-  "Chuquisaca",
-  "Tarija",
-  "Beni",
-  "Pando",
+  "Cochabamba",
+  "La Paz",
 ];
 
 interface SerialValidation {
