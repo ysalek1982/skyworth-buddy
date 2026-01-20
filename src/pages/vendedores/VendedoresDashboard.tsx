@@ -27,8 +27,11 @@ import {
   Calendar,
   Camera,
   FileText,
-  X
+  X,
+  HelpCircle
 } from 'lucide-react';
+import { normalizeSerial, validateSerialFormat, SERIAL_EXAMPLE } from '@/lib/serialUtils';
+import SerialInputHelp from '@/components/ui/SerialInputHelp';
 
 interface Seller {
   id: string;
@@ -154,17 +157,26 @@ function DashboardContent() {
     }
   };
 
-  // Validate serial in real-time
+  // Validate serial in real-time with normalization
   const validateSerial = async (serialNumber: string) => {
-    if (!serialNumber || serialNumber.length < 3) {
+    // Normalize the serial before validation
+    const normalizedSerial = normalizeSerial(serialNumber);
+    
+    if (!normalizedSerial || normalizedSerial.length < 3) {
       setSerialValidation({ status: 'idle', message: '' });
+      return;
+    }
+
+    // Check format first
+    const formatCheck = validateSerialFormat(normalizedSerial);
+    if (formatCheck.error) {
+      setSerialValidation({ status: 'invalid', message: formatCheck.error });
       return;
     }
 
     setSerialValidation({ status: 'checking', message: 'Verificando serial...' });
 
     try {
-      const normalizedSerial = serialNumber.trim().toUpperCase();
       const { data, error } = await supabase
         .from('tv_serials')
         .select(`
@@ -172,6 +184,7 @@ function DashboardContent() {
           serial_number,
           status,
           seller_status,
+          campaign_type,
           product_id,
           products (
             model_name,
@@ -187,7 +200,7 @@ function DashboardContent() {
       if (!data) {
         setSerialValidation({ 
           status: 'invalid', 
-          message: 'Serial no encontrado en la base de datos' 
+          message: 'Serial no encontrado en la base de datos. Verifica que lo hayas ingresado correctamente.' 
         });
         return;
       }
@@ -195,7 +208,16 @@ function DashboardContent() {
       if (data.status === 'BLOCKED') {
         setSerialValidation({ 
           status: 'invalid', 
-          message: 'Este serial está bloqueado' 
+          message: 'Este serial está bloqueado y no puede participar en la promoción.' 
+        });
+        return;
+      }
+
+      // Check if LEGACY - sellers cannot register LEGACY serials
+      if (data.campaign_type === 'LEGACY') {
+        setSerialValidation({ 
+          status: 'invalid', 
+          message: 'Este serial pertenece a campañas anteriores y solo puede ser registrado por participantes finales (compradores).' 
         });
         return;
       }
@@ -203,7 +225,7 @@ function DashboardContent() {
       if (data.seller_status === 'REGISTERED') {
         setSerialValidation({ 
           status: 'registered', 
-          message: 'Este serial ya fue registrado por un vendedor' 
+          message: 'Este serial ya fue registrado por otro vendedor.' 
         });
         return;
       }
@@ -219,15 +241,17 @@ function DashboardContent() {
       console.error('Error validating serial:', error);
       setSerialValidation({ 
         status: 'invalid', 
-        message: 'Error al validar el serial' 
+        message: 'Error al validar el serial. Intenta nuevamente.' 
       });
     }
   };
 
   const handleSerialChange = (value: string) => {
-    setSerialForm({ ...serialForm, serial_number: value });
+    // Auto-normalize: remove dashes, spaces, uppercase
+    const normalized = normalizeSerial(value);
+    setSerialForm({ ...serialForm, serial_number: normalized });
     // Debounce validation
-    const timeoutId = setTimeout(() => validateSerial(value), 500);
+    const timeoutId = setTimeout(() => validateSerial(normalized), 500);
     return () => clearTimeout(timeoutId);
   };
 
@@ -516,17 +540,22 @@ function DashboardContent() {
                       />
                     </div>
                     
-                    {/* Serial Number */}
+                    {/* Serial Number with help */}
                     <div className="space-y-2">
-                      <Label htmlFor="serial_number">Número de Serie *</Label>
+                      <Label htmlFor="serial_number" className="font-semibold">Número de Serie *</Label>
                       <Input
                         id="serial_number"
                         value={serialForm.serial_number}
                         onChange={(e) => handleSerialChange(e.target.value)}
-                        placeholder="Ej: SKW123456789"
-                        className={`input-dark ${getSerialInputClass()}`}
+                        placeholder={`Ej: ${SERIAL_EXAMPLE}`}
+                        className={`input-dark font-mono tracking-wider ${getSerialInputClass()}`}
                         required
                       />
+                      
+                      {/* Help text for serial */}
+                      <SerialInputHelp variant="dark" />
+                      
+                      {/* Validation message */}
                       {serialValidation.status !== 'idle' && (
                         <div className={`flex items-center gap-2 text-sm ${
                           serialValidation.status === 'valid' ? 'text-green-500' :
