@@ -19,37 +19,22 @@ export function normalizeSerial(serial: string): string {
 /**
  * Valida el formato de un serial normalizado.
  * Solo permite letras A-Z y números 0-9.
+ * NO valida longitud mínima/máxima.
  * @returns Object with isValid boolean and optional error message
  */
 export function validateSerialFormat(serial: string): { isValid: boolean; error: string | null } {
   const normalized = normalizeSerial(serial);
   
   if (!normalized) {
-    return { isValid: false, error: null }; // Empty is not an error, just not valid
-  }
-
-  // Check length (8-24 characters reasonable range)
-  if (normalized.length < 8) {
-    return { 
-      isValid: false, 
-      error: 'El serial parece muy corto. Verifica que lo hayas ingresado completo.' 
-    };
-  }
-
-  if (normalized.length > 24) {
-    return { 
-      isValid: false, 
-      error: 'El serial parece muy largo. Verifica que no hayas incluido información extra.' 
-    };
+    return { isValid: false, error: 'El serial es obligatorio.' };
   }
 
   // Check for invalid characters (anything not A-Z or 0-9)
   const invalidCharsMatch = normalized.match(/[^A-Z0-9]/g);
   if (invalidCharsMatch) {
-    const invalidChars = [...new Set(invalidCharsMatch)].join(', ');
     return { 
       isValid: false, 
-      error: `El serial contiene caracteres no válidos: ${invalidChars}. Solo puede contener letras (A-Z) y números (0-9).` 
+      error: 'El serial solo debe contener letras y números (sin guiones ni espacios).' 
     };
   }
 
