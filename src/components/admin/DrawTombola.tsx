@@ -20,6 +20,7 @@ interface Winner {
   full_name: string;
   dni: string;
   city: string;
+  department: string;
   email: string;
   phone: string;
 }
@@ -155,11 +156,15 @@ export default function DrawTombola({ onComplete, finalistsCount }: DrawTombolaP
         .single();
 
       if (purchase) {
+        // Derive department from city (city field stores department in our system)
+        const department = purchase.city || 'No especificado';
+        
         const winner: Winner = {
           code: winnerCoupon.code,
           full_name: purchase.full_name,
           dni: purchase.dni,
           city: purchase.city || 'No especificada',
+          department: department,
           email: purchase.email,
           phone: purchase.phone
         };
@@ -189,6 +194,7 @@ export default function DrawTombola({ onComplete, finalistsCount }: DrawTombolaP
         full_name: 'Participante',
         dni: 'N/A',
         city: 'N/A',
+        department: 'No especificado',
         email: 'N/A',
         phone: 'N/A'
       };
@@ -437,8 +443,11 @@ export default function DrawTombola({ onComplete, finalistsCount }: DrawTombolaP
                     >
                       <MapPin className="h-5 w-5 text-cyan-400 mt-0.5" />
                       <div>
-                        <p className="text-cyan-400 text-sm">Ciudad:</p>
-                        <p className="text-white font-bold text-lg">{currentWinner?.city}</p>
+                        <p className="text-cyan-400 text-sm">Departamento:</p>
+                        <p className="text-white font-bold text-lg">{currentWinner?.department}</p>
+                        {currentWinner?.city !== currentWinner?.department && (
+                          <p className="text-muted-foreground text-sm">{currentWinner?.city}</p>
+                        )}
                       </div>
                     </motion.div>
                   </div>
