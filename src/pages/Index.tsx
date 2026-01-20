@@ -29,15 +29,18 @@ const Index = () => {
         {/* HERO SECTION */}
         <section 
           id="inicio" 
-          className="relative min-h-[90vh] flex flex-col items-center justify-center px-4 py-16"
+          className="relative min-h-[85vh] md:min-h-[90vh] flex flex-col items-center justify-center px-4 py-20"
           style={{
-            backgroundImage: `linear-gradient(to bottom, rgba(7, 24, 37, 0.7), rgba(7, 24, 37, 0.85)), url('/landing/stadium-bg.jpg')`,
+            backgroundImage: `url('/landing/fondo.jpg')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
           }}
         >
-          {/* Stadium overlay for effect */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0a2818]/60 via-transparent to-[#071825]" />
+          {/* Dark overlay for contrast */}
+          <div className="absolute inset-0 bg-black/50" />
+          {/* Gradient overlay top and bottom */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#071825]/70 via-transparent to-[#071825]" />
           
           {/* Hero Content */}
           <div className="relative z-10 text-center max-w-4xl mx-auto">
