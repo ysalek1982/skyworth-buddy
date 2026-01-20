@@ -10,24 +10,27 @@ interface SerialInputHelpProps {
 export function SerialInputHelp({ variant = 'dark' }: SerialInputHelpProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const textColor = variant === 'dark' ? 'text-cyan-400' : 'text-primary';
-  const mutedColor = variant === 'dark' ? 'text-muted-foreground' : 'text-muted-foreground';
+  // High contrast colors for dark backgrounds
+  const textColor = variant === 'dark' ? 'text-slate-300' : 'text-slate-600';
+  const exampleColor = variant === 'dark' ? 'text-amber-400' : 'text-amber-600';
+  const linkColor = variant === 'dark' ? 'text-cyan-400 hover:text-cyan-300' : 'text-blue-600 hover:text-blue-500';
 
   return (
     <>
-      {/* Always visible help text below input */}
-      <div className={`text-xs ${textColor} space-y-1 mt-1`}>
-        <p className="flex items-center gap-1">
+      {/* Always visible help text below input - HIGH CONTRAST */}
+      <div className={`text-xs space-y-1 mt-2 p-2 rounded-md ${variant === 'dark' ? 'bg-slate-800/60 border border-slate-700' : 'bg-slate-100 border border-slate-200'}`}>
+        <p className={`flex items-center gap-1 ${textColor}`}>
           <Tv className="w-3 h-3 flex-shrink-0" />
           <span>
-            Ingresa el serial tal como aparece bajo el código de barras, <strong className="text-amber-400">sin guiones (-)</strong>.
+            El número de serie determina los puntos (modelo del TV).
           </span>
         </p>
-        <p className={mutedColor}>
-          Ej: <span className="font-mono font-bold text-white">{SERIAL_EXAMPLE}</span>
+        <p className={textColor}>
+          Ej: <span className={`font-mono font-bold ${exampleColor}`}>{SERIAL_EXAMPLE}</span>
+          <span className="text-amber-500 ml-1">(sin guiones)</span>
           <button 
             onClick={() => setIsModalOpen(true)} 
-            className="ml-2 inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 underline"
+            className={`ml-2 inline-flex items-center gap-1 ${linkColor} underline`}
           >
             <HelpCircle className="w-3 h-3" />
             ¿Dónde lo encuentro?

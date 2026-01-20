@@ -162,12 +162,13 @@ function DashboardContent() {
     // Normalize the serial before validation
     const normalizedSerial = normalizeSerial(serialNumber);
     
-    if (!normalizedSerial || normalizedSerial.length < 3) {
+    // Only validate if there's something to validate
+    if (!normalizedSerial) {
       setSerialValidation({ status: 'idle', message: '' });
       return;
     }
 
-    // Check format first
+    // Check format first (only alphanumeric, no length check)
     const formatCheck = validateSerialFormat(normalizedSerial);
     if (formatCheck.error) {
       setSerialValidation({ status: 'invalid', message: formatCheck.error });
@@ -521,90 +522,57 @@ function DashboardContent() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleRegisterSerial} className="space-y-6">
-                  {/* Basic Info */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Sale Date */}
-                    <div className="space-y-2">
-                      <Label htmlFor="sale_date" className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Fecha de Venta *
-                      </Label>
-                      <Input
-                        id="sale_date"
-                        type="date"
-                        value={serialForm.sale_date}
-                        onChange={(e) => setSerialForm({ ...serialForm, sale_date: e.target.value })}
-                        className="input-dark"
-                        required
-                        max={new Date().toISOString().split('T')[0]}
-                      />
-                    </div>
+                  {/* Serial Number - First and most important field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="serial_number" className="text-base font-semibold text-foreground">
+                      N° Serie del TV *
+                    </Label>
+                    <Input
+                      id="serial_number"
+                      value={serialForm.serial_number}
+                      onChange={(e) => handleSerialChange(e.target.value)}
+                      placeholder="Ingresa el número de serie"
+                      className={`input-dark font-mono tracking-wider text-lg ${getSerialInputClass()}`}
+                      required
+                    />
                     
-                    {/* Serial Number with help */}
-                    <div className="space-y-2">
-                      <Label htmlFor="serial_number" className="font-semibold">Número de Serie *</Label>
-                      <Input
-                        id="serial_number"
-                        value={serialForm.serial_number}
-                        onChange={(e) => handleSerialChange(e.target.value)}
-                        placeholder={`Ej: ${SERIAL_EXAMPLE}`}
-                        className={`input-dark font-mono tracking-wider ${getSerialInputClass()}`}
-                        required
-                      />
-                      
-                      {/* Help text for serial */}
-                      <SerialInputHelp variant="dark" />
-                      
-                      {/* Validation message */}
-                      {serialValidation.status !== 'idle' && (
-                        <div className={`flex items-center gap-2 text-sm ${
-                          serialValidation.status === 'valid' ? 'text-green-500' :
-                          serialValidation.status === 'checking' ? 'text-blue-500' : 'text-red-500'
-                        }`}>
-                          {serialValidation.status === 'valid' && <CheckCircle className="h-4 w-4" />}
-                          {serialValidation.status === 'checking' && <Loader2 className="h-4 w-4 animate-spin" />}
-                          {(serialValidation.status === 'invalid' || serialValidation.status === 'registered') && <AlertCircle className="h-4 w-4" />}
-                          <span>{serialValidation.message}</span>
-                          {serialValidation.points && (
-                            <Badge variant="outline" className="ml-2 text-green-500 border-green-500">
-                              +{serialValidation.points} puntos
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    {/* Help text for serial - high contrast */}
+                    <SerialInputHelp variant="dark" />
+                    
+                    {/* Validation message */}
+                    {serialValidation.status !== 'idle' && (
+                      <div className={`flex items-center gap-2 text-sm mt-2 ${
+                        serialValidation.status === 'valid' ? 'text-green-400' :
+                        serialValidation.status === 'checking' ? 'text-blue-400' : 'text-red-400'
+                      }`}>
+                        {serialValidation.status === 'valid' && <CheckCircle className="h-4 w-4" />}
+                        {serialValidation.status === 'checking' && <Loader2 className="h-4 w-4 animate-spin" />}
+                        {(serialValidation.status === 'invalid' || serialValidation.status === 'registered') && <AlertCircle className="h-4 w-4" />}
+                        <span>{serialValidation.message}</span>
+                        {serialValidation.points && (
+                          <Badge variant="outline" className="ml-2 text-green-400 border-green-500 bg-green-500/10">
+                            +{serialValidation.points} puntos
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="client_name">Nombre del Cliente *</Label>
-                      <Input
-                        id="client_name"
-                        value={serialForm.client_name}
-                        onChange={(e) => setSerialForm({ ...serialForm, client_name: e.target.value })}
-                        placeholder="Nombre completo"
-                        className="input-dark"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="client_phone">Teléfono del Cliente</Label>
-                      <Input
-                        id="client_phone"
-                        value={serialForm.client_phone}
-                        onChange={(e) => setSerialForm({ ...serialForm, client_phone: e.target.value })}
-                        placeholder="Opcional"
-                        className="input-dark"
-                      />
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="invoice_number">Número de Factura/Nota de Venta</Label>
-                      <Input
-                        id="invoice_number"
-                        value={serialForm.invoice_number}
-                        onChange={(e) => setSerialForm({ ...serialForm, invoice_number: e.target.value })}
-                        placeholder="Número de documento"
-                        className="input-dark"
-                      />
-                    </div>
+                  {/* Sale Date */}
+                  <div className="space-y-2">
+                    <Label htmlFor="sale_date" className="text-base font-semibold text-foreground flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Fecha de Venta *
+                    </Label>
+                    <Input
+                      id="sale_date"
+                      type="date"
+                      value={serialForm.sale_date}
+                      onChange={(e) => setSerialForm({ ...serialForm, sale_date: e.target.value })}
+                      className="input-dark"
+                      required
+                      max={new Date().toISOString().split('T')[0]}
+                    />
                   </div>
 
                   {/* Document Uploads Section */}
