@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Menu, X, Store, LogOut, User, Shield } from "lucide-react";
+import { Menu, X, Store, LogOut, User, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -14,19 +14,17 @@ const Header = () => {
 
   // Only anchor links for single-page landing
   const navLinks = [
-    { href: "#inicio", label: "Inicio", isAnchor: true },
-    { href: "#registrar-compra", label: "Registrar Compra", isAnchor: true },
+    { href: "#inicio", label: "Inicio" },
+    { href: "#registrar-compra", label: "Registrar Compra" },
   ];
 
   const handleNavClick = (href: string) => {
     setIsMenuOpen(false);
     const anchor = href;
     if (location.pathname === "/") {
-      // Already on home, just scroll
       const element = document.querySelector(anchor);
       element?.scrollIntoView({ behavior: "smooth" });
     } else {
-      // Navigate to home then scroll
       navigate("/");
       setTimeout(() => {
         const element = document.querySelector(anchor);
@@ -42,34 +40,37 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass-effect">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a2818]/80 backdrop-blur-md border-b border-white/10">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="flex items-center justify-between h-[var(--header-h)]">
-          {/* Logo */}
+        <div className="flex items-center justify-between h-16">
+          {/* Logo - Left */}
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-orange flex items-center justify-center shadow-glow-orange">
-              <Trophy className="w-5 h-5 text-white" />
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
+                <path d="M12 2 L12 22 M2 12 L22 12" stroke="currentColor" strokeWidth="1.5"/>
+              </svg>
             </div>
-            <div className="hidden sm:block">
-              <span className="font-bold text-white text-lg tracking-wide">SKYWORTH</span>
-              <span className="text-[#FF6A00] text-xs block -mt-1 font-medium">SUEÑO DEL HINCHA</span>
+            <div>
+              <span className="font-bold text-white text-lg tracking-wide block leading-none">SKYWORTH</span>
+              <span className="text-[#FF6A00] text-[10px] font-semibold uppercase tracking-wider">El Sueño del Hincha</span>
             </div>
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-6">
+          {/* Desktop Nav - Center */}
+          <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
               <button
                 key={link.href}
                 onClick={() => handleNavClick(link.href)}
-                className="text-sm font-medium transition-colors text-white/70 hover:text-white"
+                className="text-sm font-medium transition-colors text-white/80 hover:text-[#FF6A00]"
               >
                 {link.label}
               </button>
             ))}
           </nav>
 
-          {/* Actions */}
+          {/* Actions - Right */}
           <div className="flex items-center gap-2">
             {!loading && (
               <>
@@ -98,7 +99,11 @@ const Header = () => {
                   </div>
                 ) : (
                   <Link to="/vendedores/login" className="hidden sm:block">
-                    <Button variant="outline" size="sm" className="border-[#FF6A00] text-[#FF6A00] hover:bg-[#FF6A00] hover:text-white">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="border-[#FF6A00] text-[#FF6A00] hover:bg-[#FF6A00] hover:text-white rounded-full px-5"
+                    >
                       <Store className="w-4 h-4 mr-2" />
                       Soy Vendedor
                     </Button>
@@ -125,7 +130,7 @@ const Header = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-white/10 bg-[#071A2E]/95 backdrop-blur-lg"
+            className="md:hidden border-t border-white/10 bg-[#0a2818]/95 backdrop-blur-lg"
           >
             <nav className="p-4 space-y-2">
               {navLinks.map((link) => (
