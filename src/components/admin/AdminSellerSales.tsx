@@ -13,8 +13,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { 
   Loader2, CheckCircle, XCircle, Clock, Eye, Filter, 
-  Image as ImageIcon, Search, RefreshCw, FileText 
+  Search, RefreshCw
 } from 'lucide-react';
+import { SaleDocThumbnails } from '@/components/admin/SaleDocThumbnails';
 
 const DEPARTMENTS = ['Santa Cruz', 'Cochabamba', 'La Paz'];
 const STATUS_OPTIONS = [
@@ -323,38 +324,12 @@ export default function AdminSellerSales() {
                     <TableCell className="text-slate-900">{sale.client_name}</TableCell>
                     <TableCell className="font-bold text-primary">{sale.points_earned}</TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
-                        {sale.warranty_tag_url && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-7 w-7"
-                            onClick={() => setImagePreview(sale.warranty_tag_url)}
-                          >
-                            <ImageIcon className="h-4 w-4 text-cyan-600" />
-                          </Button>
-                        )}
-                        {sale.warranty_policy_url && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-7 w-7"
-                            onClick={() => setImagePreview(sale.warranty_policy_url)}
-                          >
-                            <FileText className="h-4 w-4 text-green-600" />
-                          </Button>
-                        )}
-                        {sale.invoice_photo_url && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-7 w-7"
-                            onClick={() => setImagePreview(sale.invoice_photo_url)}
-                          >
-                            <FileText className="h-4 w-4 text-amber-600" />
-                          </Button>
-                        )}
-                      </div>
+                      <SaleDocThumbnails
+                        tagUrl={sale.warranty_tag_url}
+                        policyUrl={sale.warranty_policy_url}
+                        invoiceUrl={sale.invoice_photo_url}
+                        onPreview={(url) => setImagePreview(url)}
+                      />
                     </TableCell>
                     <TableCell>{getStatusBadge(sale.status)}</TableCell>
                     <TableCell className="text-right">
@@ -465,32 +440,61 @@ export default function AdminSellerSales() {
               {/* Documents */}
               <div>
                 <Label className="text-muted-foreground mb-2 block">Documentos Adjuntos</Label>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {selectedSale.warranty_tag_url && (
-                    <div 
-                      className="aspect-video bg-muted rounded-lg overflow-hidden cursor-pointer hover:ring-2 ring-primary"
-                      onClick={() => setImagePreview(selectedSale.warranty_tag_url)}
-                    >
-                      <img src={selectedSale.warranty_tag_url} alt="TAG Póliza" className="w-full h-full object-cover" />
-                      <p className="text-xs text-center mt-1">TAG Póliza</p>
+                    <div className="space-y-1">
+                      <button
+                        type="button"
+                        className="aspect-video w-full bg-muted rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() => setImagePreview(selectedSale.warranty_tag_url)}
+                        aria-label="Ver TAG de póliza"
+                      >
+                        <img
+                          src={selectedSale.warranty_tag_url}
+                          alt="TAG Póliza"
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                      <p className="text-xs text-muted-foreground text-center">TAG Póliza</p>
                     </div>
                   )}
+
                   {selectedSale.warranty_policy_url && (
-                    <div 
-                      className="aspect-video bg-muted rounded-lg overflow-hidden cursor-pointer hover:ring-2 ring-primary"
-                      onClick={() => setImagePreview(selectedSale.warranty_policy_url)}
-                    >
-                      <img src={selectedSale.warranty_policy_url} alt="Póliza" className="w-full h-full object-cover" />
-                      <p className="text-xs text-center mt-1">Póliza</p>
+                    <div className="space-y-1">
+                      <button
+                        type="button"
+                        className="aspect-video w-full bg-muted rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() => setImagePreview(selectedSale.warranty_policy_url)}
+                        aria-label="Ver póliza"
+                      >
+                        <img
+                          src={selectedSale.warranty_policy_url}
+                          alt="Póliza"
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                      <p className="text-xs text-muted-foreground text-center">Póliza</p>
                     </div>
                   )}
+
                   {selectedSale.invoice_photo_url && (
-                    <div 
-                      className="aspect-video bg-muted rounded-lg overflow-hidden cursor-pointer hover:ring-2 ring-primary"
-                      onClick={() => setImagePreview(selectedSale.invoice_photo_url)}
-                    >
-                      <img src={selectedSale.invoice_photo_url} alt="Factura" className="w-full h-full object-cover" />
-                      <p className="text-xs text-center mt-1">Factura</p>
+                    <div className="space-y-1">
+                      <button
+                        type="button"
+                        className="aspect-video w-full bg-muted rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() => setImagePreview(selectedSale.invoice_photo_url)}
+                        aria-label="Ver factura"
+                      >
+                        <img
+                          src={selectedSale.invoice_photo_url}
+                          alt="Factura"
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                      <p className="text-xs text-muted-foreground text-center">Factura</p>
                     </div>
                   )}
                 </div>
