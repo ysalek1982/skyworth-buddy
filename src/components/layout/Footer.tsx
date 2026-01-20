@@ -7,46 +7,65 @@ import logoAJ from "@/assets/logo-aj-full.png";
 const Footer = () => {
   const [termsOpen, setTermsOpen] = useState(false);
 
+  const scrollToSection = (id: string) => {
+    const element = document.querySelector(id);
+    element?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <>
-      <footer className="border-t border-border bg-skyworth-dark/50">
+      <footer className="border-t border-white/10 bg-[#071825]">
         <div className="max-w-6xl mx-auto px-4 py-12">
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-3 gap-8">
             {/* Brand */}
-            <div className="md:col-span-2">
+            <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gradient-gold flex items-center justify-center">
-                  <Trophy className="w-5 h-5 text-skyworth-dark" />
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                  <Trophy className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground">SKYWORTH</h3>
-                  <p className="text-xs text-muted-foreground">Campaña Mundial 2026</p>
+                  <h3 className="font-bold text-white">SKYWORTH</h3>
+                  <p className="text-xs text-[#FF6A00]">El Sueño del Hincha</p>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground max-w-sm">
-                Compra tu TV Skyworth y participa por el viaje de tu vida al Mundial 2026.
-                ¡Tu oportunidad de vivir la emoción del fútbol está aquí!
+              <p className="text-sm text-white/60 max-w-sm">
+                Compra tu TV Skyworth y participa por el viaje de tu vida al repechaje rumbo a México 2026.
+                ¡Tu oportunidad de alentar a La Verde está aquí!
               </p>
             </div>
 
             {/* Links */}
             <div>
-              <h4 className="font-semibold text-foreground mb-4 uppercase text-sm">Enlaces</h4>
+              <h4 className="font-semibold text-white mb-4 uppercase text-sm">Enlaces</h4>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <button 
+                    onClick={() => scrollToSection("#inicio")}
+                    className="text-sm text-white/60 hover:text-[#FF6A00] transition-colors"
+                  >
                     Inicio
-                  </Link>
+                  </button>
                 </li>
                 <li>
-                  <Link to="/registro-cliente" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <button 
+                    onClick={() => scrollToSection("#registrar-compra")}
+                    className="text-sm text-white/60 hover:text-[#FF6A00] transition-colors"
+                  >
                     Registrar Compra
+                  </button>
+                </li>
+                <li>
+                  <Link 
+                    to="/vendedores/login" 
+                    className="text-sm text-white/60 hover:text-[#FF6A00] transition-colors"
+                  >
+                    Portal Vendedores
                   </Link>
                 </li>
                 <li>
                   <button 
                     onClick={() => setTermsOpen(true)}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors text-left"
+                    className="text-sm text-white/60 hover:text-[#FF6A00] transition-colors text-left"
                   >
                     Términos y Condiciones
                   </button>
@@ -56,50 +75,36 @@ const Footer = () => {
 
             {/* Contact */}
             <div>
-              <h4 className="font-semibold text-foreground mb-4 uppercase text-sm">Contacto</h4>
+              <h4 className="font-semibold text-white mb-4 uppercase text-sm">Contacto</h4>
               <ul className="space-y-3">
-                <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="w-4 h-4 text-primary" />
+                <li className="flex items-center gap-2 text-sm text-white/60">
+                  <Mail className="w-4 h-4 text-[#FF6A00]" />
                   soporte@skyworth.com
                 </li>
-                <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Phone className="w-4 h-4 text-primary" />
+                <li className="flex items-center gap-2 text-sm text-white/60">
+                  <Phone className="w-4 h-4 text-[#FF6A00]" />
                   +591 800 10 2026
                 </li>
-                <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="w-4 h-4 text-primary" />
+                <li className="flex items-center gap-2 text-sm text-white/60">
+                  <MapPin className="w-4 h-4 text-[#FF6A00]" />
                   Bolivia
                 </li>
               </ul>
             </div>
           </div>
 
-          {/* AJ Logo - Autoridad de Fiscalización del Juego */}
-          <div className="mt-10 pt-8 border-t border-border/50">
-            <div className="flex flex-col items-center gap-3">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">Promoción autorizada por</p>
-              <div className="bg-white rounded-lg px-6 py-4">
-                <img 
-                  src={logoAJ} 
-                  alt="Autoridad de Fiscalización del Juego - Juego Justo, Legal y Transparente" 
-                  className="h-12 md:h-14 w-auto object-contain"
-                />
-              </div>
-            </div>
-          </div>
-
           {/* Bottom */}
-          <div className="mt-8 pt-6 border-t border-border/30">
+          <div className="mt-10 pt-6 border-t border-white/10">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-white/50">
                 © 2026 Skyworth. Todos los derechos reservados.
               </p>
-              <p className="text-xs text-muted-foreground">
-                Desarrollado por <a href="mailto:ysalek@gmail.com" className="hover:text-primary transition-colors">@ysalek@gmail.com</a>
+              <p className="text-xs text-white/40">
+                Promoción válida hasta el 7 de marzo de 2026
               </p>
               <Link 
                 to="/admin" 
-                className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                className="text-xs text-white/20 hover:text-white/40 transition-colors"
               >
                 •
               </Link>
