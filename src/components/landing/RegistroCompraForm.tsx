@@ -2,8 +2,10 @@ import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { 
   Trophy, User, IdCard, Phone, Upload, CheckCircle, Mail, Tv, ArrowLeft, 
-  Loader2, AlertCircle, XCircle, Calendar, MapPin, FileText, Shield, Tag
+  Loader2, AlertCircle, XCircle, Calendar, MapPin, FileText, Shield, Tag, HelpCircle
 } from "lucide-react";
+import { normalizeSerial, validateSerialFormat, detectDashInSerial, SERIAL_EXAMPLE } from "@/lib/serialUtils";
+import SerialInputHelp from "@/components/ui/SerialInputHelp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -112,10 +114,7 @@ const RegistroCompraForm = () => {
     }
   };
 
-  // Normalize serial: trim, uppercase, remove duplicate spaces
-  const normalizeSerial = (serial: string): string => {
-    return serial.trim().replace(/\s+/g, ' ').toUpperCase();
-  };
+  // Note: normalizeSerial is now imported from @/lib/serialUtils
 
   // Validate serial against database
   const validateSerial = useCallback(async (serialNumber: string) => {
@@ -230,19 +229,32 @@ const RegistroCompraForm = () => {
     }
   };
 
-  // Handle serial input change
+  // Handle serial input change with auto-normalization
   const handleSerialChange = (value: string) => {
-    setFormData({ ...formData, serialNumber: value });
+    // Auto-normalize: remove dashes, spaces, uppercase
+    const normalized = normalizeSerial(value);
+    setFormData({ ...formData, serialNumber: normalized });
+    
+    // Check for format issues before DB validation
+    const formatCheck = validateSerialFormat(normalized);
+    
     // Reset validation when typing
     if (serialValidation.isValid || serialValidation.error) {
       setSerialValidation({
         isValid: false,
         isChecking: false,
-        error: null,
+        error: formatCheck.error, // Show format error immediately if any
         productName: null,
         couponCount: null,
         serialId: null,
       });
+    } else if (formatCheck.error) {
+      setSerialValidation(prev => ({ ...prev, error: formatCheck.error }));
+    }
+    
+    // Show helpful message if user pasted with dashes
+    if (detectDashInSerial(value) && value !== normalized) {
+      // The input was auto-corrected, we could show a toast but the visual normalization is enough
     }
   };
 
@@ -697,35 +709,17 @@ const RegistroCompraForm = () => {
                   <Label htmlFor="serialNumber" className="text-white text-lg font-bold">
                     Número de Serie *
                   </Label>
-                  <div className="relative group">
-                    <div className="w-5 h-5 rounded-full bg-blue-500/30 text-blue-400 text-xs flex items-center justify-center cursor-help font-bold">?</div>
-                    <div className="absolute left-6 top-0 z-50 hidden group-hover:block w-72 p-3 bg-slate-800 rounded-lg border border-slate-600 shadow-xl">
-                      <p className="text-sm text-white font-medium mb-2">¿Dónde encontrar el serial?</p>
-                      <ul className="text-xs text-muted-foreground space-y-1">
-                        <li>• En la <span className="text-cyan-400">póliza de garantía</span></li>
-                        <li>• En la etiqueta trasera del TV</li>
-                        <li>• Formato: letras y números (ej: SKW123456789)</li>
-                      </ul>
-                      <p className="text-xs text-amber-400 mt-2">⚠️ No confundir con el número de modelo</p>
-                    </div>
-                  </div>
                 </div>
-                
-                {/* Help text always visible */}
-                <p className="text-xs text-cyan-400/80 flex items-center gap-1">
-                  <Tv className="w-3 h-3" />
-                  Encuéntralo en tu póliza de garantía o en la parte trasera del TV. Ej: SKW123456789
-                </p>
                 
                 <div className="relative">
                   <Tv className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
                   <Input
                     id="serialNumber"
-                    placeholder="Ej: SKW123456789"
+                    placeholder={`Ej: ${SERIAL_EXAMPLE}`}
                     value={formData.serialNumber}
                     onChange={(e) => handleSerialChange(e.target.value)}
                     onBlur={handleSerialBlur}
-                    className={`pl-10 pr-12 bg-muted/50 border-2 border-border text-white placeholder:text-muted-foreground text-lg py-6 ${getSerialInputClass()}`}
+                    className={`pl-10 pr-12 bg-muted/50 border-2 border-border text-white placeholder:text-muted-foreground text-lg py-6 font-mono tracking-wider ${getSerialInputClass()}`}
                     required
                   />
                   {/* Validation indicator */}
@@ -741,6 +735,9 @@ const RegistroCompraForm = () => {
                     )}
                   </div>
                 </div>
+                
+                {/* Always visible help text */}
+                <SerialInputHelp variant="dark" />
 
                 {/* Validation Status Messages */}
                 {serialValidation.isChecking && (

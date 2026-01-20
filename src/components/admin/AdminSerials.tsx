@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from 'sonner';
 import { Plus, Upload, Loader2, Lock, Unlock, Pencil, Download, FileSpreadsheet, AlertTriangle, CheckCircle, Trash2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { normalizeSerial } from '@/lib/serialUtils';
 
 interface Serial {
   id: string;
@@ -83,8 +84,11 @@ export default function AdminSerials() {
     setSaving(true);
 
     try {
+      // Normalize serial before saving
+      const normalizedSerial = normalizeSerial(form.serial_number);
+      
       const { error } = await supabase.from('tv_serials').insert({
-        serial_number: form.serial_number.trim().toUpperCase(),
+        serial_number: normalizedSerial,
         product_id: form.product_id || null
       });
 
@@ -117,10 +121,13 @@ export default function AdminSerials() {
     setSaving(true);
 
     try {
+      // Normalize serial before saving
+      const normalizedSerial = normalizeSerial(form.serial_number);
+      
       const { error } = await supabase
         .from('tv_serials')
         .update({
-          serial_number: form.serial_number.trim().toUpperCase(),
+          serial_number: normalizedSerial,
           product_id: form.product_id || null
         })
         .eq('id', editingSerial.id);
@@ -181,13 +188,25 @@ export default function AdminSerials() {
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet);
 
-      // Parse and validate serials
+      // Parse and validate serials - normalize all serials (remove dashes, spaces, uppercase)
       const parsed: ParsedSerial[] = jsonData.map((row) => {
-        const serialNumber = String(row['SERIAL'] || row['serial'] || row['Serial'] || row['serial_number'] || '').trim().toUpperCase();
+        const rawSerial = String(row['SERIAL'] || row['serial'] || row['Serial'] || row['serial_number'] || '').trim();
+        // Normalize the serial: remove dashes, spaces, uppercase
+        const serialNumber = normalizeSerial(rawSerial);
         const productName = String(row['MODELO'] || row['modelo'] || row['Modelo'] || row['product'] || row['PRODUCTO'] || '').trim();
 
         if (!serialNumber) {
           return { serial_number: '', valid: false, error: 'Serial vacío' };
+        }
+
+        // Check for invalid characters after normalization
+        const invalidChars = serialNumber.match(/[^A-Z0-9]/g);
+        if (invalidChars) {
+          return { 
+            serial_number: serialNumber, 
+            valid: false, 
+            error: `Contiene caracteres no válidos: ${[...new Set(invalidChars)].join(', ')}` 
+          };
         }
 
         // Find matching product
