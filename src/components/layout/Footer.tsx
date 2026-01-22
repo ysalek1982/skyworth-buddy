@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Trophy, Mail, Phone, MapPin } from "lucide-react";
-import { Link } from "react-router-dom";
 import TermsModal from "@/components/landing/TermsModal";
-import logoAJ from "@/assets/logo-aj-full.png";
 
 const Footer = () => {
   const [termsOpen, setTermsOpen] = useState(false);
@@ -55,14 +53,6 @@ const Footer = () => {
                   </button>
                 </li>
                 <li>
-                  <Link 
-                    to="/vendedores/login" 
-                    className="text-sm text-white/60 hover:text-[#FF6A00] transition-colors"
-                  >
-                    Portal Vendedores
-                  </Link>
-                </li>
-                <li>
                   <button 
                     onClick={() => setTermsOpen(true)}
                     className="text-sm text-white/60 hover:text-[#FF6A00] transition-colors text-left"
@@ -102,12 +92,6 @@ const Footer = () => {
               <p className="text-xs text-white/40">
                 Promoción válida hasta el 7 de marzo de 2026
               </p>
-              <Link 
-                to="/admin" 
-                className="text-xs text-white/20 hover:text-white/40 transition-colors"
-              >
-                •
-              </Link>
             </div>
           </div>
         </div>

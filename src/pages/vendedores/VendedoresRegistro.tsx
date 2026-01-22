@@ -43,7 +43,7 @@ const VendedoresRegistro = () => {
   // If user is already a seller, redirect to dashboard
   useEffect(() => {
     if (user && rolesLoaded && isSeller && !isSuccess) {
-      navigate("/vendedores/dashboard", { replace: true });
+      navigate("/ventas/dashboard", { replace: true });
     }
   }, [user, rolesLoaded, isSeller, navigate, isSuccess]);
 
@@ -161,7 +161,7 @@ const VendedoresRegistro = () => {
             </p>
 
             <Button
-              onClick={() => navigate("/vendedores/login")}
+              onClick={() => navigate("/ventas/login")}
               className="w-full bg-gradient-gold text-primary-foreground font-bold uppercase tracking-wider"
             >
               Iniciar Sesión
@@ -182,7 +182,7 @@ const VendedoresRegistro = () => {
         >
           {/* Back Link */}
           <Link
-            to="/vendedores"
+            to="/ventas"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4 sm:mb-8"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -356,7 +356,7 @@ const VendedoresRegistro = () => {
             <div className="mt-4 sm:mt-6 text-center">
               <p className="text-xs sm:text-sm text-muted-foreground">
                 ¿Ya tienes cuenta?{" "}
-                <Link to="/vendedores/login" className="text-primary hover:underline font-medium">
+                <Link to="/ventas/login" className="text-primary hover:underline font-medium">
                   Inicia sesión
                 </Link>
               </p>

@@ -18,7 +18,7 @@ const PathSelector = () => {
       title: "SOY VENDEDOR",
       description: "Trabajo en una tienda autorizada y quiero registrar ventas para ganar puntos.",
       icon: Briefcase,
-      link: "/login",
+      link: "/ventas/login",
       variant: "green" as const,
       badge: "SUMA PUNTOS",
     },

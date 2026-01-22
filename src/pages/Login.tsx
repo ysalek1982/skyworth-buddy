@@ -29,7 +29,7 @@ const Login = () => {
       } else if (isAdmin) {
         navigate("/admin", { replace: true });
       } else if (isSeller) {
-        navigate("/vendedores/dashboard", { replace: true });
+        navigate("/ventas/dashboard", { replace: true });
       } else {
         navigate("/", { replace: true });
       }
@@ -154,13 +154,13 @@ const Login = () => {
           <div className="mt-6 text-center space-y-2">
             <p className="text-sm text-muted-foreground">
               ¿Eres vendedor?{" "}
-              <Link to="/vendedores/login" className="text-primary hover:underline font-medium">
+              <Link to="/ventas/login" className="text-primary hover:underline font-medium">
                 Ingresa aquí
               </Link>
             </p>
             <p className="text-sm text-muted-foreground">
               ¿No tienes cuenta de vendedor?{" "}
-              <Link to="/vendedores/registro" className="text-primary hover:underline font-medium">
+              <Link to="/ventas/registro" className="text-primary hover:underline font-medium">
                 Regístrate
               </Link>
             </p>

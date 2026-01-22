@@ -420,7 +420,7 @@ function DashboardContent() {
             </CardHeader>
             <CardContent>
               <Button asChild>
-                <Link to="/vendedores/registro">Registrarme como Vendedor</Link>
+                <Link to="/ventas/registro">Registrarme como Vendedor</Link>
               </Button>
             </CardContent>
           </Card>
