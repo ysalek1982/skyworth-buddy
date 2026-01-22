@@ -7,6 +7,45 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Generate premium ticket HTML for each coupon
+function generateTicketsHTML(couponsString: string): string {
+  if (!couponsString) return "";
+  
+  const coupons = couponsString.split(",").map((c) => c.trim()).filter(Boolean);
+  
+  return coupons
+    .map(
+      (coupon, index) => `
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+<tr>
+<td style="background:linear-gradient(135deg,#FFD700 0%,#FFA500 100%);border-radius:8px;padding:3px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:6px;">
+<tr>
+<td style="padding:15px 20px;">
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td width="40" style="vertical-align:middle;">
+<div style="width:36px;height:36px;background:linear-gradient(135deg,#FFD700,#FFA500);border-radius:50%;text-align:center;line-height:36px;font-size:16px;font-weight:bold;color:#1a1a2e;">${index + 1}</div>
+</td>
+<td style="padding-left:15px;vertical-align:middle;">
+<p style="margin:0;font-size:11px;color:#FFD700;text-transform:uppercase;letter-spacing:1px;">Ticket #${index + 1}</p>
+<p style="margin:5px 0 0;font-size:18px;font-weight:bold;color:#ffffff;font-family:monospace;letter-spacing:2px;">${coupon}</p>
+</td>
+<td width="30" style="vertical-align:middle;text-align:right;">
+<span style="font-size:24px;">🎟️</span>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>`
+    )
+    .join("");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -70,7 +109,15 @@ serve(async (req) => {
         emailSubject = emailSubject.replace(regex, String(value));
         emailBody = emailBody.replace(regex, String(value));
       });
+
+      // Generate premium tickets HTML if cupones variable exists
+      if (variables.cupones) {
+        const ticketsHTML = generateTicketsHTML(String(variables.cupones));
+        emailBody = emailBody.replace("<!-- TICKETS_PLACEHOLDER -->", ticketsHTML);
+      }
     }
+
+    console.log("Sending email to:", to, "template:", template_type);
 
     const client = new SMTPClient({
       connection: {

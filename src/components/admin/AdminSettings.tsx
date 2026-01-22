@@ -20,7 +20,7 @@ interface SecureSetting {
 
 const settingsKeys = {
   gemini: ['GEMINI_API_KEY', 'GEMINI_MODEL', 'BOT_ENABLED'],
-  whatsapp: ['WHATSAPP_PROVIDER', 'WHATSAPP_API_URL', 'WHATSAPP_TOKEN', 'WHATSAPP_PHONE_ID', 'WHATSAPP_ENABLED'],
+  whatsapp: ['WHATSAPP_PROVIDER', 'WHATSAPP_API_URL', 'WHATSAPP_TOKEN', 'WHATSAPP_PHONE_ID', 'WHATSAPP_TEMPLATE_LANG', 'WHATSAPP_ENABLED'],
   smtp: ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM', 'EMAIL_ENABLED'],
   campaign: ['SELLER_AUTO_WINNER_ENABLED']
 };
@@ -337,13 +337,28 @@ export default function AdminSettings() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="wa-phone">Phone ID</Label>
+                <Label htmlFor="wa-phone">Phone Number ID</Label>
                 <Input
                   id="wa-phone"
                   value={form.WHATSAPP_PHONE_ID || ''}
                   onChange={(e) => updateForm('WHATSAPP_PHONE_ID', e.target.value)}
-                  placeholder="ID del número de teléfono"
+                  placeholder="Ej: 901411756396423"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Encuéntralo en Meta Business Suite → WhatsApp → Configuración de la API
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="wa-lang">Template Language Code</Label>
+                <Input
+                  id="wa-lang"
+                  value={form.WHATSAPP_TEMPLATE_LANG || ''}
+                  onChange={(e) => updateForm('WHATSAPP_TEMPLATE_LANG', e.target.value)}
+                  placeholder="es_ES"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Código del idioma del template aprobado (ej: es_ES, es_MX, es_BO)
+                </p>
               </div>
               <div className="flex gap-2">
                 <Button onClick={() => handleSave('whatsapp')} disabled={saving}>
