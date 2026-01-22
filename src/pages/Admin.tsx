@@ -13,7 +13,8 @@ import {
   X,
   FileText,
   ClipboardCheck,
-  BarChart3
+  BarChart3,
+  UserCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -28,6 +29,7 @@ import AdminSettings from '@/components/admin/AdminSettings';
 import AdminLandingCMS from '@/components/admin/AdminLandingCMS';
 import AdminSellerSales from '@/components/admin/AdminSellerSales';
 import AdminSellerStats from '@/components/admin/AdminSellerStats';
+import AdminPurchases from '@/components/admin/AdminPurchases';
 
 const tabs = [
   { value: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -36,6 +38,7 @@ const tabs = [
   { value: 'serials', label: 'Seriales', icon: Barcode },
   { value: 'coupons', label: 'Cupones', icon: Ticket },
   { value: 'sellers', label: 'Vendedores', icon: Users },
+  { value: 'clients', label: 'Clientes', icon: UserCheck },
   { value: 'seller-sales', label: 'Revisión Ventas', icon: ClipboardCheck },
   { value: 'seller-stats', label: 'Estadísticas Vendedores', icon: BarChart3 },
   { value: 'draw', label: 'Sorteo', icon: Trophy },
@@ -81,6 +84,8 @@ function AdminContent() {
         return <AdminCoupons />;
       case 'sellers':
         return <AdminSellers />;
+      case 'clients':
+        return <AdminPurchases />;
       case 'seller-sales':
         return <AdminSellerSales />;
       case 'seller-stats':
