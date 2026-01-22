@@ -558,7 +558,7 @@ function DashboardContent() {
                     )}
                   </div>
 
-                  {/* Sale Date */}
+                  {/* Sale Date with Range Validation */}
                   <div className="space-y-2">
                     <Label htmlFor="sale_date" className="text-base font-semibold text-foreground flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
@@ -571,8 +571,12 @@ function DashboardContent() {
                       onChange={(e) => setSerialForm({ ...serialForm, sale_date: e.target.value })}
                       className="input-dark"
                       required
-                      max={new Date().toISOString().split('T')[0]}
+                      min="2026-01-22"
+                      max="2026-03-07"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Válido: 22 de enero - 7 de marzo de 2026.
+                    </p>
                   </div>
 
                   {/* Document Uploads Section */}
