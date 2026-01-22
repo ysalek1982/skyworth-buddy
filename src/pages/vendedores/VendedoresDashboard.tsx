@@ -52,6 +52,7 @@ interface Sale {
   sale_date: string;
   points_earned: number;
   created_at: string;
+  status?: string | null;
 }
 
 interface SerialValidation {
@@ -366,7 +367,7 @@ function DashboardContent() {
           .eq('id', result.sale_id);
       }
 
-      toast.success(`¡Venta registrada! +${result.points} puntos`);
+      toast.success(`¡Venta registrada! Queda pendiente de aprobación para sumar puntos.`);
       setSerialForm({ 
         serial_number: '', 
         client_name: '', 
@@ -739,7 +740,9 @@ function DashboardContent() {
             <Card>
               <CardHeader>
                 <CardTitle>Historial de Ventas</CardTitle>
-                <CardDescription>Todas tus ventas registradas y puntos ganados</CardDescription>
+                <CardDescription>
+                  Tus ventas registradas (los puntos solo se suman cuando el administrador aprueba la venta)
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {sales.length === 0 ? (
@@ -761,9 +764,23 @@ function DashboardContent() {
                           <TableCell>{sale.client_name}</TableCell>
                           <TableCell>{new Date(sale.sale_date).toLocaleDateString()}</TableCell>
                           <TableCell className="text-right">
-                            <Badge variant="secondary" className="bg-green-500/20 text-green-500">
-                              +{sale.points_earned}
-                            </Badge>
+                            {(() => {
+                              const status = (sale.status ?? 'PENDING').toString().toUpperCase();
+
+                              if (status === 'APPROVED') {
+                                return (
+                                  <Badge variant="outline" className="bg-primary/15 text-primary border-primary/30">
+                                    +{sale.points_earned}
+                                  </Badge>
+                                );
+                              }
+
+                              if (status === 'REJECTED') {
+                                return <Badge variant="destructive">Rechazada</Badge>;
+                              }
+
+                              return <Badge variant="secondary">Pendiente</Badge>;
+                            })()}
                           </TableCell>
                         </TableRow>
                       ))}
