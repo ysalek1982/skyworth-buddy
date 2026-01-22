@@ -348,16 +348,17 @@ const RegistroCompraForm = () => {
         throw new Error(result.error || "Error al registrar la compra");
       }
 
-      // Update purchase record with document URLs if we have them
+      // Attach document URLs using secure RPC (bypasses RLS)
       if (result.purchase_id && (invoiceUrl || polizaUrl || tagUrl)) {
-        await supabase
-          .from("client_purchases")
-          .update({
-            invoice_url: invoiceUrl,
-            id_front_url: polizaUrl,
-            id_back_url: tagUrl,
-          })
-          .eq("id", result.purchase_id);
+        const { error: attachError } = await supabase.rpc('rpc_attach_buyer_documents', {
+          p_purchase_id: result.purchase_id,
+          p_invoice_url: invoiceUrl || '',
+          p_id_front_url: polizaUrl || '',  // Póliza de Garantía
+          p_id_back_url: tagUrl || '',       // TAG de Póliza
+        });
+        if (attachError) {
+          console.warn('Error attaching documents:', attachError);
+        }
       }
 
       // Store the generated coupons for display
