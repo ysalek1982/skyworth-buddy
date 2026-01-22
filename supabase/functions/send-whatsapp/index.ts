@@ -65,7 +65,20 @@ serve(async (req) => {
 
     if (provider === "meta") {
       // Meta WhatsApp Business API
-      const url = apiUrl || `https://graph.facebook.com/v18.0/${phoneId}/messages`;
+      // Allow admins to set either:
+      // - Base URL: https://graph.facebook.com/v18.0
+      // - Full endpoint: https://graph.facebook.com/v18.0/<PHONE_ID>/messages
+      // - Template URL containing {PHONE_ID}
+      const rawApiUrl = (apiUrl || "").trim();
+      const normalizedApiUrl = rawApiUrl.replace(/\/$/, "");
+
+      const url = !normalizedApiUrl
+        ? `https://graph.facebook.com/v18.0/${phoneId}/messages`
+        : normalizedApiUrl.includes("{PHONE_ID}")
+          ? normalizedApiUrl.replaceAll("{PHONE_ID}", phoneId)
+          : normalizedApiUrl.endsWith("/messages")
+            ? normalizedApiUrl
+            : `${normalizedApiUrl}/${phoneId}/messages`;
       
       // Build template components from variables
       const components = variables ? [
