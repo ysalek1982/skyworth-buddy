@@ -43,14 +43,8 @@ const Header = () => {
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a2818]/80 backdrop-blur-md border-b border-white/10">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo - Left */}
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
-                <path d="M12 2 L12 22 M2 12 L22 12" stroke="currentColor" strokeWidth="1.5"/>
-              </svg>
-            </div>
+          {/* Logo - Text Only (no icon per requirement) */}
+          <Link to="/" className="flex items-center gap-2">
             <div>
               <span className="font-bold text-white text-lg tracking-wide block leading-none">SKYWORTH</span>
               <span className="text-[#FF6A00] text-[10px] font-semibold uppercase tracking-wider">El Sueño del Hincha</span>

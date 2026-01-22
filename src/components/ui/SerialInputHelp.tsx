@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Tv, HelpCircle, AlertTriangle, X } from "lucide-react";
+import { Tv, HelpCircle, AlertTriangle, X, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { SERIAL_EXAMPLE, SERIAL_EXAMPLE_WITH_DASH, MODEL_EXAMPLE } from "@/lib/serialUtils";
 
@@ -18,29 +18,29 @@ export function SerialInputHelp({ variant = 'dark' }: SerialInputHelpProps) {
   return (
     <>
       {/* Always visible help text below input - HIGH CONTRAST */}
-      <div className={`text-xs space-y-1 mt-2 p-2 rounded-md ${variant === 'dark' ? 'bg-slate-800/60 border border-slate-700' : 'bg-slate-100 border border-slate-200'}`}>
-        <p className={`flex items-center gap-1 ${textColor}`}>
-          <Tv className="w-3 h-3 flex-shrink-0" />
-          <span>
+      <div className={`text-xs space-y-1 mt-2 p-3 rounded-lg ${variant === 'dark' ? 'bg-slate-800/80 border border-slate-600' : 'bg-slate-100 border border-slate-200'}`}>
+        <p className={`flex items-center gap-2 ${textColor}`}>
+          <Tv className="w-4 h-4 flex-shrink-0 text-cyan-400" />
+          <span className="font-medium">
             El número de serie determina los puntos (modelo del TV).
           </span>
         </p>
-        <p className={textColor}>
-          Ej: <span className={`font-mono font-bold ${exampleColor}`}>{SERIAL_EXAMPLE}</span>
-          <span className="text-amber-500 ml-1">(sin guiones)</span>
-          <button 
-            onClick={() => setIsModalOpen(true)} 
-            className={`ml-2 inline-flex items-center gap-1 ${linkColor} underline`}
-          >
-            <HelpCircle className="w-3 h-3" />
-            ¿Dónde lo encuentro?
-          </button>
+        <p className={`${textColor} ml-6`}>
+          Ejemplo: <span className={`font-mono font-bold text-base ${exampleColor}`}>{SERIAL_EXAMPLE}</span>
+          <span className="text-amber-500 ml-2 font-semibold">(sin guiones)</span>
         </p>
+        <button 
+          onClick={() => setIsModalOpen(true)} 
+          className={`ml-6 inline-flex items-center gap-1 ${linkColor} underline font-medium`}
+        >
+          <HelpCircle className="w-3 h-3" />
+          ¿Dónde lo encuentro?
+        </button>
       </div>
 
       {/* Modal with detailed help */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-md bg-slate-900 border-slate-700">
+        <DialogContent className="max-w-lg bg-slate-900 border-slate-700">
           <DialogHeader>
             <DialogTitle className="text-white flex items-center gap-2">
               <Tv className="w-5 h-5 text-cyan-400" />
@@ -62,29 +62,49 @@ export function SerialInputHelp({ variant = 'dark' }: SerialInputHelpProps) {
               </ul>
             </div>
 
-            {/* Format example */}
-            <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-green-400 mb-2">✅ Formato correcto</h4>
-              <p className="font-mono text-lg font-bold text-white">{SERIAL_EXAMPLE}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Solo letras y números, sin guiones ni espacios.
-              </p>
+            {/* Visual example - Etiqueta */}
+            <div className="bg-slate-800 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-cyan-400 mb-3 flex items-center gap-2">
+                <Eye className="w-4 h-4" />
+                Ejemplo de etiqueta
+              </h4>
+              <div className="bg-white rounded-md p-3 text-center">
+                <p className="text-xs text-gray-500 mb-2">Así se ve en la etiqueta:</p>
+                <p className="font-mono text-2xl text-gray-800 font-bold tracking-wider border-b-2 border-dashed border-gray-300 pb-2">
+                  <span className="text-gray-700">2540415M</span>
+                  <span className="text-red-500 font-extrabold">-</span>
+                  <span className="text-gray-700">00039</span>
+                </p>
+                <p className="text-xs text-gray-400 mt-2 flex items-center justify-center gap-1">
+                  <AlertTriangle className="w-3 h-3 text-amber-500" />
+                  Nota el guión en medio
+                </p>
+              </div>
             </div>
 
             {/* Common mistake - dash */}
             <div className="bg-amber-900/30 border border-amber-500/30 rounded-lg p-4">
               <h4 className="text-sm font-semibold text-amber-400 mb-2 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4" />
-                ¡Ojo con el guión!
+                ¡Importante! No incluyas el guión
               </h4>
               <p className="text-sm text-muted-foreground">
                 Algunas etiquetas muestran el serial con guión:
               </p>
-              <p className="font-mono text-lg text-amber-300 line-through">{SERIAL_EXAMPLE_WITH_DASH}</p>
-              <p className="text-sm text-white mt-2">
-                Debes ingresarlo <strong>SIN el guión</strong>:
+              <p className="font-mono text-lg text-amber-300 line-through my-2">{SERIAL_EXAMPLE_WITH_DASH}</p>
+              <p className="text-sm text-white">
+                Debes ingresarlo <strong className="text-green-400">SIN el guión</strong>:
               </p>
-              <p className="font-mono text-lg font-bold text-green-400">{SERIAL_EXAMPLE}</p>
+              <p className="font-mono text-xl font-bold text-green-400 mt-1">{SERIAL_EXAMPLE}</p>
+            </div>
+
+            {/* Format example */}
+            <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-green-400 mb-2">✅ Formato correcto</h4>
+              <p className="font-mono text-xl font-bold text-white">{SERIAL_EXAMPLE}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Solo letras y números, sin guiones ni espacios.
+              </p>
             </div>
 
             {/* Don't confuse with model */}

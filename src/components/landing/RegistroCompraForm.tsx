@@ -774,7 +774,7 @@ const RegistroCompraForm = () => {
                 )}
               </div>
 
-              {/* Purchase Date */}
+              {/* Purchase Date with Range Validation */}
               <div className="space-y-2">
                 <Label htmlFor="fechaCompra" className="text-white">Fecha de Compra *</Label>
                 <div className="relative">
@@ -785,11 +785,14 @@ const RegistroCompraForm = () => {
                     value={formData.fechaCompra}
                     onChange={(e) => setFormData({ ...formData, fechaCompra: e.target.value })}
                     className="pl-10 bg-muted/50 border-border text-white"
+                    min="2026-01-22"
+                    max="2026-03-07"
                     required
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Debe coincidir con la fecha de tu factura o nota de venta.
+                  <span className="block mt-1 text-amber-400">Válido: 22 de enero - 7 de marzo de 2026.</span>
                 </p>
               </div>
 

@@ -15,10 +15,11 @@ const Index = () => {
     element?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Single label per feature - no duplicates
   const prizeFeatures = [
-    { icon: Plane, label: "Pasajes", sublabel: "PASAJES" },
-    { icon: Building2, label: "Hospedaje", sublabel: "HOSPEDAJE" },
-    { icon: Ticket, label: "Entradas", sublabel: "ENTRADAS" },
+    { icon: Plane, label: "Pasajes Aéreos" },
+    { icon: Building2, label: "Hospedaje" },
+    { icon: Ticket, label: "Entradas al Partido" },
   ];
 
   return (
@@ -135,8 +136,7 @@ const Index = () => {
                   <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-3 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
                     <feature.icon className="w-8 h-8 md:w-10 md:h-10 text-white" />
                   </div>
-                  <p className="text-white font-medium text-sm md:text-base">{feature.label}</p>
-                  <p className="text-white/70 text-xs md:text-sm font-bold uppercase">{feature.sublabel}</p>
+                  <p className="text-white font-bold text-sm md:text-base uppercase">{feature.label}</p>
                 </motion.div>
               ))}
             </div>
