@@ -1,8 +1,5 @@
-import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   LayoutDashboard, 
   Package, 
@@ -46,10 +43,29 @@ const tabs = [
   { value: 'settings', label: 'Configuración', icon: Settings },
 ];
 
+const ADMIN_ACTIVE_TAB_KEY = '__SKYWORTH_ADMIN_ACTIVE_TAB__';
+
 function AdminContent() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const allowedTabValues = useMemo(() => new Set(tabs.map((t) => t.value)), []);
+
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(ADMIN_ACTIVE_TAB_KEY);
+      return saved && allowedTabValues.has(saved) ? saved : 'dashboard';
+    } catch {
+      return 'dashboard';
+    }
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(ADMIN_ACTIVE_TAB_KEY, activeTab);
+    } catch {
+      // ignore
+    }
+  }, [activeTab]);
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -162,9 +178,5 @@ function AdminContent() {
 }
 
 export default function Admin() {
-  return (
-    <ProtectedRoute requiredRole="admin">
-      <AdminContent />
-    </ProtectedRoute>
-  );
+  return <AdminContent />;
 }
