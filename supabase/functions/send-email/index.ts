@@ -58,6 +58,23 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Resolve email - if 'to' is a UUID, look up the user's email
+    let recipientEmail = to;
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidPattern.test(to)) {
+      // It's a user_id, look up the email from auth.users
+      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(to);
+      if (userError || !userData?.user?.email) {
+        console.error("Could not resolve user email for:", to, userError);
+        return new Response(
+          JSON.stringify({ success: false, message: "No se pudo resolver el email del usuario" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      recipientEmail = userData.user.email;
+      console.log("Resolved email from user_id:", recipientEmail);
+    }
+
     // Get settings
     const { data: settings } = await supabase
       .from("secure_settings")
@@ -117,7 +134,7 @@ serve(async (req) => {
       }
     }
 
-    console.log("Sending email to:", to, "template:", template_type);
+    console.log("Sending email to:", recipientEmail, "template:", template_type);
 
     const client = new SMTPClient({
       connection: {
@@ -133,7 +150,7 @@ serve(async (req) => {
 
     await client.send({
       from: smtpFrom,
-      to: to,
+      to: recipientEmail,
       subject: emailSubject,
       content: emailBody,
       html: emailBody,
@@ -141,7 +158,7 @@ serve(async (req) => {
 
     await client.close();
 
-    console.log("Email sent successfully to:", to);
+    console.log("Email sent successfully to:", recipientEmail);
 
     return new Response(
       JSON.stringify({ success: true }),
