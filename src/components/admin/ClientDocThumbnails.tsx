@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { toSignedStorageUrl } from "@/lib/storageSignedUrl";
 
 type Props = {
   invoiceUrl?: string | null;
@@ -26,6 +27,30 @@ export function ClientDocThumbnails({ invoiceUrl, idFrontUrl, idBackUrl, onPrevi
     return list;
   }, [invoiceUrl, idFrontUrl, idBackUrl]);
 
+  const [signedUrls, setSignedUrls] = React.useState<Record<DocItem["key"], string | null>>({
+    invoice: null,
+    id_front: null,
+    id_back: null,
+  });
+
+  React.useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      const next: Record<DocItem["key"], string | null> = { invoice: null, id_front: null, id_back: null };
+      await Promise.all(
+        docs.map(async (d) => {
+          next[d.key] = await toSignedStorageUrl(d.url);
+        })
+      );
+      if (alive) setSignedUrls(next);
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [docs]);
+
   if (docs.length === 0) {
     return <span className={cn("text-xs text-muted-foreground", className)}>—</span>;
   }
@@ -33,10 +58,13 @@ export function ClientDocThumbnails({ invoiceUrl, idFrontUrl, idBackUrl, onPrevi
   return (
     <div className={cn("flex items-center gap-2", className)}>
       {docs.map((doc) => (
+        (() => {
+          const url = signedUrls[doc.key] ?? doc.url;
+          return (
         <button
           key={doc.key}
           type="button"
-          onClick={() => onPreview(doc.url)}
+          onClick={() => onPreview(url)}
           className={cn(
             "group relative h-10 w-14 overflow-hidden rounded-md border border-border bg-muted/40",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -44,7 +72,7 @@ export function ClientDocThumbnails({ invoiceUrl, idFrontUrl, idBackUrl, onPrevi
           aria-label={`Ver ${doc.label}`}
           title={`Ver ${doc.label}`}
         >
-          <img src={doc.url} alt={doc.alt} loading="lazy" className="h-full w-full object-cover" />
+          <img src={url} alt={doc.alt} loading="lazy" className="h-full w-full object-cover" />
           <span
             className={cn(
               "pointer-events-none absolute inset-x-0 bottom-0",
@@ -55,6 +83,8 @@ export function ClientDocThumbnails({ invoiceUrl, idFrontUrl, idBackUrl, onPrevi
             {doc.label}
           </span>
         </button>
+          );
+        })()
       ))}
     </div>
   );
