@@ -39,7 +39,7 @@ const VendedoresHome = () => {
           >
             {rolesLoaded && user && isSeller ? (
               // Logged in seller
-              <Link to="/vendedores/dashboard" className="col-span-2">
+              <Link to="/ventas/dashboard" className="col-span-2">
                 <div className="bg-card rounded-2xl p-8 shadow-card hover:shadow-lg transition-shadow text-center group">
                   <div className="w-16 h-16 mx-auto rounded-full bg-gradient-green flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <Trophy className="w-8 h-8 text-white" />
@@ -56,7 +56,7 @@ const VendedoresHome = () => {
             ) : (
               // Not logged in
               <>
-                <Link to="/vendedores/login">
+                <Link to="/ventas/login">
                   <div className="bg-card rounded-2xl p-8 shadow-card hover:shadow-lg transition-shadow text-center group h-full">
                     <div className="w-16 h-16 mx-auto rounded-full bg-gradient-gold flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                       <LogIn className="w-8 h-8 text-skyworth-dark" />
@@ -71,7 +71,7 @@ const VendedoresHome = () => {
                   </div>
                 </Link>
 
-                <Link to="/vendedores/registro">
+                <Link to="/ventas/registro">
                   <div className="bg-card rounded-2xl p-8 shadow-card hover:shadow-lg transition-shadow text-center group h-full">
                     <div className="w-16 h-16 mx-auto rounded-full bg-gradient-green flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                       <UserPlus className="w-8 h-8 text-white" />

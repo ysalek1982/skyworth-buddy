@@ -62,11 +62,11 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
 
   // Not authenticated - redirect to appropriate login
   if (!user) {
-    const isSellerRoute = location.pathname.startsWith('/vendedores');
+    const isSellerRoute = location.pathname.startsWith('/ventas');
     const isAdminRoute = location.pathname.startsWith('/admin');
     
     if (isSellerRoute) {
-      return <Navigate to="/vendedores/login" state={{ from: location }} replace />;
+      return <Navigate to="/ventas/login" state={{ from: location }} replace />;
     }
     
     if (isAdminRoute) {
@@ -128,13 +128,13 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Button 
-              onClick={() => navigate('/vendedores/registro')} 
+              onClick={() => navigate('/ventas/registro')} 
               className="w-full bg-gradient-to-r from-green-600 to-green-500"
             >
               <Store className="h-4 w-4 mr-2" />
               Registrarme como Vendedor
             </Button>
-            <Button variant="outline" onClick={() => navigate('/vendedores')} className="w-full">
+            <Button variant="outline" onClick={() => navigate('/ventas')} className="w-full">
               <Home className="h-4 w-4 mr-2" />
               Portal Vendedores
             </Button>
@@ -142,7 +142,7 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
               variant="ghost" 
               onClick={async () => {
                 await signOut();
-                navigate('/vendedores/login', { replace: true });
+                navigate('/ventas/login', { replace: true });
               }} 
               className="w-full text-muted-foreground"
             >

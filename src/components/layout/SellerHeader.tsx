@@ -13,10 +13,10 @@ const SellerHeader = () => {
   const { user, signOut, loading, isSeller } = useAuth();
 
   const navLinks = [
-    { href: "/vendedores", label: "Inicio", icon: Home },
-    { href: "/vendedores/dashboard", label: "Mi Dashboard", icon: BarChart3 },
-    { href: "/vendedores/ranking", label: "Rankings", icon: Trophy },
-    { href: "/vendedores/resultados", label: "Resultados", icon: Award },
+    { href: "/ventas", label: "Inicio", icon: Home },
+    { href: "/ventas/dashboard", label: "Mi Dashboard", icon: BarChart3 },
+    { href: "/ventas/ranking", label: "Rankings", icon: Trophy },
+    { href: "/ventas/resultados", label: "Resultados", icon: Award },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -24,7 +24,7 @@ const SellerHeader = () => {
   const handleSignOut = async () => {
     await signOut();
     toast.success("¡Hasta pronto!");
-    navigate("/vendedores");
+    navigate("/ventas");
   };
 
   return (
@@ -32,7 +32,7 @@ const SellerHeader = () => {
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/vendedores" className="flex items-center gap-3">
+          <Link to="/ventas" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-green flex items-center justify-center">
               <Store className="w-5 h-5 text-white" />
             </div>
@@ -80,7 +80,7 @@ const SellerHeader = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Link to="/vendedores/login">
+                  <Link to="/ventas/login">
                     <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
                       Ingresar
                     </Button>
@@ -145,7 +145,7 @@ const SellerHeader = () => {
                   </div>
                 ) : (
                   <Link
-                    to="/vendedores/login"
+                    to="/ventas/login"
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-primary"
                   >

@@ -26,7 +26,7 @@ const VendedoresLogin = () => {
     // Only act when authentication is done and roles are loaded
     if (!loading && user && rolesLoaded) {
       if (isSeller) {
-        navigate("/vendedores/dashboard", { replace: true });
+        navigate("/ventas/dashboard", { replace: true });
       } else {
         // User is authenticated but not a seller - show error and stop loading
         setRoleError("No tienes rol de vendedor. Por favor regístrate como vendedor primero.");
@@ -81,7 +81,7 @@ const VendedoresLogin = () => {
         >
           {/* Back Link */}
           <Link
-            to="/vendedores"
+            to="/ventas"
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -170,7 +170,7 @@ const VendedoresLogin = () => {
             <div className="mt-6 text-center space-y-2">
               <p className="text-sm text-muted-foreground">
                 ¿No tienes cuenta?{" "}
-                <Link to="/vendedores/registro" className="text-primary hover:underline font-medium">
+                <Link to="/ventas/registro" className="text-primary hover:underline font-medium">
                   Regístrate como vendedor
                 </Link>
               </p>

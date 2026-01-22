@@ -9,13 +9,13 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
-// Vendedores pages (separate context)
-const VendedoresHome = lazy(() => import("./pages/vendedores/VendedoresHome"));
-const VendedoresLogin = lazy(() => import("./pages/vendedores/VendedoresLogin"));
-const VendedoresRegistro = lazy(() => import("./pages/vendedores/VendedoresRegistro"));
-const VendedoresDashboard = lazy(() => import("./pages/vendedores/VendedoresDashboard"));
-const VendedoresRanking = lazy(() => import("./pages/vendedores/VendedoresRanking"));
-const VendedoresResultados = lazy(() => import("./pages/vendedores/VendedoresResultados"));
+// Ventas pages (seller portal)
+const VentasHome = lazy(() => import("./pages/vendedores/VendedoresHome"));
+const VentasLogin = lazy(() => import("./pages/vendedores/VendedoresLogin"));
+const VentasRegistro = lazy(() => import("./pages/vendedores/VendedoresRegistro"));
+const VentasDashboard = lazy(() => import("./pages/vendedores/VendedoresDashboard"));
+const VentasRanking = lazy(() => import("./pages/vendedores/VendedoresRanking"));
+const VentasResultados = lazy(() => import("./pages/vendedores/VendedoresResultados"));
 
 // Admin
 const Admin = lazy(() => import("./pages/Admin"));
@@ -43,13 +43,13 @@ const App = () => (
               {/* Public route - ONLY landing page */}
               <Route path="/" element={<Index />} />
 
-              {/* Vendedores routes - separate context */}
-              <Route path="/vendedores" element={<VendedoresHome />} />
-              <Route path="/vendedores/login" element={<VendedoresLogin />} />
-              <Route path="/vendedores/registro" element={<VendedoresRegistro />} />
-              <Route path="/vendedores/dashboard" element={<VendedoresDashboard />} />
-              <Route path="/vendedores/ranking" element={<VendedoresRanking />} />
-              <Route path="/vendedores/resultados" element={<VendedoresResultados />} />
+              {/* Ventas routes - seller portal */}
+              <Route path="/ventas" element={<VentasHome />} />
+              <Route path="/ventas/login" element={<VentasLogin />} />
+              <Route path="/ventas/registro" element={<VentasRegistro />} />
+              <Route path="/ventas/dashboard" element={<VentasDashboard />} />
+              <Route path="/ventas/ranking" element={<VentasRanking />} />
+              <Route path="/ventas/resultados" element={<VentasResultados />} />
 
               {/* Legacy login redirect */}
               <Route path="/login" element={<Login />} />
