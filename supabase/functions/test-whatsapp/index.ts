@@ -12,45 +12,72 @@ serve(async (req) => {
   }
 
   try {
-    const { test_phone } = await req.json();
+    // Parse body (may be empty for simple test)
+    let body: Record<string, unknown> = {};
+    try {
+      body = await req.json();
+    } catch {
+      // Empty body is OK for testing
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get WhatsApp settings
-    const { data: settings } = await supabase
+    const { data: settings, error: settingsError } = await supabase
       .from("secure_settings")
-      .select("key, value")
-      .in("key", ["WHATSAPP_PROVIDER", "WHATSAPP_API_URL", "WHATSAPP_TOKEN", "WHATSAPP_PHONE_ID"]);
+      .select("key, value, is_enabled")
+      .in("key", ["WHATSAPP_PROVIDER", "WHATSAPP_API_URL", "WHATSAPP_TOKEN", "WHATSAPP_PHONE_ID", "WHATSAPP_ENABLED"]);
 
-    const settingsMap: Record<string, string> = {};
+    if (settingsError) {
+      console.error("Error fetching settings:", settingsError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Error al obtener configuración: " + settingsError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const settingsMap: Record<string, { value: string | null; is_enabled: boolean }> = {};
     settings?.forEach((s) => {
-      if (s.value) settingsMap[s.key] = s.value;
+      settingsMap[s.key] = { value: s.value, is_enabled: s.is_enabled };
     });
 
-    const provider = settingsMap["WHATSAPP_PROVIDER"] || "meta";
-    const apiUrl = settingsMap["WHATSAPP_API_URL"];
-    const token = settingsMap["WHATSAPP_TOKEN"];
-    const phoneId = settingsMap["WHATSAPP_PHONE_ID"];
+    // Check if WhatsApp is enabled
+    const isEnabled = settingsMap["WHATSAPP_ENABLED"]?.is_enabled === true;
+    
+    const provider = (settingsMap["WHATSAPP_PROVIDER"]?.value || "meta").trim();
+    const apiUrl = (settingsMap["WHATSAPP_API_URL"]?.value || "").trim();
+    const token = (settingsMap["WHATSAPP_TOKEN"]?.value || "").trim();
+    const phoneId = (settingsMap["WHATSAPP_PHONE_ID"]?.value || "").trim();
 
-    if (!token || !phoneId) {
+    // Validate required fields
+    const missingFields: string[] = [];
+    if (!token) missingFields.push("Token de acceso (WHATSAPP_TOKEN)");
+    if (!phoneId) missingFields.push("Phone Number ID (WHATSAPP_PHONE_ID)");
+
+    if (missingFields.length > 0) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "Configuración de WhatsApp incompleta",
+          error: `Configuración incompleta. Faltan: ${missingFields.join(", ")}`,
           missing: {
             token: !token,
             phoneId: !phoneId,
-          }
+          },
+          hint: "Ve a Configuración → WhatsApp y completa todos los campos requeridos."
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    console.log("Testing WhatsApp with:", { provider, phoneId: phoneId.substring(0, 4) + "...", isEnabled });
+
     // Test Meta API connection by checking the phone number ID
-    if (provider === "meta") {
+    if (provider === "meta" || !provider) {
       const url = `https://graph.facebook.com/v18.0/${phoneId}`;
+      
+      console.log("Testing Meta API at:", url);
       
       const response = await fetch(url, {
         method: "GET",
@@ -63,11 +90,21 @@ serve(async (req) => {
 
       if (data.error) {
         console.error("WhatsApp API test error:", data.error);
+        
+        // Provide helpful error messages
+        let userMessage = data.error.message;
+        if (data.error.code === 190) {
+          userMessage = "Token inválido o expirado. Genera un nuevo token en Meta Business Suite.";
+        } else if (data.error.code === 100) {
+          userMessage = "Phone ID inválido. Verifica el ID en Meta Business Suite → WhatsApp → Configuración de la API.";
+        }
+        
         return new Response(
           JSON.stringify({ 
             success: false, 
-            error: data.error.message,
-            code: data.error.code 
+            error: userMessage,
+            code: data.error.code,
+            details: data.error.message
           }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -76,7 +113,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: "Conexión exitosa con WhatsApp Business API",
+          message: "✅ Conexión exitosa con WhatsApp Business API",
+          enabled: isEnabled,
           phone_info: {
             display_phone_number: data.display_phone_number,
             verified_name: data.verified_name,
@@ -93,6 +131,7 @@ serve(async (req) => {
         success: true, 
         message: "Configuración de WhatsApp verificada",
         provider,
+        enabled: isEnabled,
         note: "Para probar el envío, necesitas un número de teléfono válido"
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
