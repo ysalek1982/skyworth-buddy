@@ -359,16 +359,17 @@ function DashboardContent() {
         throw new Error(result.error || 'Error al registrar');
       }
 
-      // Update the sale with file URLs
+      // Attach document URLs using secure RPC (bypasses RLS)
       if (result.sale_id) {
-        await supabase
-          .from('seller_sales')
-          .update({
-            warranty_tag_url: warrantyTagUrl,
-            warranty_policy_url: warrantyPolicyUrl,
-            invoice_photo_url: invoicePhotoUrl
-          })
-          .eq('id', result.sale_id);
+        const { error: attachError } = await supabase.rpc('rpc_attach_seller_documents', {
+          p_sale_id: result.sale_id,
+          p_warranty_tag_url: warrantyTagUrl,
+          p_warranty_policy_url: warrantyPolicyUrl,
+          p_invoice_photo_url: invoicePhotoUrl,
+        });
+        if (attachError) {
+          console.warn('Error attaching seller documents:', attachError);
+        }
       }
 
       toast.success(`¡Venta registrada! Queda pendiente de aprobación para sumar puntos.`);
