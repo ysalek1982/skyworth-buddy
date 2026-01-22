@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import { Trophy, Plane, Hotel, Ticket, Sparkles, Calendar } from "lucide-react";
 import CountdownTimer from "@/components/ui/CountdownTimer";
 import { useLandingSettings, getDaysUntilDraw, formatDrawDate } from "@/hooks/useLandingSettings";
-import stadiumBgDefault from "@/assets/stadium-bg.jpg";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Football ball SVG component
@@ -17,6 +16,9 @@ const FootballIcon = ({ className }: { className?: string }) => (
 const HeroSection = () => {
   const { data: settings, isLoading } = useLandingSettings();
 
+  // MANDATORY: Use fondo.jpg from public/landing as background
+  const stadiumBg = "/landing/fondo.jpg";
+
   const scrollToRegister = () => {
     const element = document.getElementById("registrar-compra");
     if (element) {
@@ -24,8 +26,10 @@ const HeroSection = () => {
     }
   };
 
-  const backgroundImage = settings?.hero_background_url || stadiumBgDefault;
+  // Always use fondo.jpg from public/landing/ (mandatory)
+  const backgroundImage = stadiumBg;
   const overlayOpacity = settings?.theme?.overlayOpacity ?? 0.6;
+
 
   if (isLoading) {
     return (
@@ -352,37 +356,37 @@ const HeroSection = () => {
               </div>
             </div>
 
-            {/* Benefits with staggered animations */}
+            {/* Benefits with staggered animations - SINGLE LABEL only (no duplicates) */}
             {settings?.sections?.showBenefits !== false && (
               <div className="mt-10 pt-8 border-t border-gray-200">
                 <p className="text-sm uppercase tracking-widest text-gray-500 mb-6 font-bold">
                   El Premio Incluye:
                 </p>
                 <div className="flex flex-wrap justify-center gap-8">
-                  {(settings?.benefits || ["Pasajes Aéreos", "Hospedaje", "Entradas al Partido"]).slice(0, 4).map((benefit, index) => {
-                    const icons = [Plane, Hotel, Ticket, Trophy];
-                    const Icon = icons[index] || Trophy;
-                    return (
+                  {[
+                    { icon: Plane, label: "Pasajes" },
+                    { icon: Hotel, label: "Hospedaje" },
+                    { icon: Ticket, label: "Entradas" },
+                  ].map((item, index) => (
+                    <motion.div 
+                      key={index} 
+                      className="flex flex-col items-center gap-3"
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.8 + index * 0.15 }}
+                      whileHover={{ scale: 1.1, y: -5 }}
+                    >
                       <motion.div 
-                        key={index} 
-                        className="flex flex-col items-center gap-3"
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.8 + index * 0.15 }}
-                        whileHover={{ scale: 1.1, y: -5 }}
+                        className="icon-circle"
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ duration: 4, repeat: Infinity, delay: index * 0.5 }}
                       >
-                        <motion.div 
-                          className="icon-circle"
-                          animate={{ rotate: [0, 10, -10, 0] }}
-                          transition={{ duration: 4, repeat: Infinity, delay: index * 0.5 }}
-                        >
-                          <Icon className="w-8 h-8" />
-                        </motion.div>
-                        <span className="text-sm font-bold text-[#0B2A4A] uppercase text-center max-w-24">{benefit}</span>
+                        <item.icon className="w-8 h-8" />
                       </motion.div>
-                    );
-                  })}
+                      <span className="text-sm font-bold text-[#0B2A4A] uppercase text-center">{item.label}</span>
+                    </motion.div>
+                  ))}
                 </div>
               </div>
             )}
