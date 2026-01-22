@@ -53,6 +53,7 @@ interface Sale {
   points_earned: number;
   created_at: string;
   status?: string | null;
+  rejection_reason?: string | null;
 }
 
 interface SerialValidation {
@@ -77,6 +78,9 @@ function DashboardContent() {
   const [registeringSerial, setRegisteringSerial] = useState(false);
   const [serialValidation, setSerialValidation] = useState<SerialValidation>({ status: 'idle', message: '' });
   const [campaignInfo, setCampaignInfo] = useState<{ name: string; drawDate: string } | null>(null);
+  
+  // Modal for rejection reason
+  const [rejectionModal, setRejectionModal] = useState<{ open: boolean; sale: Sale | null }>({ open: false, sale: null });
   
   // File upload refs
   const warrantyTagRef = useRef<HTMLInputElement>(null);
@@ -752,44 +756,87 @@ function DashboardContent() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Serial</TableHead>
-                        <TableHead>Cliente</TableHead>
                         <TableHead>Fecha</TableHead>
-                        <TableHead className="text-right">Puntos</TableHead>
+                        <TableHead className="text-right">Estado</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sales.map((sale) => (
-                        <TableRow key={sale.id}>
-                          <TableCell className="font-mono">{sale.serial_number}</TableCell>
-                          <TableCell>{sale.client_name}</TableCell>
-                          <TableCell>{new Date(sale.sale_date).toLocaleDateString()}</TableCell>
-                          <TableCell className="text-right">
-                            {(() => {
-                              const status = (sale.status ?? 'PENDING').toString().toUpperCase();
-
-                              if (status === 'APPROVED') {
-                                return (
-                                  <Badge variant="outline" className="bg-primary/15 text-primary border-primary/30">
-                                    +{sale.points_earned}
-                                  </Badge>
-                                );
-                              }
-
-                              if (status === 'REJECTED') {
-                                return <Badge variant="destructive">Rechazada</Badge>;
-                              }
-
-                              return <Badge variant="secondary">Pendiente</Badge>;
-                            })()}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {sales.map((sale) => {
+                        const status = (sale.status ?? 'PENDING').toString().toUpperCase();
+                        
+                        return (
+                          <TableRow key={sale.id}>
+                            <TableCell className="font-mono">{sale.serial_number}</TableCell>
+                            <TableCell>{new Date(sale.sale_date).toLocaleDateString()}</TableCell>
+                            <TableCell className="text-right">
+                              {status === 'APPROVED' && (
+                                <Badge variant="outline" className="bg-primary/15 text-primary border-primary/30">
+                                  +{sale.points_earned} pts
+                                </Badge>
+                              )}
+                              {status === 'REJECTED' && (
+                                <Badge 
+                                  variant="destructive" 
+                                  className="cursor-pointer hover:opacity-80"
+                                  onClick={() => setRejectionModal({ open: true, sale })}
+                                >
+                                  Rechazada ⓘ
+                                </Badge>
+                              )}
+                              {status === 'PENDING' && (
+                                <Badge variant="secondary">Pendiente</Badge>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Rejection Reason Modal */}
+          {rejectionModal.open && rejectionModal.sale && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-card border border-border rounded-lg shadow-xl max-w-md w-full"
+              >
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
+                      <AlertCircle className="h-5 w-5 text-destructive" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">Venta Rechazada</h3>
+                      <p className="text-sm text-muted-foreground">Serial: {rejectionModal.sale.serial_number}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 mb-4">
+                    <p className="text-sm font-medium text-foreground mb-1">Motivo del rechazo:</p>
+                    <p className="text-sm text-muted-foreground">
+                      {rejectionModal.sale.rejection_reason || 'No se especificó motivo'}
+                    </p>
+                  </div>
+                  
+                  <p className="text-sm text-muted-foreground mb-4">
+                    El serial ha sido liberado. Puedes volver a registrarlo con la documentación correcta.
+                  </p>
+                  
+                  <Button 
+                    className="w-full"
+                    onClick={() => setRejectionModal({ open: false, sale: null })}
+                  >
+                    Entendido
+                  </Button>
+                </div>
+              </motion.div>
+            </div>
+          )}
         </Tabs>
       </div>
     </SellerLayout>

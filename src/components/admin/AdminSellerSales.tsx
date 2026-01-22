@@ -153,6 +153,54 @@ export default function AdminSellerSales() {
         throw new Error(result.error || 'Error al rechazar');
       }
 
+      // Send rejection email to seller
+      try {
+        // Get seller email from auth.users via the seller's user_id
+        const { data: sellerData } = await supabase
+          .from('sellers')
+          .select('user_id, store_name')
+          .eq('id', selectedSale.seller_id)
+          .single();
+
+        if (sellerData?.user_id) {
+          // Get email from profiles or auth
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('nombre')
+            .eq('user_id', sellerData.user_id)
+            .single();
+
+          // Get campaign info
+          const { data: landingData } = await supabase
+            .from('landing_settings')
+            .select('campaign_name')
+            .eq('is_active', true)
+            .maybeSingle();
+
+          // We need to get the email - use the seller's store name as fallback
+          const sellerName = profileData?.nombre || sellerData.store_name || 'Vendedor';
+
+          // Call send-email edge function
+          await supabase.functions.invoke('send-email', {
+            body: {
+              to: sellerData.user_id, // The edge function will need to resolve this
+              template_type: 'seller_sale_rejected',
+              variables: {
+                nombre: sellerName,
+                serial: selectedSale.serial_number,
+                motivo_rechazo: rejectReason || 'No se especificó motivo',
+                dashboard_url: `${window.location.origin}/ventas/dashboard`,
+                campaign_name: landingData?.campaign_name || 'El Sueño del Hincha Skyworth'
+              }
+            }
+          });
+          console.log('Rejection email sent to seller');
+        }
+      } catch (emailError) {
+        console.error('Error sending rejection email:', emailError);
+        // Don't fail the rejection if email fails
+      }
+
       toast.success(result.message || 'Venta rechazada');
       setRejectOpen(false);
       setRejectReason('');
