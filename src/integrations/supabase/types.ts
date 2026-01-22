@@ -974,6 +974,24 @@ export type Database = {
         Args: { p_reviewer_id: string; p_sale_id: string }
         Returns: Json
       }
+      rpc_attach_buyer_documents: {
+        Args: {
+          p_id_back_url: string
+          p_id_front_url: string
+          p_invoice_url: string
+          p_purchase_id: string
+        }
+        Returns: Json
+      }
+      rpc_attach_seller_documents: {
+        Args: {
+          p_invoice_photo_url: string
+          p_sale_id: string
+          p_warranty_policy_url: string
+          p_warranty_tag_url: string
+        }
+        Returns: Json
+      }
       rpc_register_buyer_serial: {
         Args: {
           p_city?: string
