@@ -22,15 +22,25 @@ serve(async (req) => {
     const { data: settings } = await supabase
       .from("secure_settings")
       .select("key, value, is_enabled")
-      .in("key", ["WHATSAPP_PROVIDER", "WHATSAPP_API_URL", "WHATSAPP_TOKEN", "WHATSAPP_PHONE_ID", "WHATSAPP_ENABLED"]);
+      .in("key", [
+        "WHATSAPP_PROVIDER",
+        "WHATSAPP_API_URL",
+        "WHATSAPP_TOKEN",
+        "WHATSAPP_PHONE_ID",
+        "WHATSAPP_TEMPLATE_LANG",
+        "WHATSAPP_ENABLED",
+      ]);
 
     const settingsMap: Record<string, { value: string | null; is_enabled: boolean }> = {};
     settings?.forEach((s) => {
       settingsMap[s.key] = { value: s.value, is_enabled: s.is_enabled };
     });
 
-    if (!settingsMap["WHATSAPP_ENABLED"]?.is_enabled) {
-      console.log("WhatsApp disabled, skipping send");
+    // Check if WhatsApp is enabled - IMPORTANT: check is_enabled field
+    const isWhatsAppEnabled = settingsMap["WHATSAPP_ENABLED"]?.is_enabled === true;
+    
+    if (!isWhatsAppEnabled) {
+      console.log("WhatsApp disabled (is_enabled=false), skipping send");
       return new Response(
         JSON.stringify({ success: false, message: "WhatsApp está deshabilitado" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -41,34 +51,31 @@ serve(async (req) => {
     const apiUrl = settingsMap["WHATSAPP_API_URL"]?.value;
     const token = settingsMap["WHATSAPP_TOKEN"]?.value;
     const phoneId = settingsMap["WHATSAPP_PHONE_ID"]?.value;
+    const templateLang = settingsMap["WHATSAPP_TEMPLATE_LANG"]?.value || "es_ES";
 
     if (!token || !phoneId) {
+      console.error("WhatsApp config incomplete - token:", !!token, "phoneId:", !!phoneId);
       return new Response(
-        JSON.stringify({ error: "Configuración de WhatsApp incompleta" }),
+        JSON.stringify({ error: "Configuración de WhatsApp incompleta (falta token o phone ID)" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get template from database
-    const { data: template } = await supabase
-      .from("notification_templates")
-      .select("name, body")
-      .eq("type", "whatsapp")
-      .eq("name", template_name)
-      .eq("is_active", true)
-      .single();
+    // Format phone number (remove all non-digits)
+    let formattedPhone = to.replace(/\D/g, "");
+    // Ensure it starts with country code (Bolivia = 591)
+    if (formattedPhone.startsWith("0")) {
+      formattedPhone = "591" + formattedPhone.slice(1);
+    } else if (!formattedPhone.startsWith("591") && formattedPhone.length <= 8) {
+      formattedPhone = "591" + formattedPhone;
+    }
 
-    // Format phone number
-    const formattedPhone = to.replace(/\D/g, "");
+    console.log("Sending WhatsApp to:", formattedPhone, "template:", template_name, "lang:", templateLang);
 
     let response;
 
-    if (provider === "meta") {
+    if (provider === "meta" || !provider) {
       // Meta WhatsApp Business API
-      // Allow admins to set either:
-      // - Base URL: https://graph.facebook.com/v18.0
-      // - Full endpoint: https://graph.facebook.com/v18.0/<PHONE_ID>/messages
-      // - Template URL containing {PHONE_ID}
       const rawApiUrl = (apiUrl || "").trim();
       const normalizedApiUrl = rawApiUrl.replace(/\/$/, "");
 
@@ -79,17 +86,34 @@ serve(async (req) => {
           : normalizedApiUrl.endsWith("/messages")
             ? normalizedApiUrl
             : `${normalizedApiUrl}/${phoneId}/messages`;
-      
+
+      console.log("Meta API URL:", url);
+
       // Build template components from variables
-      const components = variables ? [
-        {
-          type: "body",
-          parameters: Object.values(variables).map((value) => ({
-            type: "text",
-            text: String(value),
-          })),
+      const components = variables
+        ? [
+            {
+              type: "body",
+              parameters: Object.values(variables).map((value) => ({
+                type: "text",
+                text: String(value),
+              })),
+            },
+          ]
+        : [];
+
+      const payload = {
+        messaging_product: "whatsapp",
+        to: formattedPhone,
+        type: "template",
+        template: {
+          name: template_name,
+          language: { code: templateLang },
+          components,
         },
-      ] : [];
+      };
+
+      console.log("Sending payload:", JSON.stringify(payload, null, 2));
 
       response = await fetch(url, {
         method: "POST",
@@ -97,16 +121,7 @@ serve(async (req) => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: formattedPhone,
-          type: "template",
-          template: {
-            name: template?.name || template_name,
-            language: { code: "es" },
-            components,
-          },
-        }),
+        body: JSON.stringify(payload),
       });
     } else {
       // Generic API provider
@@ -128,14 +143,26 @@ serve(async (req) => {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("WhatsApp API error:", data);
+      console.error("WhatsApp API error:", JSON.stringify(data));
+      
+      // Parse Meta error for better messaging
+      let errorMessage = "Error al enviar WhatsApp";
+      if (data?.error?.message) {
+        errorMessage = data.error.message;
+        if (data.error.code === 132000) {
+          errorMessage = `Template "${template_name}" no encontrado o no aprobado para idioma "${templateLang}"`;
+        } else if (data.error.code === 131030) {
+          errorMessage = "Número de teléfono inválido o no registrado en WhatsApp";
+        }
+      }
+      
       return new Response(
-        JSON.stringify({ error: "Error al enviar WhatsApp", details: data }),
+        JSON.stringify({ error: errorMessage, details: data }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("WhatsApp sent successfully to:", formattedPhone);
+    console.log("WhatsApp sent successfully to:", formattedPhone, "response:", JSON.stringify(data));
 
     return new Response(
       JSON.stringify({ success: true, data }),
