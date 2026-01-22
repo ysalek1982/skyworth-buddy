@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { supabase } from '@/integrations/supabase/client';
@@ -418,8 +419,8 @@ function DashboardContent() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => window.location.href = '/vendedores/registro'}>
-                Registrarme como Vendedor
+              <Button asChild>
+                <Link to="/vendedores/registro">Registrarme como Vendedor</Link>
               </Button>
             </CardContent>
           </Card>
