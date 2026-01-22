@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (!mounted) return;
 
       setSession(newSession);
@@ -111,15 +111,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // If signed in, (re)load roles.
-      setRolesLoaded(false);
-      setRolesError(null);
+      // Avoid unmounting protected screens on background token refresh.
+      // Roles don't change on TOKEN_REFRESHED, so keep existing rolesLoaded state.
+      const shouldReloadRoles = event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION';
 
-      // IMPORTANT: defer backend calls out of the auth callback
-      setTimeout(() => {
-        if (!mounted) return;
-        void loadRolesForUser(nextUser.id);
-      }, 0);
+      if (shouldReloadRoles) {
+        setRolesLoaded(false);
+        setRolesError(null);
+
+        // IMPORTANT: defer backend calls out of the auth callback
+        setTimeout(() => {
+          if (!mounted) return;
+          void loadRolesForUser(nextUser.id);
+        }, 0);
+      }
     });
 
     const initializeAuth = async () => {

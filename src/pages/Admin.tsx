@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -49,6 +49,7 @@ const tabs = [
 function AdminContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -122,7 +123,7 @@ function AdminContent() {
           </div>
           <Button 
             variant="outline" 
-            onClick={() => window.location.href = '/'}
+            onClick={() => navigate('/')}
             className="border-primary/50 text-foreground hover:bg-primary/10"
           >
             Volver al sitio
