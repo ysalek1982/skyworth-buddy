@@ -511,13 +511,13 @@ function DashboardContent() {
           </TabsList>
 
           <TabsContent value="register">
-            <Card>
+            <Card className="bg-slate-800/90 border-slate-700">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-white">
                   <Plus className="h-5 w-5" />
                   Registrar Nueva Venta
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-slate-300">
                   Ingresa el serial del TV vendido para ganar puntos
                 </CardDescription>
               </CardHeader>
@@ -525,7 +525,7 @@ function DashboardContent() {
                 <form onSubmit={handleRegisterSerial} className="space-y-6">
                   {/* Serial Number - First and most important field */}
                   <div className="space-y-2">
-                    <Label htmlFor="serial_number" className="text-base font-semibold text-foreground">
+                    <Label htmlFor="serial_number" className="text-base font-semibold text-white">
                       N° Serie del TV *
                     </Label>
                     <Input
@@ -533,7 +533,7 @@ function DashboardContent() {
                       value={serialForm.serial_number}
                       onChange={(e) => handleSerialChange(e.target.value)}
                       placeholder="Ingresa el número de serie"
-                      className={`input-dark font-mono tracking-wider text-lg ${getSerialInputClass()}`}
+                      className={`bg-slate-900 border-slate-600 text-white placeholder:text-slate-400 font-mono tracking-wider text-lg ${getSerialInputClass()}`}
                       required
                     />
                     
@@ -561,7 +561,7 @@ function DashboardContent() {
 
                   {/* Sale Date with Range Validation */}
                   <div className="space-y-2">
-                    <Label htmlFor="sale_date" className="text-base font-semibold text-foreground flex items-center gap-2">
+                    <Label htmlFor="sale_date" className="text-base font-semibold text-white flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
                       Fecha de Venta *
                     </Label>
@@ -570,30 +570,30 @@ function DashboardContent() {
                       type="date"
                       value={serialForm.sale_date}
                       onChange={(e) => setSerialForm({ ...serialForm, sale_date: e.target.value })}
-                      className="input-dark"
+                      className="bg-slate-900 border-slate-600 text-white"
                       required
                       min="2026-01-22"
                       max="2026-03-07"
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-slate-400">
                       Válido: 22 de enero - 7 de marzo de 2026.
                     </p>
                   </div>
 
                   {/* Document Uploads Section */}
-                  <div className="border-t border-border pt-6">
-                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <div className="border-t border-slate-600 pt-6">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-white">
                       <Camera className="h-5 w-5" />
                       Documentos Requeridos
                     </h3>
-                    <p className="text-sm text-muted-foreground mb-4">
+                    <p className="text-sm text-slate-400 mb-4">
                       Los documentos deben coincidir con el número de serie y fecha de venta
                     </p>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {/* Warranty Tag Photo */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">TAG de Póliza de Garantía *</Label>
+                        <Label className="text-sm font-medium text-slate-200">TAG de Póliza de Garantía *</Label>
                         <input
                           ref={warrantyTagRef}
                           type="file"
@@ -622,18 +622,18 @@ function DashboardContent() {
                           <Button
                             type="button"
                             variant="outline"
-                            className="w-full h-32 flex flex-col items-center justify-center gap-2 border-dashed"
+                            className="w-full h-32 flex flex-col items-center justify-center gap-2 border-dashed border-slate-600 bg-slate-900/50 hover:bg-slate-800"
                             onClick={() => warrantyTagRef.current?.click()}
                           >
-                            <Upload className="h-8 w-8 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">Subir foto del TAG</span>
+                            <Upload className="h-8 w-8 text-slate-400" />
+                            <span className="text-xs text-slate-400">Subir foto del TAG</span>
                           </Button>
                         )}
                       </div>
 
                       {/* Warranty Policy Photo */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">Póliza de Garantía *</Label>
+                        <Label className="text-sm font-medium text-slate-200">Póliza de Garantía *</Label>
                         <input
                           ref={warrantyPolicyRef}
                           type="file"
@@ -646,7 +646,7 @@ function DashboardContent() {
                             <img 
                               src={warrantyPolicyFile.preview} 
                               alt="Policy Preview" 
-                              className="w-full h-32 object-cover rounded-lg border border-border"
+                              className="w-full h-32 object-cover rounded-lg border border-slate-600"
                             />
                             <Button
                               type="button"
@@ -662,18 +662,18 @@ function DashboardContent() {
                           <Button
                             type="button"
                             variant="outline"
-                            className="w-full h-32 flex flex-col items-center justify-center gap-2 border-dashed"
+                            className="w-full h-32 flex flex-col items-center justify-center gap-2 border-dashed border-slate-600 bg-slate-900/50 hover:bg-slate-800"
                             onClick={() => warrantyPolicyRef.current?.click()}
                           >
-                            <FileText className="h-8 w-8 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">Subir póliza</span>
+                            <FileText className="h-8 w-8 text-slate-400" />
+                            <span className="text-xs text-slate-400">Subir póliza</span>
                           </Button>
                         )}
                       </div>
 
                       {/* Invoice Photo */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">Factura / Nota de Venta *</Label>
+                        <Label className="text-sm font-medium text-slate-200">Factura / Nota de Venta *</Label>
                         <input
                           ref={invoicePhotoRef}
                           type="file"
@@ -686,7 +686,7 @@ function DashboardContent() {
                             <img 
                               src={invoicePhotoFile.preview} 
                               alt="Invoice Preview" 
-                              className="w-full h-32 object-cover rounded-lg border border-border"
+                              className="w-full h-32 object-cover rounded-lg border border-slate-600"
                             />
                             <Button
                               type="button"
@@ -702,11 +702,11 @@ function DashboardContent() {
                           <Button
                             type="button"
                             variant="outline"
-                            className="w-full h-32 flex flex-col items-center justify-center gap-2 border-dashed"
+                            className="w-full h-32 flex flex-col items-center justify-center gap-2 border-dashed border-slate-600 bg-slate-900/50 hover:bg-slate-800"
                             onClick={() => invoicePhotoRef.current?.click()}
                           >
-                            <Upload className="h-8 w-8 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">Subir factura</span>
+                            <Upload className="h-8 w-8 text-slate-400" />
+                            <span className="text-xs text-slate-400">Subir factura</span>
                           </Button>
                         )}
                       </div>
@@ -716,7 +716,7 @@ function DashboardContent() {
                   <Button 
                     type="submit" 
                     disabled={registeringSerial || serialValidation.status !== 'valid'} 
-                    className="w-full md:w-auto"
+                    className="w-full md:w-auto bg-primary hover:bg-primary/90"
                   >
                     {registeringSerial ? (
                       <>
